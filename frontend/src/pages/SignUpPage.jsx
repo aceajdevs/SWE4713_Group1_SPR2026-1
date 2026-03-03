@@ -219,7 +219,7 @@ function SignUpPage() {
                 ],
             });
 
-            createUserRequest(email, firstName, lastName, address, dob, password);
+            createUserRequest(email, firstName, lastName, address, dob, password, securityQuestionOptions.indexOf(securityQuestion1)+1, securityAnswer1, securityQuestionOptions.indexOf(securityQuestion2)+1, securityAnswer2, securityQuestionOptions.indexOf(securityQuestion3)+1, securityAnswer3);
         } catch (error) {
             console.error('Error hashing password:', error);
         }
