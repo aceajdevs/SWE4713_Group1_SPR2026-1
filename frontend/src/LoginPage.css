@@ -41,7 +41,7 @@
 }
 
 .login-form {
-  width: 380px;
+  width: min(560px, calc(100vw - 48px));
   background: #ffffff;
   padding: 28px;
   border-radius: 12px;
@@ -79,9 +79,63 @@
   font-size: 14px;
 }
 
+/* Grid helpers to reduce vertical space while keeping alignment clean */
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+@media (max-width: 560px) {
+  .form-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Use on smaller fields like DOB so they don't stretch full width */
+.input.compact {
+  max-width: 220px;
+  width: 100%;
+  justify-self: start;
+}
+
 .input:focus {
   outline: 2px solid #c7e0ff;
   border-color: #90bfff;
+}
+
+.input-error {
+  border-color: #dc2626;
+  background: #fef2f2;
+}
+
+.input-error:focus {
+  outline: 2px solid #fca5a5;
+  border-color: #dc2626;
+}
+
+.error-messages {
+  color: #dc2626;
+  font-size: 13px;
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+
+.error-messages ul {
+  margin: 4px 0;
+  padding-left: 20px;
+  list-style-type: disc;
+}
+
+.error-messages li {
+  margin: 2px 0;
 }
 
 .button-row {
