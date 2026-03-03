@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import '../LoginPage.css'
 import logo from '../../assets/Images/resourceDirectory/logo.png'
 import { useNavigate } from 'react-router-dom';
-import { getPasswords } from '../services/userService';
+import { createUser } from '../services/userService';
 
 function LoginPage() {
     const navigate = useNavigate();
@@ -30,7 +30,7 @@ function LoginPage() {
 
     const handleLogin = async () => {
         try {
-            await getPasswords();
+            //await createUser("betterfinance3@gmail.com", "better", "finance", "123 Marietta, GA 30067", "2000-07-07", "password_1", "accountant");
         } catch (error) {
             console.error('Error getting user passwords:', error);
         }
