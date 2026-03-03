@@ -30,7 +30,7 @@ function LoginPage() {
 
     const handleLogin = async () => {
         try {
-            await createUser("betterfinance3@gmail.com", "better", "finance", "123 Marietta, GA 30067", "2000-07-07", "password_1", "administrator");
+            //await createUser("betterfinance3@gmail.com", "better", "finance", "123 Marietta, GA 30067", "2000-07-07", "password_1", "administrator");
         } catch (error) {
             console.error('Error getting user passwords:', error);
         }
