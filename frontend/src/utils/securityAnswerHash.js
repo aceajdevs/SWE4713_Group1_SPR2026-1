@@ -1,5 +1,5 @@
-export async function hashPassword(password) {
-  const text = (password ?? '').trim();
+export async function hashSecurityAnswer(answer) {
+  const text = (answer ?? '').trim();
   const encoder = new TextEncoder();
   const data = encoder.encode(text);
 
