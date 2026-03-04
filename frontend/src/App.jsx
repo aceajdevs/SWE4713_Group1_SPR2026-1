@@ -7,15 +7,34 @@ import { AuthProvider } from './AuthContext'
 import ForgotPasswordPage from './pages/ForgotPassword'
 import SignUpPage from './pages/SignUpPage'
 import AdminDashboard from './pages/admin-dashboard';
+import AdminEditUserPage from './pages/AdminEditUserPage';
 import AccountantDashboard from './pages/accountant-dashboard'
 import ManagerDashboard from './pages/manager-dashboard'
 import UserAccountRequestPage from './pages/user-account-request'
 import CreateUserPage from './pages/CreateUserPage'
-
+import { checkPasswordsAboutToExpire } from './services/passwordExpiryService';
+import { useEffect } from 'react';
 function AppLayout() {
   const location = useLocation();
   const hideNavbar = location.pathname === '/login' || location.pathname === '/signup' || location.pathname === '/forgot-password' || location.pathname === '/';
-
+  useEffect(() => {
+    const runCheck = async () => {
+      const expiring = await checkPasswordsAboutToExpire(3);
+      if (expiring.length === 0) {
+        console.log('[PasswordExpiryCheck] No passwords about to expire');
+      } else {
+        console.log('[PasswordExpiryCheck] Passwords about to expire:', expiring);
+      }
+    };
+  
+    // Run once immediately
+    runCheck();
+  
+    // Then every 30 minutes
+    const intervalId = setInterval(runCheck, 30 * 60 * 1000);
+  
+    return () => clearInterval(intervalId);
+  }, []);
   return (
     <>
       {!hideNavbar && <Navbar />}
@@ -26,6 +45,7 @@ function AppLayout() {
         <Route path='/admin-dashboard' element={<AdminDashboard />} />
         <Route path="/admin/user-account-request" element={<UserAccountRequestPage />} />
         <Route path="/admin/create-user" element={<CreateUserPage />} />
+        <Route path="/admin/edit-user" element={<AdminEditUserPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage/>} />
         <Route path="/signup" element={<SignUpPage/>} />
         <Route path="/accountant-dashboard" element={<AccountantDashboard/>} />

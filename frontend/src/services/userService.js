@@ -190,20 +190,20 @@ export async function updateUser({
   }
 
   const { data, error } = await supabase.rpc('update_user', {
-    p_userid:          userId,
+    p_address:         address ?? null,
+    p_dob:             dob ?? null,
     p_email:           email ?? null,
-    p_username:        username ?? null,
-    p_password_hash:   passwordHash ?? null,
     p_fname:           fName ?? null,
     p_lname:           lName ?? null,
-    p_dob:             dob ?? null,
-    p_address:         address ?? null,
+    p_loginattempts:   loginAttempts ?? null,
+    p_password_hash:   passwordHash ?? null,
+    p_passwordexpires: passwordExpires ?? null,
     p_picture_path:    picturePath ?? null,
-    p_status:          typeof status === 'boolean' ? status : null,
-    p_passwordExpires: passwordExpires ?? null,
     p_role:            role ?? null,
-    p_suspendedTill:   suspendedTill ?? null,
-    p_loginAttempts:   loginAttempts ?? null,
+    p_status:          typeof status === 'boolean' ? status : null,
+    p_suspendedtill:   suspendedTill ?? null,
+    p_userid:          userId,
+    p_username:        username ?? null,
   });
 
   if (error) {
@@ -339,6 +339,32 @@ export async function updateUserPassword(userId, newPassword) {
     return data;
   } catch (err) {
     console.error('Error in updateUserPassword:', err);
+    throw err;
+  }
+}
+
+export async function adminUpdateUserSecurityAnswers(userId, answer1, answer2, answer3) {
+  try {
+    // Only hash answers that are provided; nulls mean "no change"
+    const hashedAnswer1 = answer1 ? await hashSecurityAnswer(answer1) : null;
+    const hashedAnswer2 = answer2 ? await hashSecurityAnswer(answer2) : null;
+    const hashedAnswer3 = answer3 ? await hashSecurityAnswer(answer3) : null;
+
+    const { data, error } = await supabase.rpc('admin_update_user_security_answers', {
+      p_userid: parseInt(userId, 10),
+      p_secanswer1: hashedAnswer1,
+      p_secanswer2: hashedAnswer2,
+      p_secanswer3: hashedAnswer3,
+    });
+
+    if (error) {
+      console.error('Error updating user security answers (RPC):', error);
+      throw error;
+    }
+
+    return data;
+  } catch (err) {
+    console.error('Error in adminUpdateUserSecurityAnswers:', err);
     throw err;
   }
 }

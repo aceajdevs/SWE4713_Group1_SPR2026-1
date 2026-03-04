@@ -1,16 +1,27 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import '../global.css';
-import logo from '../../assets/Images/resourceDirectory/logo.png';
 import { useNavigate } from 'react-router-dom';
 import UserReport from '../components/admin/UserReport';
 import SuspendUser from '../components/admin/SuspendUser';
 import ExpiredPasswords from '../components/admin/ExpiredPasswords';
+import { checkPasswordsAboutToExpire } from '../services/passwordExpiryService';
+
 function AdminDashboard() {
   const navigate = useNavigate();
+
 
   return (
     <div>
       <h1>Administrator Dashboard</h1>
+
+      <div style={{ marginBottom: '16px' }}>
+        <button onClick={() => navigate('/admin/create-user')} style={{ marginRight: '8px' }}>
+          Create User
+        </button>
+        <button onClick={() => navigate('/admin/edit-user')}>
+          Edit User
+        </button>
+      </div>
 
       <UserReport />
       <hr />
@@ -19,7 +30,6 @@ function AdminDashboard() {
       <hr />
 
       <ExpiredPasswords />
-
     </div>
   );
 }
