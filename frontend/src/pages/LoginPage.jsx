@@ -2,8 +2,8 @@ import React, { useState } from 'react'
 import '../LoginPage.css'
 import logo from '../../assets/Images/resourceDirectory/logo.png'
 import { useNavigate } from 'react-router-dom';
-import bcrypt from 'bcryptjs';
 import { supabase } from '../supabaseClient';
+import { hashPassword } from '../utils/passwordHash';
 import { createUser } from '../services/userService';
 import { useAuth } from '../AuthContext';
 
@@ -70,18 +70,10 @@ function LoginPage() {
             }
           }
 
-          const { data: passwordData, error: passwordError } = await supabase
-          .from('userPasswords')
-          .select('password_hash')
-          .eq('userID', userData.userID)
-          .single();
-
-          if (passwordError || !passwordData) {
-            alert('Password record not found');
-            return;
-          }
-
-          const isMatch = await bcrypt.compare(password, passwordData.password_hash);
+          // Deterministic hash compare: hash the entered password and compare
+          // with the hash stored on the user row. Both are SHA-256 hex strings.
+          const enteredHash = await hashPassword(password);
+          const isMatch = enteredHash === userData.password_hash;
 
           if (!isMatch) {
             const currentAttempts = userData.loginAttempts ?? 3;

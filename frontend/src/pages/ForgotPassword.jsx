@@ -3,7 +3,7 @@ import '../LoginPage.css'
 import logo from '../../assets/Images/resourceDirectory/logo.png'
 import { useNavigate } from 'react-router-dom';
 import { validatePassword } from '../utils/passwordValidation';
-import { checkEmail, getUserSecurityQuestions, verifySecurityAnswers } from '../services/userService';
+import { checkEmail, getUserSecurityQuestions, verifySecurityAnswers, updateUserPassword, isPasswordReused } from '../services/userService';
 
 function ForgotPasswordPage() {
     const navigate = useNavigate();
@@ -127,7 +127,7 @@ function ForgotPasswordPage() {
         }
     };
 
-    const handleNewPasswordSubmit = (e) => {
+    const handleNewPasswordSubmit = async (e) => {
         e.preventDefault();
         setGeneralError('');
 
@@ -144,11 +144,21 @@ function ForgotPasswordPage() {
             return;
         }
 
-        // TODO: Save the new password to the database (hashed) for this user
-        console.log('Password reset complete for:', { email, userId });
+        try {
+            const reused = await isPasswordReused(userId, newPassword);
+            if (reused) {
+                setGeneralError('Password used in the past cannot be used when password is reset.');
+                console.log('Password reused');
+                return;
+            }
 
-        // After successful reset, navigate back to login
-        navigate('/login');
+            await updateUserPassword(parseInt(userId, 10), newPassword);
+            // After successful reset, navigate back to login
+            navigate('/login');
+        } catch (error) {
+            console.error('Error updating password:', error);
+            setGeneralError('Error saving new password. Please try again.');
+        }
     };
 
     const handleClearAll = () => {

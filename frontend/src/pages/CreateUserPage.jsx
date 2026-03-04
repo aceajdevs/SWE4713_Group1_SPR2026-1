@@ -1,20 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../LoginPage.css';
 import { useNavigate } from 'react-router-dom';
-import { createUser, checkEmail } from '../services/userService';
+import { createUser, checkEmail, getSecurityQuestions, admin_createUser } from '../services/userService';
 import { validatePassword } from '../utils/passwordValidation';
 
 const ROLES = ['administrator', 'manager', 'accountant'];
-
-const SECURITY_QUESTION_OPTIONS = [
-    "What is your mother's maiden name?",
-    "What city were you born in?",
-    "What was the name of your first pet?",
-    "What is your favorite teacher's name?",
-    "What is the name of the street you grew up on?",
-    "What is your favorite movie?",
-    "What is your favorite food?",
-];
 
 function CreateUserPage() {
     const navigate = useNavigate();
@@ -31,6 +21,7 @@ function CreateUserPage() {
     const [passwordErrors, setPasswordErrors] = useState([]);
     const [showPasswordErrors, setShowPasswordErrors] = useState(false);
     const [role, setRole] = useState('accountant');
+    const [securityQuestions, setSecurityQuestions] = useState([]);
     const [securityQuestion1, setSecurityQuestion1] = useState('');
     const [securityAnswer1, setSecurityAnswer1] = useState('');
     const [securityQuestion2, setSecurityQuestion2] = useState('');
@@ -41,6 +32,19 @@ function CreateUserPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+
+    useEffect(() => {
+        const fetchSecurityQuestions = async () => {
+            try {
+                const questions = await getSecurityQuestions();
+                setSecurityQuestions(questions);
+            } catch (err) {
+                console.error('Failed to load security questions:', err);
+            }
+        };
+
+        fetchSecurityQuestions();
+    }, []);
 
     const getTodayLocalDateString = () => {
         const now = new Date();
@@ -187,11 +191,7 @@ function CreateUserPage() {
         setLoading(true);
 
         try {
-            const questionId1 = SECURITY_QUESTION_OPTIONS.indexOf(securityQuestion1) + 1;
-            const questionId2 = SECURITY_QUESTION_OPTIONS.indexOf(securityQuestion2) + 1;
-            const questionId3 = SECURITY_QUESTION_OPTIONS.indexOf(securityQuestion3) + 1;
-
-            await createUser(
+            await admin_createUser(
                 email,
                 firstName,
                 lastName,
@@ -199,11 +199,11 @@ function CreateUserPage() {
                 dob || null,
                 password,
                 role,
-                questionId1,
+                securityQuestion1,
                 securityAnswer1.trim(),
-                questionId2,
+                securityQuestion2,
                 securityAnswer2.trim(),
-                questionId3,
+                securityQuestion3,
                 securityAnswer3.trim()
             );
 
@@ -424,17 +424,20 @@ function CreateUserPage() {
                             className="input"
                             aria-label="security question 1"
                             value={securityQuestion1}
-                            onChange={(e) => setSecurityQuestion1(e.target.value)}
+                            onChange={(e) => setSecurityQuestion1(Number(e.target.value))}
                             required
                         >
                             <option value="" disabled>Select a question</option>
-                            {SECURITY_QUESTION_OPTIONS.map((q) => (
+                            {securityQuestions.map((q) => (
                                 <option
-                                    key={q}
-                                    value={q}
-                                    disabled={q === securityQuestion2 || q === securityQuestion3}
+                                    key={q.questionID}
+                                    value={q.questionID}
+                                    disabled={
+                                        q.questionID === securityQuestion2 ||
+                                        q.questionID === securityQuestion3
+                                    }
                                 >
-                                    {q}
+                                    {q.question}
                                 </option>
                             ))}
                         </select>
@@ -457,17 +460,20 @@ function CreateUserPage() {
                             className="input"
                             aria-label="security question 2"
                             value={securityQuestion2}
-                            onChange={(e) => setSecurityQuestion2(e.target.value)}
+                            onChange={(e) => setSecurityQuestion2(Number(e.target.value))}
                             required
                         >
                             <option value="" disabled>Select a question</option>
-                            {SECURITY_QUESTION_OPTIONS.map((q) => (
+                            {securityQuestions.map((q) => (
                                 <option
-                                    key={q}
-                                    value={q}
-                                    disabled={q === securityQuestion1 || q === securityQuestion3}
+                                    key={q.questionID}
+                                    value={q.questionID}
+                                    disabled={
+                                        q.questionID === securityQuestion1 ||
+                                        q.questionID === securityQuestion3
+                                    }
                                 >
-                                    {q}
+                                    {q.question}
                                 </option>
                             ))}
                         </select>
@@ -490,17 +496,20 @@ function CreateUserPage() {
                             className="input"
                             aria-label="security question 3"
                             value={securityQuestion3}
-                            onChange={(e) => setSecurityQuestion3(e.target.value)}
+                            onChange={(e) => setSecurityQuestion3(Number(e.target.value))}
                             required
                         >
                             <option value="" disabled>Select a question</option>
-                            {SECURITY_QUESTION_OPTIONS.map((q) => (
+                            {securityQuestions.map((q) => (
                                 <option
-                                    key={q}
-                                    value={q}
-                                    disabled={q === securityQuestion1 || q === securityQuestion2}
+                                    key={q.questionID}
+                                    value={q.questionID}
+                                    disabled={
+                                        q.questionID === securityQuestion1 ||
+                                        q.questionID === securityQuestion2
+                                    }
                                 >
-                                    {q}
+                                    {q.question}
                                 </option>
                             ))}
                         </select>
