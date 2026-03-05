@@ -119,29 +119,36 @@ export async function createUserRequest(
   answer3
 ) {
     try {
-        const hashedPassword = await hashPassword(password);
-        const hashedAnswer1 = answer1 ? await hashSecurityAnswer(answer1) : null;
-        const hashedAnswer2 = answer2 ? await hashSecurityAnswer(answer2) : null;
-        const hashedAnswer3 = answer3 ? await hashSecurityAnswer(answer3) : null;
+    const hashedPassword = await hashPassword(password);
+    const hashedAnswer1 = answer1 ? await hashSecurityAnswer(answer1) : null;
+    const hashedAnswer2 = answer2 ? await hashSecurityAnswer(answer2) : null;
+    const hashedAnswer3 = answer3 ? await hashSecurityAnswer(answer3) : null;
 
-        const { data, error } = await supabase.rpc('create_user_request', {
-          p_email:       email,
-          p_f_name:      fName,
-          p_l_name:      lName,
-          p_address:     address,
-          p_dob:         dob,
-          p_password:    hashedPassword,
-          p_questionid1: questionId1,
-          p_secanswer1:  hashedAnswer1,
-          p_questionid2: questionId2,
-          p_secanswer2:  hashedAnswer2,
-          p_questionid3: questionId3,
-          p_secanswer3:  hashedAnswer3,
-        });
+    const { data, error } = await supabase.rpc('create_user_request', {
+      p_email:       email,
+      p_f_name:      fName,
+      p_l_name:      lName,
+      p_address:     address,
+      p_dob:         dob,
+      p_password:    hashedPassword,
+      p_questionid1: questionId1,
+      p_secanswer1:  hashedAnswer1,
+      p_questionid2: questionId2,
+      p_secanswer2:  hashedAnswer2,
+      p_questionid3: questionId3,
+      p_secanswer3:  hashedAnswer3,
+    });
 
-        console.log('User request JSON:', data);
-        const fullName = `${fName} ${lName}`;
-        return data;
+    console.log('User request JSON:', data);
+    const fullName = `${fName} ${lName}`;
+
+    try {
+      await sendNewAccountRequest(fullName);
+    } catch (emailError) {
+      console.error('Error sending new account request email:', emailError);
+    }
+
+    return data;
     } 
     catch (error) {
         console.error('Error creating user request:', error);
