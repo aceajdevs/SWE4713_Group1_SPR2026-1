@@ -3,10 +3,10 @@
 ## Team Members
 ~~~
 Team Lead- Sankalp Amaravadi 
-Team Scribe/ Back end lead- Elijah Giusto 
+Team Scribe/ Testing- Elijah Giusto 
 Team support- Calvin Crose
 Front ened lead- Jonah Smith
-QA/Front end support- Christopher Stropoli
+Artistic/Project Paperwork management- Christopher Stropoli
 ~~~
 ## Technologies Used 
 ~~~
