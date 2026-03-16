@@ -69,12 +69,25 @@ function LoginPage() {
                 .eq('userID', userData.userID);
             }
           }
+          
+          // Check for empty password before hashing/comparing
+          if (!password || password.trim() === '') 
+          {
+            alert('Please enter a password.');
+            return;
+          }
 
           // Deterministic hash compare: hash the entered password and compare
           // with the hash stored on the user row. Both are SHA-256 hex strings.
           const enteredHash = await hashPassword(password);
           const isMatch = enteredHash === userData.password_hash;
-
+          
+          if (enteredHash == null)
+          {
+            alert('Please enter a password.');
+            return;
+          }
+          
           if (!isMatch) {
             const currentAttempts = userData.loginAttempts ?? 3;
             const newAttempts = Math.max(0, currentAttempts - 1);
