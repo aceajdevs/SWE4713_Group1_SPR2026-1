@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 global.fetch = vi.fn(() =>
   Promise.resolve({
     ok: true,

@@ -16,7 +16,7 @@ const ROLES = ['administrator', 'manager', 'accountant'];
 function AdminEditUserPage() {
   const navigate = useNavigate();
 
-  const [lookupUserId, setLookupUserId] = useState(''); // kept for internal use
+  const [_lookupUserId, setLookupUserId] = useState(''); // kept for internal use
   const [loadedUserId, setLoadedUserId] = useState(null);
 
   const [email, setEmail] = useState('');
@@ -34,7 +34,7 @@ function AdminEditUserPage() {
   const [showPasswordErrors, setShowPasswordErrors] = useState(false);
   const [confirmPasswordError, setConfirmPasswordError] = useState('');
 
-  const [loadingUser, setLoadingUser] = useState(false);
+  const [_loadingUser, setLoadingUser] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');

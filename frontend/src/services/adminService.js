@@ -49,7 +49,7 @@ export const suspendUser = async (userID, startDate, endDate) => {
   }
 
   if (!data || data.length === 0) {
-    throw new Error("User not foound.")
+    throw new Error("User not found.")
   }
 
   return data

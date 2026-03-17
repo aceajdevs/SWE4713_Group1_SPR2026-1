@@ -1,10 +1,7 @@
 import React from 'react';
 import '../global.css';
-import logo from '../../assets/Images/resourceDirectory/logo.png';
-import { useNavigate } from 'react-router-dom';
 
 function DashboardInitial() {
-  const navigate = useNavigate();
 
   return (
     <div className="dashboard-page">

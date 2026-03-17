@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { suspendUser } from '../../services/adminService';
+import { supabase } from '../../supabaseClient';
 
 function SuspendUser() {
   const [userId, setUserId] = useState('')
@@ -7,7 +8,32 @@ function SuspendUser() {
   const [endDate, setEndDate] = useState('')
 
   const handleSuspend = async () => {
+    // Validate all fields are filled
+    if (!userId.trim() || !startDate || !endDate) {
+      alert('Please fill in all the fields before suspending a user.');
+      return
+    }
+
+    // Validate end date comes after start date.
+    if (new Date(endDate) <= new Date(startDate)) {
+      alert('End date must be after the start date.');
+      return
+    }
+
     try {
+      // Check if user exists before suspending
+      const {data: user, error} = await supabase
+      .from('user')
+      .select('userID')
+      .eq('userID', userId.trim())
+      .single();
+
+      if (error || !user)
+      {
+        alert('User ID not found. Please enter a valid User ID.')
+        return;
+      }
+
       await suspendUser(userId, startDate, endDate)
       alert('User suspended successfully')
     } catch (err) {

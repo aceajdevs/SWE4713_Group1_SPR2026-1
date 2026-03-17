@@ -4,7 +4,6 @@ import logo from '../../assets/Images/resourceDirectory/logo.png'
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { hashPassword } from '../utils/passwordHash';
-import { createUser } from '../services/userService';
 import { useAuth } from '../AuthContext';
 
 function LoginPage() {
@@ -22,9 +21,7 @@ function LoginPage() {
     const navToWelcome = () => {
         navigate('/');
     }
-    const navToDash = () => {
-        navigate('/dashboard');
-    }
+
     const navToForgotPassword = () => {
         navigate('/forgot-password');
     }
@@ -69,12 +66,25 @@ function LoginPage() {
                 .eq('userID', userData.userID);
             }
           }
+          
+          // Check for empty password before hashing/comparing
+          if (!password || password.trim() === '') 
+          {
+            alert('Please enter a password.');
+            return;
+          }
 
           // Deterministic hash compare: hash the entered password and compare
           // with the hash stored on the user row. Both are SHA-256 hex strings.
           const enteredHash = await hashPassword(password);
           const isMatch = enteredHash === userData.password_hash;
-
+          
+          if (enteredHash == null)
+          {
+            alert('Please enter a password.');
+            return;
+          }
+          
           if (!isMatch) {
             const currentAttempts = userData.loginAttempts ?? 3;
             const newAttempts = Math.max(0, currentAttempts - 1);
@@ -115,7 +125,7 @@ function LoginPage() {
             .update({ "loginAttempts": 3 })
             .eq('userID', userData.userID);
 
-          const { data: updatedUserData, error: refreshError } = await supabase
+          const { data: updatedUserData } = await supabase
             .from('user')
             .select('*')
             .eq('userID', userData.userID)

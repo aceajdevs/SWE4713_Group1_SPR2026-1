@@ -1,10 +1,8 @@
-import React, { useEffect } from 'react';
 import '../global.css';
 import { useNavigate } from 'react-router-dom';
 import UserReport from '../components/admin/UserReport';
 import SuspendUser from '../components/admin/SuspendUser';
 import ExpiredPasswords from '../components/admin/ExpiredPasswords';
-import { checkPasswordsAboutToExpire } from '../services/passwordExpiryService';
 
 function AdminDashboard() {
   const navigate = useNavigate();

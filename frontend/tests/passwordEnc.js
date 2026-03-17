@@ -1,3 +1,4 @@
+/* eslint-disable */
 import crypto from "crypto";
 
 const algorithm = "aes-128-gcm";

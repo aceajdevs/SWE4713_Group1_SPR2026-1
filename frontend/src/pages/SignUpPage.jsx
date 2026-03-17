@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import '../LoginPage.css'
 import logo from '../../assets/Images/resourceDirectory/logo.png'
 import { useNavigate } from 'react-router-dom';
 import { validatePassword } from '../utils/passwordValidation';
 import { hashPassword } from '../utils/passwordHash';
-import { createUser, createUserRequest, getSecurityQuestions } from '../services/userService';
+import { createUserRequest, getSecurityQuestions } from '../services/userService';
 
 function SignUpPage() {
     const navigate = useNavigate();
