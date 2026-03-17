@@ -124,7 +124,7 @@ export async function createUserRequest(
     const hashedAnswer2 = answer2 ? await hashSecurityAnswer(answer2) : null;
     const hashedAnswer3 = answer3 ? await hashSecurityAnswer(answer3) : null;
 
-    const { data, error } = await supabase.rpc('create_user_request', {
+    const { data } = await supabase.rpc('create_user_request', {
       p_email:       email,
       p_f_name:      fName,
       p_l_name:      lName,

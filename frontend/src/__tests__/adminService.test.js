@@ -23,7 +23,7 @@ let latestChain;
 vi.mock('../supabaseClient', () => {
     return {
         supabase: {
-            from: vi.fn((table) => {
+            from: vi.fn(() => {
                 // latestChain gets overwritten per test
                 return latestChain
             }),

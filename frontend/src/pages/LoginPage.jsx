@@ -4,7 +4,6 @@ import logo from '../../assets/Images/resourceDirectory/logo.png'
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { hashPassword } from '../utils/passwordHash';
-import { createUser } from '../services/userService';
 import { useAuth } from '../AuthContext';
 
 function LoginPage() {
@@ -22,9 +21,7 @@ function LoginPage() {
     const navToWelcome = () => {
         navigate('/');
     }
-    const navToDash = () => {
-        navigate('/dashboard');
-    }
+
     const navToForgotPassword = () => {
         navigate('/forgot-password');
     }
@@ -128,7 +125,7 @@ function LoginPage() {
             .update({ "loginAttempts": 3 })
             .eq('userID', userData.userID);
 
-          const { data: updatedUserData, error: refreshError } = await supabase
+          const { data: updatedUserData } = await supabase
             .from('user')
             .select('*')
             .eq('userID', userData.userID)

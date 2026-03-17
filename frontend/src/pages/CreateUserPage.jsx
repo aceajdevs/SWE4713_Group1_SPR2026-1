@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import '../LoginPage.css';
 import { useNavigate } from 'react-router-dom';
-import { createUser, checkEmail, getSecurityQuestions, admin_createUser } from '../services/userService';
+import { checkEmail, getSecurityQuestions, admin_createUser } from '../services/userService';
 import { validatePassword } from '../utils/passwordValidation';
 
 const ROLES = ['administrator', 'manager', 'accountant'];
