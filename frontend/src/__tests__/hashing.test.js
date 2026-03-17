@@ -3,9 +3,9 @@ import { hashPassword } from '../utils/passwordHash';
 import { hashSecurityAnswer } from '../utils/securityAnswerHash';
 
 describe('hashPassword', () => {
-  // ──────────────────────────────────────────────
+  // ══════════════════════════════════════════════
   // POSITIVE TESTS
-  // ──────────────────────────────────────────────
+  // ══════════════════════════════════════════════
   it('returns a hex string for a normal password', async () => {
     const hash = await hashPassword('MyPassword1!');
     expect(typeof hash).toBe('string');
@@ -36,9 +36,9 @@ describe('hashPassword', () => {
     expect(hash1).not.toBe(hash2);
   });
 
-  // ──────────────────────────────────────────────
+  // ══════════════════════════════════════════════
   // EDGE CASES / NEGATIVE TESTS
-  // ──────────────────────────────────────────────
+  // ══════════════════════════════════════════════
   it('handles empty string', async () => {
     const hash = await hashPassword('');
     expect(hash).toMatch(/^[0-9a-f]{64}$/);
@@ -84,9 +84,9 @@ describe('hashPassword', () => {
 });
 
 describe('hashSecurityAnswer', () => {
-  // ──────────────────────────────────────────────
+  // ══════════════════════════════════════════════
   // POSITIVE TESTS
-  // ──────────────────────────────────────────────
+  // ══════════════════════════════════════════════
   it('returns a 64-char hex string', async () => {
     const hash = await hashSecurityAnswer('My first pet');
     expect(hash).toMatch(/^[0-9a-f]{64}$/);
@@ -110,9 +110,9 @@ describe('hashSecurityAnswer', () => {
     expect(hash1).toBe(hash2);
   });
 
-  // ──────────────────────────────────────────────
+  // ══════════════════════════════════════════════
   // EDGE CASES
-  // ──────────────────────────────────────────────
+  // ══════════════════════════════════════════════
   it('handles null input gracefully', async () => {
     const hash = await hashSecurityAnswer(null);
     expect(hash).toMatch(/^[0-9a-f]{64}$/);

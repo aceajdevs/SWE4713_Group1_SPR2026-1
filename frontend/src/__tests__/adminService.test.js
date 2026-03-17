@@ -45,7 +45,10 @@ describe('adminService', () => {
         vi.clearAllMocks();
     });
 
-    // getAllUsers
+  // ══════════════════════════════════════════════
+  // getAllUsers
+  // ══════════════════════════════════════════════
+
     it('returns list of users on success', async () => {
       const users = [
         { userID: 1, fName: 'Alice', role: 'administrator' },
@@ -69,7 +72,10 @@ describe('adminService', () => {
       expect(result).toEqual([]);
     });
 
-    // getExpiredPasswords
+  // ══════════════════════════════════════════════
+  // getExpiredPasswords
+  // ══════════════════════════════════════════════
+
     describe('getExpiredPasswords', () => {
         it('returns expired password records', async () => {
         const expired = [
@@ -94,7 +100,10 @@ describe('adminService', () => {
         });
     });
 
-    //suspendUser
+  // ══════════════════════════════════════════════
+  // suspendUser
+  // ══════════════════════════════════════════════
+
     describe('suspendUser', () => {
         it('suspends a user successfully', async () => {
         const updatedUser = [{ userID: 5, status: false, suspendedTill: '2026-04-01' }];

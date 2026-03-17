@@ -2,9 +2,9 @@ import { describe, it, expect } from 'vitest';
 import { validatePassword } from '../utils/passwordValidation';
 
 describe('validatePassword', () => {
-  // ──────────────────────────────────────────────
+  // ══════════════════════════════════════════════
   // POSITIVE TESTS — valid passwords that should pass
-  // ──────────────────────────────────────────────
+  // ══════════════════════════════════════════════
   describe('valid passwords (positive tests)', () => {
     it('accepts a standard valid password', () => {
       const result = validatePassword('Abcdef1!');
@@ -51,9 +51,9 @@ describe('validatePassword', () => {
     });
   });
 
-  // ──────────────────────────────────────────────
+  // ══════════════════════════════════════════════
   // NEGATIVE TESTS — invalid passwords
-  // ──────────────────────────────────────────────
+  // ══════════════════════════════════════════════
   describe('invalid passwords (negative tests)', () => {
     it('rejects an empty string', () => {
       const result = validatePassword('');
@@ -124,9 +124,9 @@ describe('validatePassword', () => {
     });
   });
 
-  // ──────────────────────────────────────────────
+  // ══════════════════════════════════════════════
   // BOUNDARY VALUE ANALYSIS
-  // ──────────────────────────────────────────────
+  // ══════════════════════════════════════════════
   describe('boundary value analysis', () => {
     it('length 0 — empty', () => {
       const result = validatePassword('');
@@ -155,9 +155,9 @@ describe('validatePassword', () => {
     });
   });
 
-  // ──────────────────────────────────────────────
+  // ══════════════════════════════════════════════
   // EQUIVALENCE PARTITIONING — multiple error combos
-  // ──────────────────────────────────────────────
+  // ══════════════════════════════════════════════
   describe('equivalence partitioning — combined failures', () => {
     it('reports multiple errors when password fails everything', () => {
       const result = validatePassword('');
@@ -191,9 +191,9 @@ describe('validatePassword', () => {
     });
   });
 
-  // ──────────────────────────────────────────────
+  // ══════════════════════════════════════════════
   // RETURN VALUE STRUCTURE
-  // ──────────────────────────────────────────────
+  // ══════════════════════════════════════════════
   describe('return value structure', () => {
     it('returns an object with isValid and errors properties', () => {
       const result = validatePassword('anything');

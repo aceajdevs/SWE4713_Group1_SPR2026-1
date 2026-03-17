@@ -27,9 +27,9 @@ describe('checkPasswordsAboutToExpire', () => {
     vi.useRealTimers();
   });
 
-  // ──────────────────────────────────────────────
+  // ══════════════════════════════════════════════
   // POSITIVE TESTS
-  // ──────────────────────────────────────────────
+  // ══════════════════════════════════════════════
   it('returns passwords expiring within the default 3-day window', async () => {
     const now = new Date('2026-03-17T12:00:00Z');
     vi.setSystemTime(now);
@@ -88,9 +88,9 @@ describe('checkPasswordsAboutToExpire', () => {
     expect(result).toHaveLength(2);
   });
 
-  // ──────────────────────────────────────────────
+  // ══════════════════════════════════════════════
   // NEGATIVE / EXCLUSION TESTS
-  // ──────────────────────────────────────────────
+  // ══════════════════════════════════════════════
   it('excludes already-expired passwords', async () => {
     const now = new Date('2026-03-17T12:00:00Z');
     vi.setSystemTime(now);
@@ -142,9 +142,9 @@ describe('checkPasswordsAboutToExpire', () => {
     expect(result).toHaveLength(0);
   });
 
-  // ──────────────────────────────────────────────
+  // ══════════════════════════════════════════════
   // EDGE CASES
-  // ──────────────────────────────────────────────
+  // ══════════════════════════════════════════════
   it('returns empty array when no data is returned', async () => {
     __mockSelect.mockResolvedValue({ data: [], error: null });
     const result = await checkPasswordsAboutToExpire();
