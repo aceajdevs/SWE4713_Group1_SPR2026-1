@@ -191,6 +191,7 @@ export async function updateUser({
   role,
   suspendedTill,
   loginAttempts,
+  changedBy,
 }) {
   if (userId == null) {
     throw new Error('updateUser: userId is required');
@@ -211,6 +212,7 @@ export async function updateUser({
     p_suspendedtill:   suspendedTill ?? null,
     p_userid:          userId,
     p_username:        username ?? null,
+    p_changed_by:      changedBy ?? null,
   });
 
   if (error) {
@@ -218,7 +220,6 @@ export async function updateUser({
     throw error;
   }
 
-  console.log('Updated user JSON:', data);
   return data;
 }
 

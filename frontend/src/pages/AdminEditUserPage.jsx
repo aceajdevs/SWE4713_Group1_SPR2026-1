@@ -10,11 +10,13 @@ import {
 } from '../services/userService';
 import { validatePassword } from '../utils/passwordValidation';
 import { getAllUsers } from '../services/adminService';
+import { useAuth } from '../AuthContext';
 
 const ROLES = ['administrator', 'manager', 'accountant'];
 
 function AdminEditUserPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [_lookupUserId, setLookupUserId] = useState(''); // kept for internal use
   const [loadedUserId, setLoadedUserId] = useState(null);
@@ -178,22 +180,22 @@ function AdminEditUserPage() {
 
     setSaving(true);
     try {
-      // Update non-hashed fields via updateUser
       await updateUser({
         userId: loadedUserId,
-        email: email || null,
-        username: username || null,
-        fName: firstName || null,
-        lName: lastName || null,
-        dob: dob || null,
-        address: address || null,
+        email,
+        username,
+        fName: firstName,
+        lName: lastName,
+        dob,
+        address,
         picturePath: null,
-        status: status,
+        status,
         passwordExpires: null,
-        role: role || null,
+        role,
         suspendedTill: null,
         loginAttempts: null,
         passwordHash: null,
+        changedBy: user?.userID || null,
       });
 
       // If a new password was provided, update it separately

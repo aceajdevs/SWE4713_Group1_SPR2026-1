@@ -132,6 +132,12 @@ function LoginPage() {
             .single();
 
           const finalUserData = updatedUserData || userData;
+          
+          try {
+            await supabase.rpc('set_changed_by', { p_userid: finalUserData.userID });
+          } catch (e) {
+            console.error('Failed to set changed_by:', e);
+          }
 
           await loginWithUserData(finalUserData);
 
