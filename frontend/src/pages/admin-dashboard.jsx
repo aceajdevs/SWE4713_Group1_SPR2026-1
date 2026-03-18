@@ -18,8 +18,11 @@ function AdminDashboard() {
         <button onClick={() => navigate('/admin/create-user')} style={{ marginRight: '8px' }}>
           Create User
         </button>
-        <button onClick={() => navigate('/admin/edit-user')}>
+        <button onClick={() => navigate('/admin/edit-user')} style={{ marginRight: '8px' }}>
           Edit User
+        </button>
+        <button onClick={() => navigate('/admin/chart-of-accounts')}>
+          Chart of Accounts
         </button>
       </div>
 
