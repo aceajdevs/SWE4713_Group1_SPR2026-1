@@ -19,7 +19,7 @@ test.describe('Login flow from welcome', () => {
     await expect(page.getByLabel('password')).toBeVisible();
   });
 
-  test('fills inputs and submits (form prevents default)', async ({ page }) => {
+  test('fills inputs and Clear empties them', async ({ page }) => {
     await page.click('button:has-text("Go to Login Page")');
 
     await page.fill('input[name="username"]', 'testuser');
@@ -28,11 +28,16 @@ test.describe('Login flow from welcome', () => {
     await expect(page.locator('input[name="username"]')).toHaveValue('testuser');
     await expect(page.locator('input[name="password"]')).toHaveValue('s3cret');
 
-    // Click the submit-ish button (Help) — form prevents default so page won't navigate
-    await page.click('button:has-text("Help")');
+    await page.getByRole('button', { name: 'Clear' }).click();
 
-    // Inputs should retain their values
-    await expect(page.locator('input[name="username"]')).toHaveValue('testuser');
+    await expect(page.locator('input[name="username"]')).toHaveValue('');
+    await expect(page.locator('input[name="password"]')).toHaveValue('');
+  });
+
+  test('Help opens the user manual', async ({ page }) => {
+    await page.click('button:has-text("Go to Login Page")');
+    await page.getByRole('button', { name: 'Open help and user manual' }).click();
+    await expect(page.getByRole('heading', { name: 'User manual' })).toBeVisible();
   });
 
   test('other buttons are clickable', async ({ page }) => {

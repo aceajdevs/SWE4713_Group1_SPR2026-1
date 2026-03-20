@@ -25,7 +25,7 @@ export async function createUser(
     const hashedAnswer2 = answer2 ? await hashSecurityAnswer(answer2) : null;
     const hashedAnswer3 = answer3 ? await hashSecurityAnswer(answer3) : null;
 
-    const { data, error } = await supabase.rpc('create_user', {
+    const { data, error } = await supabase.rpc('create_user_with_actor', {
       p_email:       email,
       p_f_name:      fName,
       p_l_name:      lName,
@@ -67,6 +67,7 @@ export async function admin_createUser(
   answer2,
   questionId3,
   answer3,
+  changedByUserId
 ) {
   try {
     const hashedPassword = await hashPassword(password);
@@ -75,7 +76,7 @@ export async function admin_createUser(
     const hashedAnswer2 = answer2 ? await hashSecurityAnswer(answer2) : null;
     const hashedAnswer3 = answer3 ? await hashSecurityAnswer(answer3) : null;
 
-    const { data, error } = await supabase.rpc('create_user', {
+    const { data, error } = await supabase.rpc('create_user_with_actor', {
       p_email:       email,
       p_f_name:      fName,
       p_l_name:      lName,
@@ -89,6 +90,7 @@ export async function admin_createUser(
       p_secanswer2:  hashedAnswer2,
       p_questionid3: questionId3,
       p_secanswer3:  hashedAnswer3,
+      p_changed_by: changedByUserId ?? null,
     });
 
     if (error) {
@@ -116,7 +118,8 @@ export async function createUserRequest(
   questionId2,
   answer2,
   questionId3,
-  answer3
+  answer3,
+  changedByUserId
 ) {
     try {
     const hashedPassword = await hashPassword(password);
@@ -158,8 +161,6 @@ export async function createUserRequest(
 
 export async function getSecurityQuestions() {
   try {
-    // Note: PostgreSQL folds unquoted identifiers to lowercase, so the
-    // function name is effectively "get_securityquestions".
     const { data, error } = await supabase.rpc('get_securityquestions');
 
     if (error) {
@@ -167,8 +168,6 @@ export async function getSecurityQuestions() {
       throw error;
     }
 
-    // data is expected to be a JSON array of objects:
-    // [{ questionID: 1, question: '...' }, ...]
     return data || [];
   } catch (err) {
     console.error('Error in getSecurityQuestions:', err);
@@ -191,6 +190,7 @@ export async function updateUser({
   role,
   suspendedTill,
   loginAttempts,
+  changedBy,
 }) {
   if (userId == null) {
     throw new Error('updateUser: userId is required');
@@ -211,6 +211,7 @@ export async function updateUser({
     p_suspendedtill:   suspendedTill ?? null,
     p_userid:          userId,
     p_username:        username ?? null,
+    p_changed_by:      changedBy ?? null,
   });
 
   if (error) {
@@ -218,7 +219,6 @@ export async function updateUser({
     throw error;
   }
 
-  console.log('Updated user JSON:', data);
   return data;
 }
 
@@ -352,7 +352,6 @@ export async function updateUserPassword(userId, newPassword) {
 
 export async function adminUpdateUserSecurityAnswers(userId, answer1, answer2, answer3) {
   try {
-    // Only hash answers that are provided; nulls mean "no change"
     const hashedAnswer1 = answer1 ? await hashSecurityAnswer(answer1) : null;
     const hashedAnswer2 = answer2 ? await hashSecurityAnswer(answer2) : null;
     const hashedAnswer3 = answer3 ? await hashSecurityAnswer(answer3) : null;
@@ -390,11 +389,12 @@ export async function getAllUserRequests() {
   }
 }
 
-export async function approveUserRequest(userRequestId, role) {
+export async function approveUserRequest(userRequestId, role, changedByUserId) {
   try {
-    const { data, error } = await supabase.rpc('approve_user_request', {
+    const { data, error } = await supabase.rpc('approve_user_request_with_actor', {
       p_userrequest_id: userRequestId,
       p_role: role,
+      p_changed_by: changedByUserId ?? null,
     });
 
     if (error) {
@@ -409,10 +409,11 @@ export async function approveUserRequest(userRequestId, role) {
   }
 }
 
-export async function rejectUserRequest(userRequestId) {
+export async function rejectUserRequest(userRequestId, changedByUserId) {
   try {
-    const { data, error } = await supabase.rpc('reject_user_request', {
+    const { data, error } = await supabase.rpc('reject_user_request_with_actor', {
       p_userrequest_id: userRequestId,
+      p_changed_by: changedByUserId ?? null,
     });
 
     if (error) {

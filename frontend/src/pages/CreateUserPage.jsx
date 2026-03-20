@@ -3,11 +3,14 @@ import '../LoginPage.css';
 import { useNavigate } from 'react-router-dom';
 import { checkEmail, getSecurityQuestions, admin_createUser } from '../services/userService';
 import { validatePassword } from '../utils/passwordValidation';
+import { useAuth } from '../AuthContext';
+import { HelpTooltip } from '../components/HelpTooltip';
 
 const ROLES = ['administrator', 'manager', 'accountant'];
 
 function CreateUserPage() {
     const navigate = useNavigate();
+    const { user: currentUser } = useAuth();
     
     const [email, setEmail] = useState('');
     const [emailError, setEmailError] = useState('');
@@ -191,6 +194,10 @@ function CreateUserPage() {
         setLoading(true);
 
         try {
+            if (!currentUser?.userID) {
+                throw new Error('Admin userID not found for audit logging.');
+            }
+
             await admin_createUser(
                 email,
                 firstName,
@@ -204,7 +211,8 @@ function CreateUserPage() {
                 securityQuestion2,
                 securityAnswer2.trim(),
                 securityQuestion3,
-                securityAnswer3.trim()
+                securityAnswer3.trim(),
+                currentUser.userID
             );
 
             setSuccess('User created successfully! Username will be auto-generated.');
@@ -286,7 +294,11 @@ function CreateUserPage() {
 
                     <div className="form-field">
                         <h5>Email *</h5>
-                        <input
+                        <HelpTooltip
+                          text="Login email for the new user. It must not already be registered."
+                          className="help-tooltip-block"
+                        >
+                          <input
                             className={`input ${showEmailError && emailError ? 'input-error' : ''}`}
                             type="email"
                             name="email"
@@ -295,7 +307,8 @@ function CreateUserPage() {
                             value={email}
                             onChange={handleEmailChange}
                             required
-                        />
+                          />
+                        </HelpTooltip>
                         {showEmailError && emailError && (
                             <div className="error-messages" role="alert">
                                 {emailError}
@@ -390,19 +403,24 @@ function CreateUserPage() {
 
                     <div className="form-field">
                         <h5>Role *</h5>
-                        <select
+                        <HelpTooltip
+                          text="Determines dashboard and permissions: administrator, manager, or accountant."
+                          className="help-tooltip-block"
+                        >
+                          <select
                             className="input"
                             name="role"
                             value={role}
                             onChange={(e) => setRole(e.target.value)}
                             required
-                        >
+                          >
                             {ROLES.map((r) => (
                                 <option key={r} value={r}>
                                     {r.charAt(0).toUpperCase() + r.slice(1)}
                                 </option>
                             ))}
-                        </select>
+                          </select>
+                        </HelpTooltip>
                     </div>
 
                     <div style={{ marginTop: '16px', marginBottom: '8px' }}>
@@ -527,23 +545,29 @@ function CreateUserPage() {
                     </div>
 
                     <div className="button-row" role="group">
-                        <button type="submit" disabled={loading}>
+                        <HelpTooltip text="Creates a new user with the information filled in above.">
+                          <button type="submit" disabled={loading}>
                             {loading ? 'Creating...' : 'Create User'}
-                        </button>
-                        <button type="button" onClick={handleClear} disabled={loading}>
+                          </button>
+                        </HelpTooltip>
+                        <HelpTooltip text="Clear all fields in this form.">
+                          <button type="button" onClick={handleClear} disabled={loading}>
                             Clear
-                        </button>
+                          </button>
+                        </HelpTooltip>
                     </div>
 
                     <div className="cancel-wrap">
-                        <button 
-                            type="button" 
-                            className="cancel-button" 
+                        <HelpTooltip text="Leave this form and return to the administrator dashboard.">
+                          <button
+                            type="button"
+                            className="cancel-button"
                             onClick={() => navigate('/admin-dashboard')}
                             disabled={loading}
-                        >
+                          >
                             Cancel
-                        </button>
+                          </button>
+                        </HelpTooltip>
                     </div>
                 </form>
             </main>
