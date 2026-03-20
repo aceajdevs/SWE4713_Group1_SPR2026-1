@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import '../global.css';
 import { getAllUserRequests, approveUserRequest, rejectUserRequest } from '../services/userService';
+import { useAuth } from '../AuthContext';
 
 const ROLES = ['administrator', 'manager', 'accountant'];
 
 function UserAccountRequestPage() {
+    const { user: currentUser } = useAuth();
     const [requests, setRequests] = useState([]);
     const [selectedUserId, setSelectedUserId] = useState('');
     const [selectedRole, setSelectedRole] = useState('');
@@ -61,7 +63,11 @@ function UserAccountRequestPage() {
             setLoading(true);
             setError('');
             
-            await rejectUserRequest(Number(selectedUserId));
+            if (!currentUser?.userID) {
+                throw new Error('Admin userID not found for audit logging.');
+            }
+
+            await rejectUserRequest(Number(selectedUserId), currentUser.userID);
 
             setSelectedUserId('');
             setSelectedRole('');
@@ -96,7 +102,15 @@ function UserAccountRequestPage() {
             setLoading(true);
             setError('');
 
-            const createdUser = await approveUserRequest(Number(selectedUserId), selectedRole);
+            if (!currentUser?.userID) {
+                throw new Error('Admin userID not found for audit logging.');
+            }
+
+            const createdUser = await approveUserRequest(
+                Number(selectedUserId),
+                selectedRole,
+                currentUser.userID
+            );
             console.log('Approved user:', createdUser);
 
             await fetchRequests();

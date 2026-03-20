@@ -8,14 +8,11 @@ import { checkEmail, getUserSecurityQuestions, verifySecurityAnswers, updateUser
 function ForgotPasswordPage() {
     const navigate = useNavigate();
 
-    // Step management: 1 = email/userId, 2 = security questions, 3 = new password
     const [step, setStep] = useState(1);
 
-    // Step 1: identity fields
     const [email, setEmail] = useState('');
     const [userId, setUserId] = useState('');
 
-    // Step 2: security questions
     const [securityQuestion1, setSecurityQuestion1] = useState('');
     const [securityQuestion2, setSecurityQuestion2] = useState('');
     const [securityQuestion3, setSecurityQuestion3] = useState('');
@@ -24,7 +21,6 @@ function ForgotPasswordPage() {
     const [securityAnswer3, setSecurityAnswer3] = useState('');
     const [loadingQuestions, setLoadingQuestions] = useState(false);
 
-    // Step 3: new password
     const [newPassword, setNewPassword] = useState('');
     const [confirmNewPassword, setConfirmNewPassword] = useState('');
     const [passwordErrors, setPasswordErrors] = useState([]);
@@ -45,7 +41,6 @@ function ForgotPasswordPage() {
             const emailExists = await checkEmail(email);
             console.log('Email exists:', emailExists);
             if(emailExists) {
-                // Fetch security questions before moving to step 2
                 setLoadingQuestions(true);
                 try {
                     const questions = await getUserSecurityQuestions(email, userId);
@@ -84,7 +79,6 @@ function ForgotPasswordPage() {
             return;
         }
 
-        // Verify security answers against the database
         try {
             const isValid = await verifySecurityAnswers(email, userId, securityAnswer1, securityAnswer2, securityAnswer3);
             if (isValid) {
@@ -153,7 +147,6 @@ function ForgotPasswordPage() {
             }
 
             await updateUserPassword(parseInt(userId, 10), newPassword);
-            // After successful reset, navigate back to login
             navigate('/login');
         } catch (error) {
             console.error('Error updating password:', error);

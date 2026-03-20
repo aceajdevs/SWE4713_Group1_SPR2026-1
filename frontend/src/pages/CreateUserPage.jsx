@@ -3,11 +3,13 @@ import '../LoginPage.css';
 import { useNavigate } from 'react-router-dom';
 import { checkEmail, getSecurityQuestions, admin_createUser } from '../services/userService';
 import { validatePassword } from '../utils/passwordValidation';
+import { useAuth } from '../AuthContext';
 
 const ROLES = ['administrator', 'manager', 'accountant'];
 
 function CreateUserPage() {
     const navigate = useNavigate();
+    const { user: currentUser } = useAuth();
     
     const [email, setEmail] = useState('');
     const [emailError, setEmailError] = useState('');
@@ -191,6 +193,10 @@ function CreateUserPage() {
         setLoading(true);
 
         try {
+            if (!currentUser?.userID) {
+                throw new Error('Admin userID not found for audit logging.');
+            }
+
             await admin_createUser(
                 email,
                 firstName,
@@ -204,7 +210,8 @@ function CreateUserPage() {
                 securityQuestion2,
                 securityAnswer2.trim(),
                 securityQuestion3,
-                securityAnswer3.trim()
+                securityAnswer3.trim(),
+                currentUser.userID
             );
 
             setSuccess('User created successfully! Username will be auto-generated.');
