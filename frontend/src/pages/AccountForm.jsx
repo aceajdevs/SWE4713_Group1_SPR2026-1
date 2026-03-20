@@ -48,6 +48,22 @@ function AccountForm() {
   }, [id, user, navigate]);
 
   useEffect(() => {
+    if (isEditing && formData.type && !formData.statementType) {
+      const statementTypeMap = {
+        'Assets': 'Balance Sheet',
+        'Liabilities': 'Balance Sheet',
+        'Equity': 'Balance Sheet',
+        'Revenue': 'Income Statement',
+        'Expenses': 'Income Statement'
+      };
+      const autoStatementType = statementTypeMap[formData.type] || '';
+      if (autoStatementType) {
+        setFormData(prev => ({ ...prev, statementType: autoStatementType }));
+      }
+    }
+  }, [isEditing, formData.type, formData.statementType]);
+
+  useEffect(() => {
     if (!isEditing && formData.type && formData.subType) {
       suggestAccountNumber(formData.type, formData.subType);
     }
@@ -163,6 +179,16 @@ function AccountForm() {
           'Expenses': 'Debit'
         };
         updated.normalSide = normalSideMap[value] || 'Debit';
+
+        // Automatically set statementType based on account type
+        const statementTypeMap = {
+          'Assets': 'Balance Sheet',
+          'Liabilities': 'Balance Sheet',
+          'Equity': 'Balance Sheet',
+          'Revenue': 'Income Statement',
+          'Expenses': 'Income Statement'
+        };
+        updated.statementType = statementTypeMap[value] || '';
       }
       
       return updated;
@@ -315,21 +341,6 @@ function AccountForm() {
             {formData.type && subcategoriesMap[formData.type]?.map(sub => (
               <option key={sub} value={sub}>{sub}</option>
             ))}
-          </select>
-        </div>
-        <div>
-          <label>Statement Type:</label>
-          <select
-            name="statementType"
-            value={formData.statementType}
-            onChange={handleChange}
-            required
-            className="input-field"
-          >
-            <option value="">Select a Statement Type</option>
-            <option value="Income Statement">Income Statement</option>
-            <option value="Balance Sheet">Balance Sheet</option>
-            <option value="Retained Earnings">Retained Earnings</option>
           </select>
         </div>
         <div>
