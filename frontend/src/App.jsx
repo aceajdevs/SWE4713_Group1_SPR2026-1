@@ -12,9 +12,12 @@ import AccountantDashboard from './pages/accountant-dashboard'
 import ManagerDashboard from './pages/manager-dashboard'
 import UserAccountRequestPage from './pages/user-account-request'
 import CreateUserPage from './pages/CreateUserPage'
+import ChartOfAccounts from './pages/ChartOfAccounts'
+import AccountForm from './pages/AccountForm'
 import UserManualPage from './pages/UserManualPage'
 import { checkPasswordsAboutToExpire } from './services/passwordExpiryService';
 import { useEffect } from 'react';
+
 function AppLayout() {
   const location = useLocation();
   const hideNavbar =
@@ -52,6 +55,9 @@ function AppLayout() {
         <Route path="/admin/user-account-request" element={<UserAccountRequestPage />} />
         <Route path="/admin/create-user" element={<CreateUserPage />} />
         <Route path="/admin/edit-user" element={<AdminEditUserPage />} />
+        <Route path="/admin/chart-of-accounts" element={<ChartOfAccounts />} />
+        <Route path="/admin/add-account" element={<AccountForm />} />
+        <Route path="/admin/edit-account/:id" element={<AccountForm />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage/>} />
         <Route path="/signup" element={<SignUpPage/>} />
         <Route path="/accountant-dashboard" element={<AccountantDashboard/>} />

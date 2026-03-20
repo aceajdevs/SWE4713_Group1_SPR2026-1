@@ -18,6 +18,13 @@ function Navbar() {
     setIsMenuOpen(false);
   };
 
+  const handleChartOfAccountsNavigation = () => {
+    if (user && user.role === 'administrator') {
+      handleNavigation('/chart-of-accounts');
+    } else {
+      handleNavigation('/chart-of-accounts');
+    }
+  };
   const handleDashboardNavigation = () => {
     if (user && user.role) {
       if (user.role === 'administrator') {
