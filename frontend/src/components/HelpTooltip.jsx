@@ -6,7 +6,7 @@ import './HelpTooltip.css';
  */
 export function HelpTooltip({ text, children, className = '' }) {
   const tipId = useId();
-  const hoverDelayMs = 800;
+  const hoverDelayMs = 1200;
   const [visible, setVisible] = useState(false);
   const timerRef = useRef(null);
   const wrapperRef = useRef(null);

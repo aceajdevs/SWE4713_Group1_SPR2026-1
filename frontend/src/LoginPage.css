@@ -77,6 +77,8 @@
   border: 1px solid #e6eef6;
   background: #fbfdff;
   font-size: 14px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* Grid helpers to reduce vertical space while keeping alignment clean */
