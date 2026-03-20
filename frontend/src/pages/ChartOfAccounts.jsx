@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
-import { fetchFromTable, updateRecord } from '../supabaseUtils';
+import { fetchFromTable } from '../supabaseUtils';
+import { setChartAccountActiveWithActor } from '../services/chartOfAccountsService';
 import '../global.css';
 
 const ROLES = ['administrator', 'manager', 'accountant'];
@@ -36,10 +37,18 @@ function ChartOfAccounts() {
   };
 
   const handleDeactivate = async (id, currentStatus) => {
-    const newStatus = !currentStatus;
-    const { error } = await updateRecord('chartOfAccounts', id, { active: newStatus });
-    if (!error) {
+    const actorUserId = parseInt(user?.userID, 10);
+    if (!Number.isFinite(actorUserId) || actorUserId <= 0) {
+      alert('Unable to determine current administrator user ID.');
+      return;
+    }
+    try {
+      const newStatus = !currentStatus;
+      await setChartAccountActiveWithActor(id, newStatus, actorUserId);
       loadAccounts();
+    } catch (error) {
+      console.error('Failed to update account status:', error);
+      alert(`Error: ${error.message}`);
     }
   };
 
@@ -174,7 +183,7 @@ function ChartOfAccounts() {
           </thead>
           <tbody>
             {filteredAccounts.map((account) => (
-              <tr key={account.id}>
+              <tr key={account.accountID}>
                 <td>{account.accountNumber}</td>
                 <td>{account.accountName}</td>
                 <td>{account.description || 'N/A'}</td>
@@ -190,10 +199,10 @@ function ChartOfAccounts() {
                 <td>
                   {isAdmin && (
                     <>
-                      <button onClick={() => navigate(`/admin/edit-account/${account.id}`)} style={{ marginRight: '5px' }}>
+                      <button onClick={() => navigate(`/admin/edit-account/${account.accountID}`)} style={{ marginRight: '5px' }}>
                         Edit
                       </button>
-                      <button onClick={() => handleDeactivate(account.id, account.active)}>
+                      <button onClick={() => handleDeactivate(account.accountID, account.active)}>
                         {account.active ? 'Deactivate' : 'Activate'}
                       </button>
                     </>

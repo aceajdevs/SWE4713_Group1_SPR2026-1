@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { supabase } from '../supabaseClient';
+import {
+  createChartAccountWithActor,
+  updateChartAccountWithActor,
+} from '../services/chartOfAccountsService';
 import '../global.css';
 
 function AccountForm() {
@@ -124,7 +128,7 @@ function AccountForm() {
     const { data, error } = await supabase
       .from('chartOfAccounts')
       .select('*')
-      .eq('id', id)
+      .eq('accountID', id)
       .single();
     
     if (!error && data) {
@@ -224,6 +228,13 @@ function AccountForm() {
     }
 
     setLoading(true);
+    const actorUserId = parseInt(user?.userID, 10);
+
+    if (!Number.isFinite(actorUserId) || actorUserId <= 0) {
+      alert('Unable to determine current administrator user ID.');
+      setLoading(false);
+      return;
+    }
 
     const accountData = {
       accountName: formData.accountName,
@@ -236,34 +247,27 @@ function AccountForm() {
       orderNumber: parseInt(formData.orderNumber, 10) || 0,
       active: isEditing ? formData.active : true,
       statementType: formData.statementType,
-      createdBy: isEditing ? formData.createdBy : (parseInt(user?.userID, 10) || 0),
+      createdBy: isEditing ? formData.createdBy : actorUserId,
       createdAt: isEditing ? formData.createdAt : new Date().toISOString()
     };
 
     console.log('Submitting account data to Supabase:', accountData);
 
-    let error;
-    if (isEditing) {
-      const { error: updateError } = await supabase
-        .from('chartOfAccounts')
-        .update(accountData)
-        .eq('id', id);
-      error = updateError;
-    } else {
-      const { error: insertError } = await supabase
-        .from('chartOfAccounts')
-        .insert([accountData]);
-      error = insertError;
-    }
+    try {
+      if (isEditing) {
+        await updateChartAccountWithActor(parseInt(id, 10), accountData, actorUserId);
+      } else {
+        await createChartAccountWithActor(accountData, actorUserId);
+      }
 
-    if (!error) {
       alert(`Account ${isEditing ? 'updated' : 'added'} successfully!`);
       navigate('/admin/chart-of-accounts');
-    } else {
+    } catch (error) {
       console.error('Supabase submission error:', error);
       alert(`Error: ${error.message}`);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   if (fetching) return <p>Loading account details...</p>;

@@ -63,10 +63,11 @@ export async function insertRecord(tableName, record) {
  */
 export async function updateRecord(tableName, id, updates) {
   try {
+    const idColumn = tableName === 'chartOfAccounts' ? 'accountID' : 'id';
     const { data, error } = await supabase
       .from(tableName)
       .update(updates)
-      .eq('id', id)
+      .eq(idColumn, id)
       .select();
     if (error) throw error;
     return { data: data?.[0], error: null };
@@ -84,7 +85,8 @@ export async function updateRecord(tableName, id, updates) {
  */
 export async function deleteRecord(tableName, id) {
   try {
-    const { error } = await supabase.from(tableName).delete().eq('id', id);
+    const idColumn = tableName === 'chartOfAccounts' ? 'accountID' : 'id';
+    const { error } = await supabase.from(tableName).delete().eq(idColumn, id);
     if (error) throw error;
     return { success: true, error: null };
   } catch (error) {
