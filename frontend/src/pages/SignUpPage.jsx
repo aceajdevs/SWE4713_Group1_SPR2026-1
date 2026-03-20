@@ -5,6 +5,8 @@ import { useNavigate } from 'react-router-dom';
 import { validatePassword } from '../utils/passwordValidation';
 import { hashPassword } from '../utils/passwordHash';
 import { createUserRequest, getSecurityQuestions } from '../services/userService';
+import PageHelpCorner from '../components/PageHelpCorner';
+import { HelpTooltip } from '../components/HelpTooltip';
 
 function SignUpPage() {
     const navigate = useNavigate();
@@ -257,6 +259,7 @@ function SignUpPage() {
 
     return (
         <div className="login-page">
+            <PageHelpCorner topic="signup" />
             <header className="login-header">
                 <div className="logo" aria-hidden="true">
                     <img src={logo} alt="App Logo" />
@@ -315,7 +318,11 @@ function SignUpPage() {
                             <div className="form-grid-2">
                                 <div className="form-field">
                                     <h5>Email</h5>
-                                    <input
+                                    <HelpTooltip
+                                      text="Contact email for your account. It must be unique and reachable by administrators."
+                                      className="help-tooltip-block"
+                                    >
+                                      <input
                                         className={`input ${showEmailError && emailError ? 'input-error' : ''}`}
                                         type="email"
                                         name="email"
@@ -324,7 +331,8 @@ function SignUpPage() {
                                         value={email}
                                         onChange={handleEmailChange}
                                         required
-                                    />
+                                      />
+                                    </HelpTooltip>
                                     {showEmailError && emailError && (
                                         <div className="error-messages" role="alert">
                                             {emailError}
@@ -398,8 +406,12 @@ function SignUpPage() {
                             </div>
 
                             <div className="button-row" role="group">
-                                <button type="submit" className="login-button">Submit Request</button>
-                                <button type="button" onClick={handleClear}>Clear</button>
+                                <HelpTooltip text="Continue to security questions with the profile and password entered above.">
+                                  <button type="submit" className="login-button">Submit Request</button>
+                                </HelpTooltip>
+                                <HelpTooltip text="Reset all fields on this sign-up form.">
+                                  <button type="button" onClick={handleClear}>Clear</button>
+                                </HelpTooltip>
                             </div>
                         </>
                     )}
@@ -522,24 +534,34 @@ function SignUpPage() {
                             </div>
 
                             <div className="button-row" role="group">
-                                <button type="button" onClick={() => { setSecurityQuestionsError(''); setStep(1); }}>
+                                <HelpTooltip text="Return to profile and password step.">
+                                  <button type="button" onClick={() => { setSecurityQuestionsError(''); setStep(1); }}>
                                     Back
-                                </button>
-                                <button type="submit" className="login-button">Finish Signup</button>
-                                <button type="button" onClick={handleClear}>Clear</button>
+                                  </button>
+                                </HelpTooltip>
+                                <HelpTooltip text="Send your account request to administrators for approval.">
+                                  <button type="submit" className="login-button">Finish Signup</button>
+                                </HelpTooltip>
+                                <HelpTooltip text="Reset all fields on this sign-up form.">
+                                  <button type="button" onClick={handleClear}>Clear</button>
+                                </HelpTooltip>
                             </div>
                         </>
                     )}
 
                     <div className="button-row" role="group">
-                        <button type="button" onClick={navToLogin}>
-                            Already have an account? 
-                        </button>
+                        <HelpTooltip text="Go to the sign-in page if you already have an account.">
+                          <button type="button" onClick={navToLogin}>
+                            Already have an account?
+                          </button>
+                        </HelpTooltip>
                     </div>
                     <div className="cancel-wrap">
-                        <button type="button" className="cancel-button" onClick={navToWelcome}>
+                        <HelpTooltip text="Leave sign-up and return to the welcome screen.">
+                          <button type="button" className="cancel-button" onClick={navToWelcome}>
                             Cancel
-                        </button>
+                          </button>
+                        </HelpTooltip>
                     </div>
 
                     

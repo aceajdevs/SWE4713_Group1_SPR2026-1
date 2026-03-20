@@ -12,11 +12,17 @@ import AccountantDashboard from './pages/accountant-dashboard'
 import ManagerDashboard from './pages/manager-dashboard'
 import UserAccountRequestPage from './pages/user-account-request'
 import CreateUserPage from './pages/CreateUserPage'
+import UserManualPage from './pages/UserManualPage'
 import { checkPasswordsAboutToExpire } from './services/passwordExpiryService';
 import { useEffect } from 'react';
 function AppLayout() {
   const location = useLocation();
-  const hideNavbar = location.pathname === '/login' || location.pathname === '/signup' || location.pathname === '/forgot-password' || location.pathname === '/';
+  const hideNavbar =
+    location.pathname === '/login' ||
+    location.pathname === '/signup' ||
+    location.pathname === '/forgot-password' ||
+    location.pathname === '/' ||
+    location.pathname === '/help';
   useEffect(() => {
     const runCheck = async () => {
       const expiring = await checkPasswordsAboutToExpire(3);
@@ -50,6 +56,7 @@ function AppLayout() {
         <Route path="/signup" element={<SignUpPage/>} />
         <Route path="/accountant-dashboard" element={<AccountantDashboard/>} />
         <Route path="/manager-dashboard" element={<ManagerDashboard/>} />
+        <Route path="/help" element={<UserManualPage />} />
       </Routes>
     </>
   );
