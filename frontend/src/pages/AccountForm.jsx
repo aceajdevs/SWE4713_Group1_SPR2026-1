@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
-import { insertRecord, updateRecord, fetchFromTable } from '../supabaseUtils';
+import { supabase } from '../supabaseClient';
 import '../global.css';
 
 function AccountForm() {
@@ -11,37 +11,49 @@ function AccountForm() {
   const isEditing = !!id;
 
   const [formData, setFormData] = useState({
-    account_name: '',
-    account_number: '',
-    account_description: '',
-    normal_side: 'Debit',
-    category: '',
-    subcategory: '',
-    initial_balance: 0,
-    debit: 0,
-    credit: 0,
-    balance: 0,
-    order: '',
-    statement: 'BS',
-    comment: ''
+    accountName: '',
+    accountNumber: '',
+    description: '',
+    normalSide: 'Debit',
+    type: '',
+    subType: '',
+    initBalance: 0,
+    orderNumber: 0,
+    active: true,
+    statementType: '',
+    createdAt: '',
+    createdBy: 0
   });
+
+  const subcategoriesMap = {
+    'Assets': ['Current Assets', 'Fixed Assets', 'Intangible Assets', 'Other Assets'],
+    'Liabilities': ['Current Liabilities', 'Long-term Liabilities', 'Other Liabilities'],
+    'Equity': ["Owner's Equity", 'Retained Earnings', 'Common Stock'],
+    'Revenue': ['Operating Revenue', 'Non-operating Revenue'],
+    'Expenses': ['Operating Expenses', 'Non-operating Expenses', 'Administrative Expenses', 'Financial Expenses']
+  };
 
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(isEditing);
 
   useEffect(() => {
+    if (user && user.role !== 'administrator') {
+      alert('Unauthorized: Access to this page is restricted to administrators.');
+      navigate('/admin/chart-of-accounts');
+      return;
+    }
     if (isEditing) {
       loadAccount();
     }
-  }, [id]);
+  }, [id, user, navigate]);
 
   useEffect(() => {
-    if (!isEditing && formData.category) {
-      suggestAccountNumber(formData.category);
+    if (!isEditing && formData.type && formData.subType) {
+      suggestAccountNumber(formData.type, formData.subType);
     }
-  }, [formData.category]);
+  }, [formData.type, formData.subType]);
 
-  const suggestAccountNumber = async (category) => {
+  const suggestAccountNumber = async (type, subType) => {
     const prefixes = {
       'Assets': '1',
       'Liabilities': '2',
@@ -49,49 +61,58 @@ function AccountForm() {
       'Revenue': '4',
       'Expenses': '5'
     };
-    const prefix = prefixes[category] || '';
+    const prefix = prefixes[type] || '';
     if (!prefix) return;
 
-    // Fetch existing accounts to find the next identifier
-    const { data, error } = await fetchFromTable('charOfAccounts', {
-      select: 'account_number'
-    });
+    // Determine subType index to find the starting point (e.g., 00, 25, 50, 75)
+    const subcategories = subcategoriesMap[type] || [];
+    const subIdx = subcategories.indexOf(subType);
+    if (subIdx === -1) return; // Wait for subType selection
 
-    let nextId = 1;
+    const baseOffset = subIdx * 25;
+
+    // Fetch existing accounts to find the next identifier
+    const { data, error } = await supabase
+      .from('chartOfAccounts')
+      .select('accountNumber');
+
+    let nextId = Math.max(subIdx * 25, 1);
     if (!error && data) {
-      // Filter accounts by prefix and find the max identifier (last 2 digits)
       const identifiers = data
-        .map(acc => acc.account_number)
-        .filter(num => num.startsWith(prefix) && num.length === 8)
-        .map(num => parseInt(num.substring(6), 10))
-        .filter(id => !isNaN(id));
+        .map(acc => acc.accountNumber?.toString())
+        .filter(num => num && num.startsWith(prefix) && num.length === 8)
+        .map(num => parseInt(num.substring(1), 10))
+        .filter(id => id >= nextId && id < (subIdx * 25) + 25);
       
       if (identifiers.length > 0) {
         nextId = Math.max(...identifiers) + 1;
       }
     }
 
-    if (nextId > 99) {
-      alert('Maximum number of accounts for this category reached (99).');
+    if (nextId >= (subIdx * 25) + 25) {
+      alert(`Maximum number of accounts for this subType reached (24 or 25).`);
       return;
     }
 
-    // Format: prefix (1) + zeros (5) + identifier (2) = 8 digits
-    const identifierStr = nextId.toString().padStart(2, '0');
-    const newAccountNumber = `${prefix}00000${identifierStr}`;
+    // Format: prefix (1) + zeros (as needed) + identifier = 8 digits
+    const identifierStr = nextId.toString().padStart(7, '0');
+    const newAccountNumber = `${prefix}${identifierStr}`;
 
     setFormData(prev => ({
       ...prev,
-      account_number: newAccountNumber
+      accountNumber: newAccountNumber
     }));
   };
 
   const loadAccount = async () => {
-    const { data, error } = await fetchFromTable('charOfAccounts', {
-      filters: { id }
-    });
-    if (!error && data && data.length > 0) {
-      setFormData(data[0]);
+    const { data, error } = await supabase
+      .from('chartOfAccounts')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (!error && data) {
+      setFormData(data);
     } else {
       console.error('Error fetching account:', error);
       navigate('/admin/chart-of-accounts');
@@ -99,16 +120,63 @@ function AccountForm() {
     setFetching(false);
   };
 
+  const formatCurrency = (value) => {
+    if (value === '' || value === undefined || value === null) return '';
+    const number = parseFloat(value);
+    if (isNaN(number)) return '';
+    return new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(number);
+  };
+
   const handleChange = (e) => {
     const { name, value, type } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'number' ? parseFloat(value) : value
-    }));
+    
+    // Check if the input is a monetary field
+    const monetaryFields = ['initBalance'];
+    
+    setFormData(prev => {
+      let updatedValue;
+      if (monetaryFields.includes(name)) {
+        // Remove commas before saving to state as a number
+        const cleanValue = typeof value === 'string' ? value.replace(/,/g, '') : value;
+        updatedValue = cleanValue === '' ? 0 : parseFloat(cleanValue);
+        if (isNaN(updatedValue)) updatedValue = 0;
+      } else {
+        updatedValue = type === 'number' ? parseFloat(value) : value;
+      }
+
+      const updated = {
+        ...prev,
+        [name]: updatedValue
+      };
+      
+      // If type changes, reset subType and set normalSide
+      if (name === 'type') {
+        updated.subType = '';
+        const normalSideMap = {
+          'Assets': 'Debit',
+          'Liabilities': 'Credit',
+          'Equity': 'Credit',
+          'Revenue': 'Credit',
+          'Expenses': 'Debit'
+        };
+        updated.normalSide = normalSideMap[value] || 'Debit';
+      }
+      
+      return updated;
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Check if the user is an admin before submitting
+    if (user?.role !== 'administrator') {
+      alert('Unauthorized: Only administrators are authorized to add or edit accounts.');
+      return;
+    }
     
     // Validation for account number format
     const prefixes = {
@@ -118,13 +186,13 @@ function AccountForm() {
       'Revenue': '4',
       'Expenses': '5'
     };
-    const expectedPrefix = prefixes[formData.category];
-    if (expectedPrefix && !formData.account_number.startsWith(expectedPrefix)) {
-      alert(`Invalid Account Number. Accounts in ${formData.category} must start with ${expectedPrefix}.`);
+    const expectedPrefix = prefixes[formData.type];
+    if (expectedPrefix && !formData.accountNumber.toString().startsWith(expectedPrefix)) {
+      alert(`Invalid Account Number. Accounts in ${formData.type} must start with ${expectedPrefix}.`);
       return;
     }
 
-    if (formData.account_number.length !== 8) {
+    if (formData.accountNumber.toString().length !== 8) {
       alert('Account Number must be exactly 8 digits.');
       return;
     }
@@ -132,24 +200,42 @@ function AccountForm() {
     setLoading(true);
 
     const accountData = {
-      ...formData,
-      user_id: user?.userID || 'unknown',
-      added_at: isEditing ? formData.added_at : new Date().toISOString(),
-      active: isEditing ? formData.active : true
+      accountName: formData.accountName,
+      accountNumber: parseInt(formData.accountNumber, 10),
+      description: formData.description,
+      normalSide: formData.normalSide,
+      type: formData.type,
+      subType: formData.subType,
+      initBalance: formData.initBalance,
+      orderNumber: parseInt(formData.orderNumber, 10) || 0,
+      active: isEditing ? formData.active : true,
+      statementType: formData.statementType,
+      createdBy: isEditing ? formData.createdBy : (parseInt(user?.userID, 10) || 0),
+      createdAt: isEditing ? formData.createdAt : new Date().toISOString()
     };
 
-    let result;
+    console.log('Submitting account data to Supabase:', accountData);
+
+    let error;
     if (isEditing) {
-      result = await updateRecord('charOfAccounts', id, accountData);
+      const { error: updateError } = await supabase
+        .from('chartOfAccounts')
+        .update(accountData)
+        .eq('id', id);
+      error = updateError;
     } else {
-      result = await insertRecord('charOfAccounts', accountData);
+      const { error: insertError } = await supabase
+        .from('chartOfAccounts')
+        .insert([accountData]);
+      error = insertError;
     }
 
-    if (!result.error) {
+    if (!error) {
       alert(`Account ${isEditing ? 'updated' : 'added'} successfully!`);
       navigate('/admin/chart-of-accounts');
     } else {
-      alert(`Error: ${result.error.message}`);
+      console.error('Supabase submission error:', error);
+      alert(`Error: ${error.message}`);
     }
     setLoading(false);
   };
@@ -157,15 +243,15 @@ function AccountForm() {
   if (fetching) return <p>Loading account details...</p>;
 
   return (
-    <div className="container" style={{ padding: '20px' }}>
+    <div className="container">
       <h1>{isEditing ? 'Edit Account' : 'Add New Account'}</h1>
-      <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+      <form onSubmit={handleSubmit} className="form-grid">
         <div>
           <label>Account Name:</label>
           <input
             type="text"
-            name="account_name"
-            value={formData.account_name}
+            name="accountName"
+            value={formData.accountName}
             onChange={handleChange}
             required
             className="input-field"
@@ -175,27 +261,26 @@ function AccountForm() {
           <label>Account Number:</label>
           <input
             type="text"
-            name="account_number"
-            value={formData.account_number}
+            name="accountNumber"
+            value={formData.accountNumber}
             onChange={handleChange}
             required
             className="input-field"
             placeholder="Auto-generated"
-            readOnly
           />
         </div>
-        <div style={{ gridColumn: 'span 2' }}>
+        <div className="span-2">
           <label>Description:</label>
           <textarea
-            name="account_description"
-            value={formData.account_description}
+            name="description"
+            value={formData.description}
             onChange={handleChange}
             className="input-field"
           />
         </div>
         <div>
           <label>Normal Side:</label>
-          <select name="normal_side" value={formData.normal_side} onChange={handleChange} className="input-field">
+          <select name="normalSide" value={formData.normalSide} onChange={handleChange} className="input-field">
             <option value="Debit">Debit</option>
             <option value="Credit">Credit</option>
           </select>
@@ -203,8 +288,8 @@ function AccountForm() {
         <div>
           <label>Category:</label>
           <select
-            name="category"
-            value={formData.category}
+            name="type"
+            value={formData.type}
             onChange={handleChange}
             required
             className="input-field"
@@ -219,88 +304,55 @@ function AccountForm() {
         </div>
         <div>
           <label>Subcategory:</label>
-          <input
-            type="text"
-            name="subcategory"
-            value={formData.subcategory}
+          <select
+            name="subType"
+            value={formData.subType}
             onChange={handleChange}
             className="input-field"
-            placeholder="e.g., Current Assets"
+            disabled={!formData.type}
+          >
+            <option value="">Select a Subcategory</option>
+            {formData.type && subcategoriesMap[formData.type]?.map(sub => (
+              <option key={sub} value={sub}>{sub}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label>Statement Type:</label>
+          <select
+            name="statementType"
+            value={formData.statementType}
+            onChange={handleChange}
+            required
+            className="input-field"
+          >
+            <option value="">Select a Statement Type</option>
+            <option value="Income Statement">Income Statement</option>
+            <option value="Balance Sheet">Balance Sheet</option>
+            <option value="Retained Earnings">Retained Earnings</option>
+          </select>
+        </div>
+        <div>
+          <label>Order Number:</label>
+          <input
+            type="number"
+            name="orderNumber"
+            value={formData.orderNumber}
+            onChange={handleChange}
+            className="input-field"
           />
         </div>
         <div>
           <label>Initial Balance:</label>
           <input
-            type="number"
-            step="0.01"
-            name="initial_balance"
-            value={formData.initial_balance}
-            onChange={handleChange}
-            className="input-field"
-          />
-        </div>
-        <div>
-          <label>Debit:</label>
-          <input
-            type="number"
-            step="0.01"
-            name="debit"
-            value={formData.debit}
-            onChange={handleChange}
-            className="input-field"
-          />
-        </div>
-        <div>
-          <label>Credit:</label>
-          <input
-            type="number"
-            step="0.01"
-            name="credit"
-            value={formData.credit}
-            onChange={handleChange}
-            className="input-field"
-          />
-        </div>
-        <div>
-          <label>Current Balance:</label>
-          <input
-            type="number"
-            step="0.01"
-            name="balance"
-            value={formData.balance}
-            onChange={handleChange}
-            className="input-field"
-          />
-        </div>
-        <div>
-          <label>Order:</label>
-          <input
             type="text"
-            name="order"
-            value={formData.order}
-            onChange={handleChange}
-            className="input-field"
-            placeholder="e.g., 01"
-          />
-        </div>
-        <div>
-          <label>Statement:</label>
-          <select name="statement" value={formData.statement} onChange={handleChange} className="input-field">
-            <option value="IS">Income Statement</option>
-            <option value="BS">Balance Sheet</option>
-            <option value="RE">Retained Earnings</option>
-          </select>
-        </div>
-        <div style={{ gridColumn: 'span 2' }}>
-          <label>Comment:</label>
-          <textarea
-            name="comment"
-            value={formData.comment}
+            name="initBalance"
+            value={formatCurrency(formData.initBalance)}
             onChange={handleChange}
             className="input-field"
           />
         </div>
-        <div style={{ gridColumn: 'span 2' }}>
+        <div className="span-2">
           <button type="submit" className="button" disabled={loading}>
             {loading ? 'Saving...' : 'Save Account'}
           </button>
