@@ -96,6 +96,18 @@ function Navbar() {
               </li>
             </>
           )}
+          <li className="nav-item">
+            <a
+              href="#/help"
+              className="nav-link"
+              onClick={(e) => {
+                e.preventDefault();
+                handleNavigation('/help');
+              }}
+            >
+              Help
+            </a>
+          </li>
           {user && (
             <li className="nav-item nav-user-section">
               <div className="nav-user-display">

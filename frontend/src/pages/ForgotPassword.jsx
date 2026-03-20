@@ -4,6 +4,8 @@ import logo from '../../assets/Images/resourceDirectory/logo.png'
 import { useNavigate } from 'react-router-dom';
 import { validatePassword } from '../utils/passwordValidation';
 import { checkEmail, getUserSecurityQuestions, verifySecurityAnswers, updateUserPassword, isPasswordReused } from '../services/userService';
+import PageHelpCorner from '../components/PageHelpCorner';
+import { HelpTooltip } from '../components/HelpTooltip';
 
 function ForgotPasswordPage() {
     const navigate = useNavigate();
@@ -178,6 +180,7 @@ function ForgotPasswordPage() {
 
     return (
         <div className="login-page">
+            <PageHelpCorner topic="forgot-password" />
             <header className="login-header">
                 <div className="logo" aria-hidden="true">
                     <img src={logo} alt="App Logo" />
@@ -201,7 +204,11 @@ function ForgotPasswordPage() {
                     {step === 1 && (
                         <>
                             <h5>Email</h5>
-                            <input
+                            <HelpTooltip
+                              text="Email address on file for your account. Used with user ID to load your security questions."
+                              className="help-tooltip-block"
+                            >
+                              <input
                                 className="input"
                                 type="email"
                                 name="email"
@@ -210,10 +217,15 @@ function ForgotPasswordPage() {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
-                            />
+                              />
+                            </HelpTooltip>
 
                             <h5>User ID</h5>
-                            <input
+                            <HelpTooltip
+                              text="Your unique user identifier (not your display name). Must match the account tied to the email."
+                              className="help-tooltip-block"
+                            >
+                              <input
                                 className="input"
                                 type="text"
                                 name="userId"
@@ -222,13 +234,18 @@ function ForgotPasswordPage() {
                                 value={userId}
                                 onChange={(e) => setUserId(e.target.value)}
                                 required
-                            />
+                              />
+                            </HelpTooltip>
 
                             <div className="button-row" role="group">
-                                <button type="button" onClick={handleClearAll}>Clear</button>
-                                <button type="button" className="login-button" onClick={handleStartReset}>
+                                <HelpTooltip text="Clear all fields on this password reset flow.">
+                                  <button type="button" onClick={handleClearAll}>Clear</button>
+                                </HelpTooltip>
+                                <HelpTooltip text="Verify email and user ID, then load your security questions.">
+                                  <button type="button" className="login-button" onClick={handleStartReset}>
                                     Continue
-                                </button>
+                                  </button>
+                                </HelpTooltip>
                             </div>
                         </>
                     )}
@@ -281,11 +298,17 @@ function ForgotPasswordPage() {
                             )}
 
                             <div className="button-row" role="group">
-                                <button type="button" onClick={handleClearAll}>Clear</button>
-                                <button type="button" onClick={() => setStep(1)}>Back</button>
-                                <button type="button" className="login-button" onClick={handleSecurityQuestionsSubmit}>
+                                <HelpTooltip text="Clear all fields on this password reset flow.">
+                                  <button type="button" onClick={handleClearAll}>Clear</button>
+                                </HelpTooltip>
+                                <HelpTooltip text="Return to email and user ID step.">
+                                  <button type="button" onClick={() => setStep(1)}>Back</button>
+                                </HelpTooltip>
+                                <HelpTooltip text="Check your answers; if correct you can set a new password.">
+                                  <button type="button" className="login-button" onClick={handleSecurityQuestionsSubmit}>
                                     Continue
-                                </button>
+                                  </button>
+                                </HelpTooltip>
                             </div>
                         </>
                     )}
@@ -333,19 +356,27 @@ function ForgotPasswordPage() {
                             )}
 
                             <div className="button-row" role="group">
-                                <button type="button" onClick={handleClearAll}>Clear</button>
-                                <button type="button" onClick={() => setStep(2)}>Back</button>
-                                <button type="button" className="login-button" onClick={handleNewPasswordSubmit}>
+                                <HelpTooltip text="Clear all fields on this password reset flow.">
+                                  <button type="button" onClick={handleClearAll}>Clear</button>
+                                </HelpTooltip>
+                                <HelpTooltip text="Return to the security questions step.">
+                                  <button type="button" onClick={() => setStep(2)}>Back</button>
+                                </HelpTooltip>
+                                <HelpTooltip text="Save your new password and return to sign in when successful.">
+                                  <button type="button" className="login-button" onClick={handleNewPasswordSubmit}>
                                     Save New Password
-                                </button>
+                                  </button>
+                                </HelpTooltip>
                             </div>
                         </>
                     )}
 
                     <div className="cancel-wrap">
-                        <button type="button" className="cancel-button" onClick={navToWelcome}>
+                        <HelpTooltip text="Leave password reset and return to the welcome screen.">
+                          <button type="button" className="cancel-button" onClick={navToWelcome}>
                             Cancel
-                        </button>
+                          </button>
+                        </HelpTooltip>
                     </div>
                 </form>
             </main>

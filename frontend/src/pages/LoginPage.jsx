@@ -5,6 +5,8 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { hashPassword } from '../utils/passwordHash';
 import { useAuth } from '../AuthContext';
+import PageHelpCorner from '../components/PageHelpCorner';
+import { HelpTooltip } from '../components/HelpTooltip';
 
 function LoginPage() {
     const navigate = useNavigate();
@@ -158,6 +160,7 @@ function LoginPage() {
     }
   return (
     <div className="login-page">
+      <PageHelpCorner topic="login" />
       <header className="login-header">
         <div className="logo" aria-hidden="true">
             <img src={logo} alt="App Logo" />
@@ -169,37 +172,56 @@ function LoginPage() {
           <h1>Login</h1>
           <p>Welcome back! Please enter your credentials to log in.</p>
           <h5>Username</h5>
-          <input
-            className="input"
-            type="text"
-            name="username"
-            placeholder="Username"
-            aria-label="username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
+          <HelpTooltip
+            text="Your account name provided by your administrator (or assigned when your account was created)."
+            className="help-tooltip-block"
+          >
+            <input
+              className="input"
+              type="text"
+              name="username"
+              placeholder="Username"
+              aria-label="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+            />
+          </HelpTooltip>
 
           <h5>Password</h5>
-          <input
-            className="input"
-            type="password"
-            name="password"
-            placeholder="Password"
-            aria-label="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+          <HelpTooltip
+            text="Enter the password for your account. Too many failed attempts can temporarily lock sign-in."
+            className="help-tooltip-block"
+          >
+            <input
+              className="input"
+              type="password"
+              name="password"
+              placeholder="Password"
+              aria-label="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </HelpTooltip>
 
           <div className="button-row" role="group">
-            <button type="submit">Help</button>
-            <button type="button" onClick={navToForgotPassword}>Forgot Password?</button>
-            <button type="button" onClick={navToSignUp}>Sign Up</button>
-            <button type="button" className= "login-button" onClick={handleLogin}>Login</button>
-            <button type="button" onClick={handleClear}>Clear</button>
+            <HelpTooltip text="Open steps to reset your password using email, user ID, and security questions.">
+              <button type="button" onClick={navToForgotPassword}>Forgot Password?</button>
+            </HelpTooltip>
+            <HelpTooltip text="Submit a new account request for an administrator to review.">
+              <button type="button" onClick={navToSignUp}>Sign Up</button>
+            </HelpTooltip>
+            <HelpTooltip text="Sign in with the username and password entered above.">
+              <button type="button" className="login-button" onClick={handleLogin}>Login</button>
+            </HelpTooltip>
+            <HelpTooltip text="Clear the username and password fields.">
+              <button type="button" onClick={handleClear}>Clear</button>
+            </HelpTooltip>
           </div>
 
           <div className="cancel-wrap">
-            <button type="button" className="cancel-button" onClick={navToWelcome}>Cancel</button>
+            <HelpTooltip text="Return to the welcome screen without signing in.">
+              <button type="button" className="cancel-button" onClick={navToWelcome}>Cancel</button>
+            </HelpTooltip>
           </div>
         </form>
       </main>

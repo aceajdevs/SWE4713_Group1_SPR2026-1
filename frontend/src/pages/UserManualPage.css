@@ -1,0 +1,151 @@
+.user-manual-page {
+  min-height: 100vh;
+  padding: 24px 20px 48px;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: #f8fafc;
+  color: #0f172a;
+  box-sizing: border-box;
+}
+
+.user-manual-header {
+  max-width: 880px;
+  margin: 0 auto 24px;
+}
+
+.user-manual-header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.user-manual-header h1 {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.user-manual-back {
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e40af;
+  background: #fff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.user-manual-back:hover {
+  background: #eff6ff;
+}
+
+.user-manual-back:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.user-manual-lead {
+  margin: 12px 0 0;
+  font-size: 15px;
+  color: #475569;
+  line-height: 1.5;
+}
+
+.user-manual-toc {
+  max-width: 880px;
+  margin: 0 auto 28px;
+  padding: 16px 20px;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+}
+
+.user-manual-toc-title {
+  margin: 0 0 12px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.user-manual-toc ul {
+  margin: 0;
+  padding-left: 1.25rem;
+  line-height: 1.7;
+}
+
+.user-manual-toc a {
+  color: #1d4ed8;
+  text-decoration: none;
+}
+
+.user-manual-toc a:hover {
+  text-decoration: underline;
+}
+
+.user-manual-toc button.user-manual-toc-link {
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #1d4ed8;
+  text-decoration: none;
+  cursor: pointer;
+  font: inherit;
+}
+
+.user-manual-toc button.user-manual-toc-link:hover {
+  text-decoration: underline;
+}
+
+.user-manual-toc button.user-manual-toc-link:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.user-manual-body {
+  max-width: 880px;
+  margin: 0 auto;
+}
+
+.user-manual-section {
+  margin-bottom: 28px;
+  padding: 20px 22px;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  scroll-margin-top: 88px;
+}
+
+.user-manual-section h2 {
+  margin: 0 0 12px;
+  font-size: 1.25rem;
+  font-weight: 650;
+  color: #0f172a;
+}
+
+.user-manual-section p,
+.user-manual-section li {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #334155;
+}
+
+.user-manual-section p {
+  margin: 0 0 12px;
+}
+
+.user-manual-section p:last-child {
+  margin-bottom: 0;
+}
+
+.user-manual-section ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.user-manual-section li {
+  margin-bottom: 8px;
+}
