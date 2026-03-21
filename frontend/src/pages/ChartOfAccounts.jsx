@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { fetchFromTable } from '../supabaseUtils';
+import { canDeactivate } from '../utils/accountValidation';
 import { setChartAccountActiveWithActor } from '../services/chartOfAccountsService';
 import '../global.css';
 
@@ -46,7 +47,7 @@ function ChartOfAccounts() {
     // If we're trying to deactivate, check balance first
     if (currentStatus) {
       const account = accounts.find((acc) => acc.accountID === id);
-      if (account && account.initBalance > 0) {
+      if (account && !canDeactivate(account)) {
         alert('Cannot deactivate an account with a balance greater than zero. Please zero out the balance first.');
         return;
       }
