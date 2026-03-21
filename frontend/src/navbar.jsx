@@ -21,8 +21,10 @@ function Navbar() {
   const handleChartOfAccountsNavigation = () => {
     if (user && user.role === 'administrator') {
       handleNavigation('/chart-of-accounts');
+      return;
     } else {
       handleNavigation('/chart-of-accounts');
+      return;
     }
   };
   const handleDashboardNavigation = () => {
@@ -92,6 +94,15 @@ function Navbar() {
                   User Account Requests
                 </a>
               </li>
+                <li className="nav-item">
+                  <a
+                    href="#/admin/chart-of-accounts"
+                    className="nav-link"
+                    onClick={() => handleNavigation('/admin/chart-of-accounts')}
+                  >
+                    Chart of Accounts
+                  </a>
+                </li>
               <li className="nav-item">
                 <a
                   href="#/admin/create-user"

@@ -1,8 +1,41 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
-import { supabase } from '../supabaseClient';
+import { fetchFromTable, insertRecord, updateRecord } from '../supabaseUtils';
+import { sendAdminEmail } from '../services/emailService';
 import '../global.css';
+
+const subcategoriesMap = {
+  'Assets': ['Current Assets', 'Fixed Assets', 'Intangible Assets', 'Other Assets'],
+  'Liabilities': ['Current Liabilities', 'Long-term Liabilities', 'Other Liabilities'],
+  'Equity': ["Owner's Equity", 'Retained Earnings', 'Common Stock'],
+  'Revenue': ['Operating Revenue', 'Non-operating Revenue'],
+  'Expenses': ['Operating Expenses', 'Non-operating Expenses', 'Administrative Expenses', 'Financial Expenses']
+};
+
+const prefixes = {
+  'Assets': '1',
+  'Liabilities': '2',
+  'Equity': '3',
+  'Revenue': '4',
+  'Expenses': '5'
+};
+
+const normalSideMap = {
+  'Assets': 'Debit',
+  'Liabilities': 'Credit',
+  'Equity': 'Credit',
+  'Revenue': 'Credit',
+  'Expenses': 'Debit'
+};
+
+const statementTypeMap = {
+  'Assets': 'Balance Sheet',
+  'Liabilities': 'Balance Sheet',
+  'Equity': 'Balance Sheet',
+  'Revenue': 'Income Statement',
+  'Expenses': 'Income Statement'
+};
 
 function AccountForm() {
   const { id } = useParams();
@@ -25,14 +58,6 @@ function AccountForm() {
     createdBy: 0
   });
 
-  const subcategoriesMap = {
-    'Assets': ['Current Assets', 'Fixed Assets', 'Intangible Assets', 'Other Assets'],
-    'Liabilities': ['Current Liabilities', 'Long-term Liabilities', 'Other Liabilities'],
-    'Equity': ["Owner's Equity", 'Retained Earnings', 'Common Stock'],
-    'Revenue': ['Operating Revenue', 'Non-operating Revenue'],
-    'Expenses': ['Operating Expenses', 'Non-operating Expenses', 'Administrative Expenses', 'Financial Expenses']
-  };
-
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(isEditing);
 
@@ -42,24 +67,13 @@ function AccountForm() {
       navigate('/admin/chart-of-accounts');
       return;
     }
-    if (isEditing) {
-      loadAccount();
-    }
+    if (isEditing) loadAccount();
   }, [id, user, navigate]);
 
   useEffect(() => {
     if (isEditing && formData.type && !formData.statementType) {
-      const statementTypeMap = {
-        'Assets': 'Balance Sheet',
-        'Liabilities': 'Balance Sheet',
-        'Equity': 'Balance Sheet',
-        'Revenue': 'Income Statement',
-        'Expenses': 'Income Statement'
-      };
-      const autoStatementType = statementTypeMap[formData.type] || '';
-      if (autoStatementType) {
-        setFormData(prev => ({ ...prev, statementType: autoStatementType }));
-      }
+      const auto = statementTypeMap[formData.type] || '';
+      if (auto) setFormData(prev => ({ ...prev, statementType: auto }));
     }
   }, [isEditing, formData.type, formData.statementType]);
 
@@ -70,27 +84,14 @@ function AccountForm() {
   }, [formData.type, formData.subType]);
 
   const suggestAccountNumber = async (type, subType) => {
-    const prefixes = {
-      'Assets': '1',
-      'Liabilities': '2',
-      'Equity': '3',
-      'Revenue': '4',
-      'Expenses': '5'
-    };
     const prefix = prefixes[type] || '';
     if (!prefix) return;
 
-    // Determine subType index to find the starting point (e.g., 00, 25, 50, 75)
     const subcategories = subcategoriesMap[type] || [];
     const subIdx = subcategories.indexOf(subType);
-    if (subIdx === -1) return; // Wait for subType selection
+    if (subIdx === -1) return;
 
-    const baseOffset = subIdx * 25;
-
-    // Fetch existing accounts to find the next identifier
-    const { data, error } = await supabase
-      .from('chartOfAccounts')
-      .select('accountNumber');
+    const { data, error } = await fetchFromTable('chartOfAccounts', { select: 'accountNumber' });
 
     let nextId = Math.max(subIdx * 25, 1);
     if (!error && data) {
@@ -98,35 +99,25 @@ function AccountForm() {
         .map(acc => acc.accountNumber?.toString())
         .filter(num => num && num.startsWith(prefix) && num.length === 8)
         .map(num => parseInt(num.substring(1), 10))
-        .filter(id => id >= nextId && id < (subIdx * 25) + 25);
-      
-      if (identifiers.length > 0) {
-        nextId = Math.max(...identifiers) + 1;
-      }
+        .filter(n => n >= subIdx * 25 && n < (subIdx * 25) + 25);
+
+      if (identifiers.length > 0) nextId = Math.max(...identifiers) + 1;
     }
 
     if (nextId >= (subIdx * 25) + 25) {
-      alert(`Maximum number of accounts for this subType reached (24 or 25).`);
+      alert('Maximum number of accounts for this subType reached (24 or 25).');
       return;
     }
 
-    // Format: prefix (1) + zeros (as needed) + identifier = 8 digits
     const identifierStr = nextId.toString().padStart(7, '0');
-    const newAccountNumber = `${prefix}${identifierStr}`;
-
-    setFormData(prev => ({
-      ...prev,
-      accountNumber: newAccountNumber
-    }));
+    setFormData(prev => ({ ...prev, accountNumber: `${prefix}${identifierStr}` }));
   };
 
   const loadAccount = async () => {
-    const { data, error } = await supabase
-      .from('chartOfAccounts')
-      .select('*')
-      .eq('id', id)
-      .single();
-    
+    const { data, error } = await fetchFromTable('chartOfAccounts', {
+      filters: { accountID: id },
+      single: true
+    });
     if (!error && data) {
       setFormData(data);
     } else {
@@ -140,22 +131,16 @@ function AccountForm() {
     if (value === '' || value === undefined || value === null) return '';
     const number = parseFloat(value);
     if (isNaN(number)) return '';
-    return new Intl.NumberFormat('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(number);
+    return new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(number);
   };
 
   const handleChange = (e) => {
     const { name, value, type } = e.target;
-    
-    // Check if the input is a monetary field
     const monetaryFields = ['initBalance'];
-    
+
     setFormData(prev => {
       let updatedValue;
       if (monetaryFields.includes(name)) {
-        // Remove commas before saving to state as a number
         const cleanValue = typeof value === 'string' ? value.replace(/,/g, '') : value;
         updatedValue = cleanValue === '' ? 0 : parseFloat(cleanValue);
         if (isNaN(updatedValue)) updatedValue = 0;
@@ -163,55 +148,40 @@ function AccountForm() {
         updatedValue = type === 'number' ? parseFloat(value) : value;
       }
 
-      const updated = {
-        ...prev,
-        [name]: updatedValue
-      };
-      
-      // If type changes, reset subType and set normalSide
+      const updated = { ...prev, [name]: updatedValue };
+
       if (name === 'type') {
         updated.subType = '';
-        const normalSideMap = {
-          'Assets': 'Debit',
-          'Liabilities': 'Credit',
-          'Equity': 'Credit',
-          'Revenue': 'Credit',
-          'Expenses': 'Debit'
-        };
         updated.normalSide = normalSideMap[value] || 'Debit';
-
-        // Automatically set statementType based on account type
-        const statementTypeMap = {
-          'Assets': 'Balance Sheet',
-          'Liabilities': 'Balance Sheet',
-          'Equity': 'Balance Sheet',
-          'Revenue': 'Income Statement',
-          'Expenses': 'Income Statement'
-        };
         updated.statementType = statementTypeMap[value] || '';
       }
-      
+
       return updated;
     });
+  };
+
+  // Finds the next available account number starting from a given number
+  const findAvailableAccountNumber = async (startingNumber, existingNumbers) => {
+    let candidate = startingNumber;
+    const prefix = startingNumber.toString()[0];
+    while (existingNumbers.has(candidate.toString())) {
+      candidate += 1;
+      // Guard: don't exceed 8 digits
+      if (candidate.toString().length > 8) return null;
+      // Guard: don't cross into a different prefix
+      if (candidate.toString()[0] !== prefix) return null;
+    }
+    return candidate.toString();
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Check if the user is an admin before submitting
     if (user?.role !== 'administrator') {
       alert('Unauthorized: Only administrators are authorized to add or edit accounts.');
       return;
     }
-    
-    // Validation for account number format
-    const prefixes = {
-      'Assets': '1',
-      'Liabilities': '2',
-      'Equity': '3',
-      'Revenue': '4',
-      'Expenses': '5'
-    };
+
     const expectedPrefix = prefixes[formData.type];
     if (expectedPrefix && !formData.accountNumber.toString().startsWith(expectedPrefix)) {
       alert(`Invalid Account Number. Accounts in ${formData.type} must start with ${expectedPrefix}.`);
@@ -225,9 +195,47 @@ function AccountForm() {
 
     setLoading(true);
 
+    // Check subcategory validity
+    const validSubcategories = subcategoriesMap[formData.type] || [];
+    if (!validSubcategories.includes(formData.subType)) {
+      alert(`Invalid subcategory "${formData.subType}" for category "${formData.type}". Please select a valid subcategory.`);
+      setLoading(false);
+      return;
+    }
+
+    // Check if account number already exists and resolve conflict
+    let resolvedAccountNumber = formData.accountNumber.toString();
+    if (!isEditing) {
+      const { data: allAccounts, error: fetchError } = await fetchFromTable('chartOfAccounts', {
+        select: 'accountNumber'
+      });
+
+      if (fetchError) {
+        alert('Error checking existing account numbers. Please try again.');
+        setLoading(false);
+        return;
+      }
+
+      const existingNumbers = new Set(
+        (allAccounts || []).map(acc => acc.accountNumber?.toString())
+      );
+
+      if (existingNumbers.has(resolvedAccountNumber)) {
+        const next = await findAvailableAccountNumber(parseInt(resolvedAccountNumber, 10) + 1, existingNumbers);
+        if (!next) {
+          alert('No available account numbers in this range. Please choose a different subcategory or adjust the number manually.');
+          setLoading(false);
+          return;
+        }
+        resolvedAccountNumber = next;
+        setFormData(prev => ({ ...prev, accountNumber: resolvedAccountNumber }));
+        alert(`Account number ${formData.accountNumber} was already taken. Assigned ${resolvedAccountNumber} instead.`);
+      }
+    }
+
     const accountData = {
       accountName: formData.accountName,
-      accountNumber: parseInt(formData.accountNumber, 10),
+      accountNumber: parseInt(resolvedAccountNumber, 10),
       description: formData.description,
       normalSide: formData.normalSide,
       type: formData.type,
@@ -240,29 +248,45 @@ function AccountForm() {
       createdAt: isEditing ? formData.createdAt : new Date().toISOString()
     };
 
-    console.log('Submitting account data to Supabase:', accountData);
-
     let error;
     if (isEditing) {
-      const { error: updateError } = await supabase
-        .from('chartOfAccounts')
-        .update(accountData)
-        .eq('id', id);
+      const { error: updateError } = await updateRecord('chartOfAccounts', id, accountData, 'accountID');
       error = updateError;
     } else {
-      const { error: insertError } = await supabase
-        .from('chartOfAccounts')
-        .insert([accountData]);
+      const { error: insertError } = await insertRecord('chartOfAccounts', accountData);
       error = insertError;
     }
 
     if (!error) {
       alert(`Account ${isEditing ? 'updated' : 'added'} successfully!`);
+      try {
+        const { data: admins, error: adminError } = await fetchFromTable('user', {
+          select: 'email, fName, lName',
+          filters: { role: 'administrator' }
+        });
+        if (!adminError && admins) {
+          const subject = `Account ${isEditing ? 'Updated' : 'Added'}: ${accountData.accountName}`;
+          const message = `The following account has been ${isEditing ? 'updated' : 'added'} by ${user.fName} ${user.lName}:
+
+Name: ${accountData.accountName}
+Number: ${accountData.accountNumber}
+Category: ${accountData.type}
+Subcategory: ${accountData.subType}
+Initial Balance: $${accountData.initBalance}
+Normal Side: ${accountData.normalSide}`;
+          for (const admin of admins) {
+            await sendAdminEmail(admin.email, `${admin.fName} ${admin.lName}`, subject, message);
+          }
+        }
+      } catch (emailErr) {
+        console.warn('Failed to send admin notification emails:', emailErr);
+      }
       navigate('/admin/chart-of-accounts');
     } else {
       console.error('Supabase submission error:', error);
       alert(`Error: ${error.message}`);
     }
+
     setLoading(false);
   };
 
@@ -313,13 +337,7 @@ function AccountForm() {
         </div>
         <div>
           <label>Category:</label>
-          <select
-            name="type"
-            value={formData.type}
-            onChange={handleChange}
-            required
-            className="input-field"
-          >
+          <select name="type" value={formData.type} onChange={handleChange} required className="input-field">
             <option value="">Select a Category</option>
             <option value="Assets">Assets</option>
             <option value="Liabilities">Liabilities</option>

@@ -28,6 +28,12 @@ export async function fetchFromTable(tableName, options = {}) {
       query = query.limit(options.limit);
     }
 
+    if (options.single) {
+      const { data, error } = await query.single();
+      if (error) throw error;
+      return { data, error: null };
+    }
+
     const { data, error } = await query;
     if (error) throw error;
     return { data, error: null };
@@ -59,14 +65,15 @@ export async function insertRecord(tableName, record) {
  * @param {string} tableName - Name of the table
  * @param {number|string} id - Record ID
  * @param {object} updates - Fields to update
+ * @param {string} idColumn - Column name for the ID (default: 'id')
  * @returns {Promise} - Updated record or error
  */
-export async function updateRecord(tableName, id, updates) {
+export async function updateRecord(tableName, id, updates, idColumn = 'id') {
   try {
     const { data, error } = await supabase
       .from(tableName)
       .update(updates)
-      .eq('id', id)
+      .eq(idColumn, id)
       .select();
     if (error) throw error;
     return { data: data?.[0], error: null };
@@ -80,11 +87,12 @@ export async function updateRecord(tableName, id, updates) {
  * Delete a record from a table
  * @param {string} tableName - Name of the table
  * @param {number|string} id - Record ID
+ * @param {string} idColumn - Column name for the ID (default: 'id')
  * @returns {Promise} - Success status or error
  */
-export async function deleteRecord(tableName, id) {
+export async function deleteRecord(tableName, id, idColumn = 'id') {
   try {
-    const { error } = await supabase.from(tableName).delete().eq('id', id);
+    const { error } = await supabase.from(tableName).delete().eq(idColumn, id);
     if (error) throw error;
     return { success: true, error: null };
   } catch (error) {
