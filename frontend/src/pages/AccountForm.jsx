@@ -163,6 +163,9 @@ function AccountForm() {
         const cleanValue = typeof value === 'string' ? value.replace(/,/g, '') : value;
         updatedValue = cleanValue === '' ? 0 : parseFloat(cleanValue);
         if (isNaN(updatedValue)) updatedValue = 0;
+      } else if (name === 'accountNumber') {
+        // Strip anything that isn't a digit
+        updatedValue = value.replace(/\D/g, '').slice(0, 8);
       } else {
         updatedValue = type === 'number' ? parseFloat(value) : value;
       }
@@ -222,8 +225,38 @@ function AccountForm() {
       return;
     }
 
-    if (formData.accountNumber.toString().length !== 8) {
-      alert('Account Number must be exactly 8 digits.');
+    if (!/^\d{8}$/.test(formData.accountNumber.toString())) {
+      alert('Account Number must be exactly 8 digits. No letters, decimals, or special characters allowed.');
+      return;
+    }
+
+    // Check for duplicate account number
+    const { data: numberDuplicates } = await supabase
+      .from('chartOfAccounts')
+      .select('accountID')
+      .eq('accountNumber', parseInt(formData.accountNumber, 10));
+
+    const numberConflict = numberDuplicates?.filter(
+      (acc) => !isEditing || acc.accountID !== parseInt(id, 10)
+    );
+
+    if (numberConflict && numberConflict.length > 0) {
+      alert('An account with this account number already exists. Duplicate account numbers are not allowed.');
+      return; 
+    }
+
+    // Check for duplicate account name
+    const { data: nameDuplicates } = await supabase
+      .from('chartOfAccounts')
+      .select('accountID')
+      .eq('accountName', formData.accountName.trim());
+
+    const nameConflict = nameDuplicates?.filter(
+      (acc) => !isEditing || acc.accountID !== parseInt(id, 10)
+    );
+
+    if (nameConflict && nameConflict.length > 0) {
+      alert('An account with this name already exists. Duplicate account names are not allowed');
       return;
     }
 

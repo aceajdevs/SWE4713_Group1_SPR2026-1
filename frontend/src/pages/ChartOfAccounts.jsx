@@ -42,15 +42,25 @@ function ChartOfAccounts() {
       alert('Unable to determine current administrator user ID.');
       return;
     }
+
+    // If we're trying to deactivate, check balance first
+    if (currentStatus) {
+      const account = accounts.find((acc) => acc.accountID === id);
+      if (account && account.initBalance > 0) {
+        alert('Cannot deactivate an account with a balance greater than zero. Please zero out the balance first.');
+        return;
+      }
+    }
+
     try {
       const newStatus = !currentStatus;
       await setChartAccountActiveWithActor(id, newStatus, actorUserId);
       loadAccounts();
     } catch (error) {
       console.error('Failed to update account status:', error);
-      alert(`Error: ${error.message}`);
+      alert(`Error: ${error.message}`)
     }
-  };
+  }
 
   const handleSearch = () => {
     setSearchQuery(searchTerm);
