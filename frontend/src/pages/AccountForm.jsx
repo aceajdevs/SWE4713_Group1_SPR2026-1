@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { isValidAccountNumber, hasCorrectPrefix, sanitizeAccountNumberInput, formatCurrency } from '../utils/accountValidation';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { supabase } from '../supabaseClient';
@@ -140,16 +141,6 @@ function AccountForm() {
     setFetching(false);
   };
 
-  const formatCurrency = (value) => {
-    if (value === '' || value === undefined || value === null) return '';
-    const number = parseFloat(value);
-    if (isNaN(number)) return '';
-    return new Intl.NumberFormat('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(number);
-  };
-
   const handleChange = (e) => {
     const { name, value, type } = e.target;
     
@@ -164,8 +155,7 @@ function AccountForm() {
         updatedValue = cleanValue === '' ? 0 : parseFloat(cleanValue);
         if (isNaN(updatedValue)) updatedValue = 0;
       } else if (name === 'accountNumber') {
-        // Strip anything that isn't a digit
-        updatedValue = value.replace(/\D/g, '').slice(0, 8);
+        updatedValue = sanitizeAccountNumberInput(value);
       } else {
         updatedValue = type === 'number' ? parseFloat(value) : value;
       }
@@ -220,12 +210,12 @@ function AccountForm() {
       'Expenses': '5'
     };
     const expectedPrefix = prefixes[formData.type];
-    if (expectedPrefix && !formData.accountNumber.toString().startsWith(expectedPrefix)) {
-      alert(`Invalid Account Number. Accounts in ${formData.type} must start with ${expectedPrefix}.`);
+    if (!hasCorrectPrefix(formData.accountNumber, formData.type)) {
+      alert(`Invalid Account Number. Accounts in ${formData.type} must start with the correct prefix.`);
       return;
     }
 
-    if (!/^\d{8}$/.test(formData.accountNumber.toString())) {
+    if (!isValidAccountNumber(formData.accountNumber)) {
       alert('Account Number must be exactly 8 digits. No letters, decimals, or special characters allowed.');
       return;
     }
