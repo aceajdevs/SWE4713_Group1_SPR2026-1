@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { fetchFromTable, updateRecord } from '../supabaseUtils';
 import { sendAdminEmail } from '../services/emailService';
+import { fetchFromTable } from '../supabaseUtils';
+import { setChartAccountActiveWithActor } from '../services/chartOfAccountsService';
 import '../global.css';
 
 const defaultFilters = {
@@ -83,6 +85,31 @@ function ChartOfAccounts() {
       if (!adminError && admins && account) {
         const subject = `Account Status Changed: ${account.accountName}`;
         const message = `The status of the following account has been changed to ${newStatus ? 'Active' : 'Inactive'} by ${user.fName} ${user.lName}:
+  const handleDeactivate = async (id, currentStatus) => {
+    const actorUserId = parseInt(user?.userID, 10);
+    if (!Number.isFinite(actorUserId) || actorUserId <= 0) {
+      alert('Unable to determine current administrator user ID.');
+      return;
+    }
+
+    // If we're trying to deactivate, check balance first
+    if (currentStatus) {
+      const account = accounts.find((acc) => acc.accountID === id);
+      if (account && account.initBalance > 0) {
+        alert('Cannot deactivate an account with a balance greater than zero. Please zero out the balance first.');
+        return;
+      }
+    }
+
+    try {
+      const newStatus = !currentStatus;
+      await setChartAccountActiveWithActor(id, newStatus, actorUserId);
+      loadAccounts();
+    } catch (error) {
+      console.error('Failed to update account status:', error);
+      alert(`Error: ${error.message}`)
+    }
+  }
 
 Name: ${account.accountName}
 Number: ${account.accountNumber}`;
@@ -425,6 +452,31 @@ Number: ${account.accountNumber}`;
                   style={{ textAlign: 'center', padding: '20px', color: '#6c757d' }}
                 >
                   No accounts exist for the selected filters.
+            {filteredAccounts.map((account) => (
+              <tr key={account.accountID}>
+                <td>{account.accountNumber}</td>
+                <td>{account.accountName}</td>
+                <td>{account.description || 'N/A'}</td>
+                <td>{account.subType}</td>
+                <td>{account.normalSide}</td>
+                <td>${(account.initBalance || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td>{account.normalSide === 'Debit' ? `$${(account.initBalance || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '-'}</td>
+                <td>{account.normalSide === 'Credit' ? `$${(account.initBalance || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '-'}</td>
+                <td>${(account.initBalance || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td>{account.createdAt ? new Date(account.createdAt).toLocaleString() : 'N/A'}</td>
+                <td>{account.createdAt ? new Date(account.createdAt).toLocaleString() : 'N/A'}</td>
+                {isAdmin && <td>{account.active ? 'Active' : 'Inactive'}</td>}
+                <td>
+                  {isAdmin && (
+                    <>
+                      <button onClick={() => navigate(`/admin/edit-account/${account.accountID}`)} style={{ marginRight: '5px' }}>
+                        Edit
+                      </button>
+                      <button onClick={() => handleDeactivate(account.accountID, account.active)}>
+                        {account.active ? 'Deactivate' : 'Activate'}
+                      </button>
+                    </>
+                  )}
                 </td>
               </tr>
             ) : (

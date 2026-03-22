@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
-import { fetchFromTable, insertRecord, updateRecord } from '../supabaseUtils';
-import { sendAdminEmail } from '../services/emailService';
+import { supabase } from '../supabaseClient';
+import {
+  createChartAccountWithActor,
+  updateChartAccountWithActor,
+} from '../services/chartOfAccountsService';
 import '../global.css';
 
 const subcategoriesMap = {
@@ -144,6 +147,9 @@ function AccountForm() {
         const cleanValue = typeof value === 'string' ? value.replace(/,/g, '') : value;
         updatedValue = cleanValue === '' ? 0 : parseFloat(cleanValue);
         if (isNaN(updatedValue)) updatedValue = 0;
+      } else if (name === 'accountNumber') {
+        // Strip anything that isn't a digit
+        updatedValue = value.replace(/\D/g, '').slice(0, 8);
       } else {
         updatedValue = type === 'number' ? parseFloat(value) : value;
       }
@@ -188,12 +194,49 @@ function AccountForm() {
       return;
     }
 
-    if (formData.accountNumber.toString().length !== 8) {
-      alert('Account Number must be exactly 8 digits.');
+    if (!/^\d{8}$/.test(formData.accountNumber.toString())) {
+      alert('Account Number must be exactly 8 digits. No letters, decimals, or special characters allowed.');
+      return;
+    }
+
+    // Check for duplicate account number
+    const { data: numberDuplicates } = await supabase
+      .from('chartOfAccounts')
+      .select('accountID')
+      .eq('accountNumber', parseInt(formData.accountNumber, 10));
+
+    const numberConflict = numberDuplicates?.filter(
+      (acc) => !isEditing || acc.accountID !== parseInt(id, 10)
+    );
+
+    if (numberConflict && numberConflict.length > 0) {
+      alert('An account with this account number already exists. Duplicate account numbers are not allowed.');
+      return; 
+    }
+
+    // Check for duplicate account name
+    const { data: nameDuplicates } = await supabase
+      .from('chartOfAccounts')
+      .select('accountID')
+      .eq('accountName', formData.accountName.trim());
+
+    const nameConflict = nameDuplicates?.filter(
+      (acc) => !isEditing || acc.accountID !== parseInt(id, 10)
+    );
+
+    if (nameConflict && nameConflict.length > 0) {
+      alert('An account with this name already exists. Duplicate account names are not allowed');
       return;
     }
 
     setLoading(true);
+    const actorUserId = parseInt(user?.userID, 10);
+
+    if (!Number.isFinite(actorUserId) || actorUserId <= 0) {
+      alert('Unable to determine current administrator user ID.');
+      setLoading(false);
+      return;
+    }
 
     // Check subcategory validity
     const validSubcategories = subcategoriesMap[formData.type] || [];
@@ -244,20 +287,19 @@ function AccountForm() {
       orderNumber: parseInt(formData.orderNumber, 10) || 0,
       active: isEditing ? formData.active : true,
       statementType: formData.statementType,
-      createdBy: isEditing ? formData.createdBy : (parseInt(user?.userID, 10) || 0),
+      createdBy: isEditing ? formData.createdBy : actorUserId,
       createdAt: isEditing ? formData.createdAt : new Date().toISOString()
     };
 
-    let error;
-    if (isEditing) {
-      const { error: updateError } = await updateRecord('chartOfAccounts', id, accountData, 'accountID');
-      error = updateError;
-    } else {
-      const { error: insertError } = await insertRecord('chartOfAccounts', accountData);
-      error = insertError;
-    }
+    console.log('Submitting account data to Supabase:', accountData);
 
-    if (!error) {
+    try {
+      if (isEditing) {
+        await updateChartAccountWithActor(parseInt(id, 10), accountData, actorUserId);
+      } else {
+        await createChartAccountWithActor(accountData, actorUserId);
+      }
+
       alert(`Account ${isEditing ? 'updated' : 'added'} successfully!`);
       try {
         const { data: admins, error: adminError } = await fetchFromTable('user', {
@@ -282,9 +324,11 @@ Normal Side: ${accountData.normalSide}`;
         console.warn('Failed to send admin notification emails:', emailErr);
       }
       navigate('/admin/chart-of-accounts');
-    } else {
+    } catch (error) {
       console.error('Supabase submission error:', error);
       alert(`Error: ${error.message}`);
+    } finally {
+      setLoading(false);
     }
 
     setLoading(false);

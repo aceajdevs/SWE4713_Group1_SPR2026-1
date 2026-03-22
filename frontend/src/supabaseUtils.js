@@ -70,6 +70,7 @@ export async function insertRecord(tableName, record) {
  */
 export async function updateRecord(tableName, id, updates, idColumn = 'id') {
   try {
+    const idColumn = tableName === 'chartOfAccounts' ? 'accountID' : 'id';
     const { data, error } = await supabase
       .from(tableName)
       .update(updates)
@@ -92,6 +93,7 @@ export async function updateRecord(tableName, id, updates, idColumn = 'id') {
  */
 export async function deleteRecord(tableName, id, idColumn = 'id') {
   try {
+    const idColumn = tableName === 'chartOfAccounts' ? 'accountID' : 'id';
     const { error } = await supabase.from(tableName).delete().eq(idColumn, id);
     if (error) throw error;
     return { success: true, error: null };
