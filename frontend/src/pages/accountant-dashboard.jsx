@@ -10,7 +10,7 @@ function AccountantDashboard() {
         <div className="dashboard-card">
           <div className="dashboard-header">
             <h1>Dashboard</h1>
-            <p className="muted">Welcome to the Better Financial Future Accountant Dashboard.  Here is where the stuff will go</p>
+            <p className="muted">Welcome to the Better Financial Future Accountant Dashboard. Here is where the stuff will go</p>
           </div>
         </div>
       </main>
