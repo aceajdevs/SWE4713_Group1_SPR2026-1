@@ -28,6 +28,14 @@ function ChartOfAccounts() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const isAdmin = user?.role === 'administrator';
+  const dashboardPath =
+    user?.role === 'administrator'
+      ? '/admin-dashboard'
+      : user?.role === 'manager'
+        ? '/manager-dashboard'
+        : user?.role === 'accountant'
+          ? '/accountant-dashboard'
+          : '/dashboard';
 
   useEffect(() => {
     if (!user) {
@@ -94,6 +102,12 @@ Number: ${account.accountNumber}`;
     if (e.key === 'Enter') handleSearch();
   };
 
+  const handleAmountValueChange = (value) => {
+    if (value === '' || /^\d*(\.\d{0,2})?$/.test(value)) {
+      setFilters({ ...filters, amountValue: value });
+    }
+  };
+
   const filteredAccounts = accounts.filter(account => {
     const search = searchQuery.trim().toLowerCase();
     const typedName = filters.accountName.trim().toLowerCase();
@@ -122,6 +136,8 @@ Number: ${account.accountNumber}`;
       if (filters.amountOperator === '=') matchesAmount = balance === rawAmount;
       if (filters.amountOperator === '>=') matchesAmount = balance >= rawAmount;
       if (filters.amountOperator === '<=') matchesAmount = balance <= rawAmount;
+      if (filters.amountOperator === '>') matchesAmount = balance > rawAmount;
+      if (filters.amountOperator === '<') matchesAmount = balance < rawAmount;
     }
 
     const matchesStatus =
@@ -192,7 +208,7 @@ Number: ${account.accountNumber}`;
               Add New Account
             </button>
           )}
-          <button onClick={() => navigate('/admin-dashboard')} className="button">
+          <button onClick={() => navigate(dashboardPath)} className="button">
             Back to Dashboard
           </button>
         </div>
@@ -244,7 +260,7 @@ Number: ${account.accountNumber}`;
       {filterPopupVisible && (
         <div className="filter-popup">
           <div className="filter-item">
-            <label>Account Name:</label>
+            <label style={{ marginRight: '8px' }}>Account Name:</label>
             <input
               type="text"
               value={filters.accountName}
@@ -255,7 +271,7 @@ Number: ${account.accountNumber}`;
             />
           </div>
           <div className="filter-item">
-            <label>Account Number:</label>
+            <label style={{ marginRight: '8px' }}>Account Number:</label>
             <input
               type="text"
               value={filters.accountNumber}
@@ -266,7 +282,7 @@ Number: ${account.accountNumber}`;
             />
           </div>
           <div className="filter-item">
-            <label>Category:</label>
+            <label style={{ marginRight: '8px' }}>Category:</label>
             <select
               value={filters.category}
               onChange={(e) => setFilters({ ...filters, category: e.target.value })}
@@ -282,7 +298,7 @@ Number: ${account.accountNumber}`;
             </select>
           </div>
           <div className="filter-item">
-            <label>Subcategory:</label>
+            <label style={{ marginRight: '8px' }}>Subcategory:</label>
             <input
               type="text"
               value={filters.subCategory}
@@ -292,8 +308,8 @@ Number: ${account.accountNumber}`;
               placeholder="e.g., Current Assets"
             />
           </div>
-          <div className="filter-item">
-            <label>Amount:</label>
+          <div className="filter-item" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <label style={{ marginRight: '8px' }}>Amount:</label>
             <div style={{ display: 'flex', gap: '6px' }}>
               <select
                 value={filters.amountOperator}
@@ -303,36 +319,35 @@ Number: ${account.accountNumber}`;
               >
                 <option value="">-</option>
                 <option value="=">=</option>
+                <option value=">">&gt;</option>
+                <option value="<">&lt;</option>
                 <option value=">=">&gt;=</option>
                 <option value="<=">&lt;=</option>
               </select>
               <input
-                type="number"
-                min="0"
-                step="0.01"
+                type="text"
+                inputMode="decimal"
                 value={filters.amountValue}
-                onChange={(e) => setFilters({ ...filters, amountValue: e.target.value })}
+                onChange={(e) => handleAmountValueChange(e.target.value)}
                 className="input-field"
                 style={{ padding: '5px', width: '130px' }}
                 placeholder="0.00"
               />
             </div>
           </div>
-          {isAdmin && (
-            <div className="filter-item">
-              <label>Status:</label>
-              <select
-                value={filters.status}
-                onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-                className="input-field"
-                style={{ padding: '5px', width: 'auto' }}
-              >
-                <option value="">All Statuses</option>
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-              </select>
-            </div>
-          )}
+          <div className="filter-item">
+            <label style={{ marginRight: '8px' }}>Status:</label>
+            <select
+              value={filters.status}
+              onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+              className="input-field"
+              style={{ padding: '5px', width: 'auto' }}
+            >
+              <option value="">All Statuses</option>
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+            </select>
+          </div>
           <button
             onClick={resetAllFilters}
             className="button"
@@ -404,8 +419,8 @@ Number: ${account.accountNumber}`;
               <th>Current Balance</th>
               <th>Added At</th>
               <th>Last Modified</th>
-              {isAdmin && <th>Status</th>}
-              <th>Actions</th>
+              <th>Status</th>
+              {isAdmin && <th>Actions</th>}
             </tr>
           </thead>
           <tbody>
@@ -439,9 +454,9 @@ Number: ${account.accountNumber}`;
                   <td>${(account.initBalance || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   <td>{account.createdAt ? new Date(account.createdAt).toLocaleString() : 'N/A'}</td>
                   <td>{account.createdAt ? new Date(account.createdAt).toLocaleString() : 'N/A'}</td>
-                  {isAdmin && <td>{account.active ? 'Active' : 'Inactive'}</td>}
-                  <td>
-                    {isAdmin && (
+                  <td>{account.active ? 'Active' : 'Inactive'}</td>
+                  {isAdmin && (
+                    <td>
                       <>
                         <button
                           onClick={(e) => {
@@ -461,8 +476,8 @@ Number: ${account.accountNumber}`;
                           {account.active ? 'Deactivate' : 'Activate'}
                         </button>
                       </>
-                    )}
-                  </td>
+                    </td>
+                  )}
                 </tr>
               ))
             )}

@@ -18,15 +18,9 @@ function Navbar() {
     setIsMenuOpen(false);
   };
 
-  const handleChartOfAccountsNavigation = () => {
-    if (user && user.role === 'administrator') {
-      handleNavigation('/chart-of-accounts');
-      return;
-    } else {
-      handleNavigation('/chart-of-accounts');
-      return;
-    }
-  };
+  const canAccessChartOfAccounts = ['administrator', 'manager', 'accountant'].includes(user?.role);
+  const isAdmin = user?.role === 'administrator';
+
   const handleDashboardNavigation = () => {
     if (user && user.role) {
       if (user.role === 'administrator') {
@@ -83,7 +77,7 @@ function Navbar() {
               Dashboard
             </a>
           </li>
-          {user && user.role === 'administrator' && (
+          {isAdmin && (
             <>
               <li className="nav-item">
                 <a
@@ -94,15 +88,6 @@ function Navbar() {
                   User Account Requests
                 </a>
               </li>
-                <li className="nav-item">
-                  <a
-                    href="#/admin/chart-of-accounts"
-                    className="nav-link"
-                    onClick={() => handleNavigation('/admin/chart-of-accounts')}
-                  >
-                    Chart of Accounts
-                  </a>
-                </li>
               <li className="nav-item">
                 <a
                   href="#/admin/create-user"
@@ -113,6 +98,17 @@ function Navbar() {
                 </a>
               </li>
             </>
+          )}
+          {canAccessChartOfAccounts && (
+            <li className="nav-item">
+              <a
+                href="#/admin/chart-of-accounts"
+                className="nav-link"
+                onClick={() => handleNavigation('/admin/chart-of-accounts')}
+              >
+                Chart of Accounts
+              </a>
+            </li>
           )}
           <li className="nav-item">
             <a

@@ -1,19 +1,32 @@
 import '../global.css';
+import { useNavigate } from 'react-router-dom';
+import UserReport from '../components/admin/UserReport';
+import SuspendUser from '../components/admin/SuspendUser';
+import ExpiredPasswords from '../components/admin/ExpiredPasswords';
 
 function AccountantDashboard() {
-  return (
-    <div className="dashboard-page">
-      <header className="login-header">
-      </header>
+  const navigate = useNavigate();
 
-      <main className="dashboard-main">
-        <div className="dashboard-card">
-          <div className="dashboard-header">
-            <h1>Dashboard</h1>
-            <p className="muted">Welcome to the Better Financial Future Accountant Dashboard.  Here is where the stuff will go</p>
-          </div>
-        </div>
-      </main>
+  return (
+    <div>
+      <h1>Accountant Dashboard</h1>
+
+      <div style={{ marginBottom: '16px' }}>
+        <button onClick={() => navigate('/admin/edit-user')} style={{ marginRight: '8px' }}>
+          Edit User
+        </button>
+        <button onClick={() => navigate('/admin/chart-of-accounts')}>
+          Chart of Accounts
+        </button>
+      </div>
+
+      <UserReport />
+      <hr />
+
+      <SuspendUser />
+      <hr />
+
+      <ExpiredPasswords />
     </div>
   );
 }

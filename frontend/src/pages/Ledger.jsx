@@ -42,32 +42,17 @@ function Ledger() {
     setLoading(false);
   };
 
-  if (loading) return <p>Loading ledger...</p>;
-  if (error) return <p style={{ color: 'red' }}>{error}</p>;
+  const ledgerTitle = account?.accountName ? `Ledger: ${account.accountName}` : 'Ledger';
 
   return (
     <div className="container">
       <div className="header-row">
-        <h1>Ledger</h1>
+        <h1>{loading ? 'Loading Account Ledger...' : ledgerTitle}</h1>
         <button onClick={() => navigate('/admin/chart-of-accounts')} className="button">
           Back to Chart of Accounts
         </button>
       </div>
-      <div style={{ marginBottom: '20px' }}>
-        <p><strong>Account ID:</strong> {account.accountID}</p>
-        <p><strong>Account Number:</strong> {account.accountNumber}</p>
-        <p><strong>Account Name:</strong> {account.accountName}</p>
-        <p><strong>Description:</strong> {account.description || 'N/A'}</p>
-        <p><strong>Category:</strong> {account.type || 'N/A'}</p>
-        <p><strong>Subcategory:</strong> {account.subType || 'N/A'}</p>
-        <p><strong>Normal Side:</strong> {account.normalSide || 'N/A'}</p>
-        <p>
-          <strong>Current Balance:</strong>{' '}
-          ${(account.initBalance || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-        </p>
-        <p><strong>Statement Type:</strong> {account.statementType || 'N/A'}</p>
-        <p><strong>Status:</strong> {account.active ? 'Active' : 'Inactive'}</p>
-      </div>
+      {!loading && error && <p style={{ display: 'none' }}>{error}</p>}
     </div>
   );
 }
