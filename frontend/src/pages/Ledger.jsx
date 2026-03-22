@@ -108,8 +108,8 @@ function Ledger() {
             </thead>
             <tbody>
               <tr style={{ fontStyle: 'italic', backgroundColor: '#f9f9f9' }}>
-                <td>—</td>
-                <td>—</td>
+                <td>-</td>
+                <td>-</td>
                 <td>Opening Balance</td>
                 <td>{account.normalSide === 'Debit' ? formatCurrency(account.initBalance) : '-'}</td>
                 <td>{account.normalSide === 'Credit' ? formatCurrency(account.initBalance) : '-'}</td>
