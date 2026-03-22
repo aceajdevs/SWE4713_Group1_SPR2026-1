@@ -15,6 +15,7 @@ import CreateUserPage from './pages/CreateUserPage'
 import ChartOfAccounts from './pages/ChartOfAccounts'
 import AccountForm from './pages/AccountForm'
 import UserManualPage from './pages/UserManualPage'
+import Ledger from './pages/Ledger'
 import { checkPasswordsAboutToExpire } from './services/passwordExpiryService';
 import { useEffect } from 'react';
 
@@ -58,6 +59,7 @@ function AppLayout() {
         <Route path="/admin/chart-of-accounts" element={<ChartOfAccounts />} />
         <Route path="/admin/add-account" element={<AccountForm />} />
         <Route path="/admin/edit-account/:id" element={<AccountForm />} />
+        <Route path="/admin/ledger/:accountNumber" element={<Ledger />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage/>} />
         <Route path="/signup" element={<SignUpPage/>} />
         <Route path="/accountant-dashboard" element={<AccountantDashboard/>} />
