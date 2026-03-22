@@ -204,7 +204,7 @@ Number: ${account.accountNumber}`;
               <tr key={account.accountID}>
                 <td>
                   <button
-                    onClick={() => navigate(`/admin/ledger/${account.accountID}`)}
+                    onClick={() => navigate(`/admin/ledger/${account.accountNumber}`)}
                     style={{
                       background: 'none',
                       border: 'none',

@@ -59,7 +59,7 @@ function AppLayout() {
         <Route path="/admin/chart-of-accounts" element={<ChartOfAccounts />} />
         <Route path="/admin/add-account" element={<AccountForm />} />
         <Route path="/admin/edit-account/:id" element={<AccountForm />} />
-        <Route path="/admin/ledger/:id" element={<Ledger />} />
+        <Route path="/admin/ledger/:accountNumber" element={<Ledger />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage/>} />
         <Route path="/signup" element={<SignUpPage/>} />
         <Route path="/accountant-dashboard" element={<AccountantDashboard/>} />
