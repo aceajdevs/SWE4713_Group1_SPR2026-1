@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
-import { fetchFromTable, updateRecord } from '../supabaseUtils';
-import { sendAdminEmail } from '../services/emailService';
 import { fetchFromTable } from '../supabaseUtils';
+import { sendAdminEmail } from '../services/emailService';
 import { setChartAccountActiveWithActor } from '../services/chartOfAccountsService';
 import '../global.css';
 
@@ -62,29 +61,6 @@ function ChartOfAccounts() {
     setLoading(false);
   };
 
-  const handleDeactivate = async (accountID, currentStatus) => {
-    const account = accounts.find(acc => acc.accountID === accountID);
-
-    if (currentStatus && account && (account.initBalance || 0) !== 0) {
-      alert(`Cannot deactivate "${account.accountName}" because it has a non-zero balance of $${account.initBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.`);
-      return;
-    }
-
-    const newStatus = !currentStatus;
-    const { error } = await updateRecord('chartOfAccounts', accountID, { active: newStatus }, 'accountID');
-    if (error) {
-      console.error('Update blocked (RLS or network):', error);
-      alert('Failed to update account status. You may not have permission.');
-      return;
-    }
-    try {
-      const { data: admins, error: adminError } = await fetchFromTable('user', {
-        select: 'email, fName, lName',
-        filters: { role: 'administrator' }
-      });
-      if (!adminError && admins && account) {
-        const subject = `Account Status Changed: ${account.accountName}`;
-        const message = `The status of the following account has been changed to ${newStatus ? 'Active' : 'Inactive'} by ${user.fName} ${user.lName}:
   const handleDeactivate = async (id, currentStatus) => {
     const actorUserId = parseInt(user?.userID, 10);
     if (!Number.isFinite(actorUserId) || actorUserId <= 0) {
@@ -92,7 +68,6 @@ function ChartOfAccounts() {
       return;
     }
 
-    // If we're trying to deactivate, check balance first
     if (currentStatus) {
       const account = accounts.find((acc) => acc.accountID === id);
       if (account && account.initBalance > 0) {
@@ -104,23 +79,25 @@ function ChartOfAccounts() {
     try {
       const newStatus = !currentStatus;
       await setChartAccountActiveWithActor(id, newStatus, actorUserId);
-      loadAccounts();
-    } catch (error) {
-      console.error('Failed to update account status:', error);
-      alert(`Error: ${error.message}`)
-    }
-  }
 
-Name: ${account.accountName}
-Number: ${account.accountNumber}`;
+      const account = accounts.find((acc) => acc.accountID === id);
+      const { data: admins, error: adminError } = await fetchFromTable('user', {
+        select: 'email, fName, lName',
+        filters: { role: 'administrator' }
+      });
+      if (!adminError && admins && account) {
+        const subject = `Account Status Changed: ${account.accountName}`;
+        const message = `The status of the following account has been changed to ${newStatus ? 'Active' : 'Inactive'} by ${user.fName} ${user.lName}:\n\nName: ${account.accountName}\nNumber: ${account.accountNumber}`;
         for (const admin of admins) {
           await sendAdminEmail(admin.email, `${admin.fName} ${admin.lName}`, subject, message);
         }
       }
-    } catch (emailErr) {
-      console.warn('Failed to send admin notification emails:', emailErr);
+
+      loadAccounts();
+    } catch (err) {
+      console.error('Failed to update account status:', err);
+      alert(`Error: ${err.message}`);
     }
-    loadAccounts();
   };
 
   const handleSearch = () => setSearchQuery(searchTerm);
@@ -211,19 +188,14 @@ Number: ${account.accountNumber}`;
       setSearchQuery('');
       return;
     }
-
     if (tokenKey === 'amount') {
       setFilters(prev => ({ ...prev, amountOperator: '', amountValue: '' }));
       return;
     }
-
-    if (tokenKey === 'status') {
-      setFilters(prev => ({ ...prev, status: '' }));
-      return;
-    }
-
     setFilters(prev => ({ ...prev, [tokenKey]: '' }));
   };
+
+  const fmt = (val) => (val || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   return (
     <div className="container">
@@ -452,31 +424,6 @@ Number: ${account.accountNumber}`;
                   style={{ textAlign: 'center', padding: '20px', color: '#6c757d' }}
                 >
                   No accounts exist for the selected filters.
-            {filteredAccounts.map((account) => (
-              <tr key={account.accountID}>
-                <td>{account.accountNumber}</td>
-                <td>{account.accountName}</td>
-                <td>{account.description || 'N/A'}</td>
-                <td>{account.subType}</td>
-                <td>{account.normalSide}</td>
-                <td>${(account.initBalance || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                <td>{account.normalSide === 'Debit' ? `$${(account.initBalance || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '-'}</td>
-                <td>{account.normalSide === 'Credit' ? `$${(account.initBalance || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '-'}</td>
-                <td>${(account.initBalance || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                <td>{account.createdAt ? new Date(account.createdAt).toLocaleString() : 'N/A'}</td>
-                <td>{account.createdAt ? new Date(account.createdAt).toLocaleString() : 'N/A'}</td>
-                {isAdmin && <td>{account.active ? 'Active' : 'Inactive'}</td>}
-                <td>
-                  {isAdmin && (
-                    <>
-                      <button onClick={() => navigate(`/admin/edit-account/${account.accountID}`)} style={{ marginRight: '5px' }}>
-                        Edit
-                      </button>
-                      <button onClick={() => handleDeactivate(account.accountID, account.active)}>
-                        {account.active ? 'Deactivate' : 'Activate'}
-                      </button>
-                    </>
-                  )}
                 </td>
               </tr>
             ) : (
@@ -494,34 +441,32 @@ Number: ${account.accountNumber}`;
                   <td>{account.description || 'N/A'}</td>
                   <td>{account.subType}</td>
                   <td>{account.normalSide}</td>
-                  <td>${(account.initBalance || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                  <td>{account.normalSide === 'Debit' ? `$${(account.initBalance || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '-'}</td>
-                  <td>{account.normalSide === 'Credit' ? `$${(account.initBalance || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '-'}</td>
-                  <td>${(account.initBalance || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                  <td>${fmt(account.initBalance)}</td>
+                  <td>{account.normalSide === 'Debit' ? `$${fmt(account.initBalance)}` : '-'}</td>
+                  <td>{account.normalSide === 'Credit' ? `$${fmt(account.initBalance)}` : '-'}</td>
+                  <td>${fmt(account.initBalance)}</td>
                   <td>{account.createdAt ? new Date(account.createdAt).toLocaleString() : 'N/A'}</td>
-                  <td>{account.createdAt ? new Date(account.createdAt).toLocaleString() : 'N/A'}</td>
+                  <td>{account.updatedAt ? new Date(account.updatedAt).toLocaleString() : 'N/A'}</td>
                   <td>{account.active ? 'Active' : 'Inactive'}</td>
                   {isAdmin && (
                     <td>
-                      <>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/admin/edit-account/${account.accountID}`);
-                          }}
-                          style={{ marginRight: '5px' }}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeactivate(account.accountID, account.active);
-                          }}
-                        >
-                          {account.active ? 'Deactivate' : 'Activate'}
-                        </button>
-                      </>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/admin/edit-account/${account.accountID}`);
+                        }}
+                        style={{ marginRight: '5px' }}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeactivate(account.accountID, account.active);
+                        }}
+                      >
+                        {account.active ? 'Deactivate' : 'Activate'}
+                      </button>
                     </td>
                   )}
                 </tr>
@@ -570,11 +515,12 @@ Number: ${account.accountNumber}`;
                 <tr><th>Category</th><td>{selectedAccount.type || 'N/A'}</td></tr>
                 <tr><th>Subcategory</th><td>{selectedAccount.subType || 'N/A'}</td></tr>
                 <tr><th>Normal Side</th><td>{selectedAccount.normalSide || 'N/A'}</td></tr>
-                <tr><th>Initial Balance</th><td>${(selectedAccount.initBalance || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td></tr>
-                <tr><th>Current Balance</th><td>${(selectedAccount.initBalance || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td></tr>
+                <tr><th>Initial Balance</th><td>${fmt(selectedAccount.initBalance)}</td></tr>
+                <tr><th>Current Balance</th><td>${fmt(selectedAccount.initBalance)}</td></tr>
                 <tr><th>Statement Type</th><td>{selectedAccount.statementType || 'N/A'}</td></tr>
                 <tr><th>Status</th><td>{selectedAccount.active ? 'Active' : 'Inactive'}</td></tr>
                 <tr><th>Added At</th><td>{selectedAccount.createdAt ? new Date(selectedAccount.createdAt).toLocaleString() : 'N/A'}</td></tr>
+                <tr><th>Last Modified</th><td>{selectedAccount.updatedAt ? new Date(selectedAccount.updatedAt).toLocaleString() : 'N/A'}</td></tr>
               </tbody>
             </table>
           )}
