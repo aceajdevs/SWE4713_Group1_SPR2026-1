@@ -1,18 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import './navbar.css';
 import logo from '../assets/Images/resourceDirectory/logo.png';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import { HelpTooltip } from './components/HelpTooltip';
+import Calendar from './components/Calendar';
 
 function Navbar() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const calendarAnchorRef = useRef(null);
 
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
+  const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
   const handleNavigation = (path) => {
     navigate(path);
@@ -24,18 +25,9 @@ function Navbar() {
 
   const handleDashboardNavigation = () => {
     if (user && user.role) {
-      if (user.role === 'administrator') {
-        handleNavigation('/admin-dashboard');
-        return;
-      }
-      if (user.role === 'manager') {
-        handleNavigation('/manager-dashboard');
-        return;
-      }
-      if (user.role === 'accountant') {
-        handleNavigation('/accountant-dashboard');
-        return;
-      }
+      if (user.role === 'administrator') { handleNavigation('/admin-dashboard'); return; }
+      if (user.role === 'manager') { handleNavigation('/manager-dashboard'); return; }
+      if (user.role === 'accountant') { handleNavigation('/accountant-dashboard'); return; }
     }
     handleNavigation('/dashboard');
   };
@@ -45,18 +37,36 @@ function Navbar() {
     navigate('/login');
     setIsMenuOpen(false);
   };
+
   return (
     <nav className="navbar">
-      <div className="navbar-container">
+      <div className="navbar-container" style={{ position: 'relative' }}>
         <div
           className="navbar-logo"
-          onClick={(e) => {
-            e.preventDefault();
-            handleDashboardNavigation();
-          }}
+          onClick={(e) => { e.preventDefault(); handleDashboardNavigation(); }}
         >
           <img src={logo} alt="App Logo" className="navbar-logo-img" />
           <span className="navbar-brand">Dashboard</span>
+        </div>
+
+        <div style={{ position: 'relative' }}>
+          <a
+            ref={calendarAnchorRef}
+            href="#"
+            className="nav-link"
+            onClick={(e) => {
+              e.preventDefault();
+              setCalendarOpen(prev => !prev);
+            }}
+          >
+            Calendar
+          </a>
+          {calendarOpen && (
+            <Calendar
+              anchorRef={calendarAnchorRef}
+              onClose={() => setCalendarOpen(false)}
+            />
+          )}
         </div>
 
         <div className="hamburger" onClick={toggleMenu}>
@@ -66,18 +76,6 @@ function Navbar() {
         </div>
 
         <ul className={`nav-menu ${isMenuOpen ? 'active' : ''}`}>
-          <li className="nav-item">
-            <a
-              href="#"
-              className="nav-link"
-              onClick={(e) => {
-                e.preventDefault();
-                handleDashboardNavigation();
-              }}
-            >
-              Dashboard
-            </a>
-          </li>
           {isAdmin && (
             <>
               <li className="nav-item">
@@ -115,10 +113,7 @@ function Navbar() {
             <a
               href="#/help"
               className="nav-link"
-              onClick={(e) => {
-                e.preventDefault();
-                handleNavigation('/help');
-              }}
+              onClick={(e) => { e.preventDefault(); handleNavigation('/help'); }}
             >
               Help
             </a>
@@ -128,18 +123,17 @@ function Navbar() {
               <div className="nav-user-display">
                 <div className="nav-user-avatar">
                   {user.picture_path || user.picturePath ? (
-                    <img 
-                      src={user.picture_path || user.picturePath} 
+                    <img
+                      src={user.picture_path || user.picturePath}
                       alt={`${user.username}'s profile`}
                       className="nav-user-img"
                       onError={(e) => {
-                        // placeholder if image fails to load
                         e.target.style.display = 'none';
                         e.target.nextSibling.style.display = 'flex';
                       }}
                     />
                   ) : null}
-                  <div 
+                  <div
                     className="nav-user-placeholder"
                     style={{ display: (user.picture_path || user.picturePath) ? 'none' : 'flex' }}
                   >
@@ -168,4 +162,3 @@ function Navbar() {
 }
 
 export default Navbar;
-
