@@ -4,6 +4,7 @@ import { useAuth } from '../AuthContext';
 import { fetchFromTable, insertRecord, updateRecord } from '../supabaseUtils';
 import { sendAdminEmail } from '../services/emailService';
 import '../global.css';
+import './AccountForm.css';
 
 const subcategoriesMap = {
   'Assets': ['Current Assets', 'Fixed Assets', 'Intangible Assets', 'Other Assets'],
@@ -319,7 +320,7 @@ Normal Side: ${accountData.normalSide}`;
             placeholder="Auto-generated"
           />
         </div>
-        <div className="span-2">
+        <div className="span-1">
           <label>Description:</label>
           <textarea
             name="description"

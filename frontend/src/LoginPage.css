@@ -4,35 +4,13 @@
   flex-direction: column;
   font-family: system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial;
   background: #f5f7fb;
-  color: #111827;
 }
-
 .login-header {
   height: 96px; /* increased to fit larger logo */
   display: flex;
   align-items: center;
-  padding: 0 20px;
-}
-
-.logo {
-  width: 250px;
-  height: 96px;
-  background: linear-gradient(90deg,#e2e8f0,#cbd5e1);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
   justify-content: center;
 }
-
-.logo img {
-  display: block;
-  max-width: 100%;
-  max-height: 100%;
-  width: auto; /* let the image keep aspect ratio */
-  height: auto;
-  object-fit: contain;
-}
-
 .login-main {
   flex: 1;
   display: flex;
@@ -60,7 +38,7 @@
 .login-form p {
   font-size: 14px;
   color: #6b7280;
-  margin-bottom: 20px;
+
 }
 
 .login-form h5{
@@ -69,6 +47,21 @@
   margin-top: 4px;
   margin-bottom: 2px;
   padding: 0 4px;
+}
+
+/* override the gray background */
+.logo {
+  background: transparent !important;
+  border-radius: 0;
+  width: auto;
+  height: auto;
+  display: block;
+  text-align: center;
+  margin-left: 150px;
+}
+.logo img {
+  max-width: 200px;
+  height: auto;
 }
 .input {
   height: 44px;
@@ -155,20 +148,52 @@
   min-width: 64px;
   height: 40px;
   border-radius: 8px;
-  background: #042069; /* primary color */
+  background: #0052cc; /* primary color */
   color: #ffffff;
   border: none;
   cursor: pointer;
   padding: 0 12px;
   order: 0;
 }
-
+.button-row .login-button {
+  min-width: 64px;
+  height: 40px;
+  border-radius: 8px;
+  background: #33A1Fd; /* primary color */
+  color: white;
+  border: none;
+  cursor: pointer;
+  padding: 0 12px;
+  order: 0;
+}
+.button-row button:hover {
+    background-color: #2563EB;
+}
 /* Make the "Forgot Password?" button wider to make the text fits comfortably */
 .button-row button:nth-child(2) {
   min-width: 160px;
   padding: 0 18px;
 }
-
+.forgot-clear-row {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  width: 100%;
+  margin-top: 8px;
+}
+.forgot-clear-row button {
+  min-width: 64px;
+  height: 40px;
+  border-radius: 8px;
+  background: #0052cc; /* primary color */
+  color: #ffffff;
+  border: none;
+  cursor: pointer;
+  padding: 0 12px;
+}
+.forgot-clear-row button:hover {
+    background-color: #2563EB;
+}
 /* Wrapper for the Cancel button so it is always centered on its own row */
 .cancel-wrap {
   display: flex;
@@ -179,12 +204,15 @@
 
 /* Make the cancel button take its own row and center it */
 .cancel-button {
-  max-width: 220px;
-  margin: 12px 0 0;
-  padding: 0 12px;
-  background: #042069;
-  color: #fff;
+  min-width: 64px;
+  height: 40px;
+  border-radius: 8px;
+  background: #0052cc; /* primary color */
+  color: #ffffff;
   border: none;
+  cursor: pointer;
+  padding: 0 12px;
+  order: 0;
 }
 
 .cancel-button:focus {

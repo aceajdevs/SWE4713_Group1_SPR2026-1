@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getAllUsers } from '../../services/adminService';
 import { sendAdminEmail } from '../../services/emailService';
+import './UserReport.css';
 
 function UserReport() {
     const [selectedUser, setSelectedUser] = useState(null);
@@ -55,7 +56,7 @@ function UserReport() {
     return (
         <div>
             <h2>All Users</h2>
-            <table border="1">
+            <table>
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -65,6 +66,7 @@ function UserReport() {
                         <th>Email</th>
                         <th>Role</th>
                         <th>Status</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>

@@ -162,15 +162,15 @@ function LoginPage() {
     <div className="login-page">
       <PageHelpCorner topic="login" />
       <header className="login-header">
-        <div className="logo" aria-hidden="true">
-            <img src={logo} alt="App Logo" />
-        </div>
       </header>
 
       <main className="login-main">
         <form className="login-form" onSubmit={(e) => e.preventDefault()}>
+        <div className="logo" aria-hidden="true">
+            <img src={logo} alt="App Logo" />
+        </div>
           <h1>Login</h1>
-          <p>Welcome back! Please enter your credentials to log in.</p>
+          <p>Welcome back! Please enter your credentials to log in or Sign Up if you are a new user.</p>
           <h5>Username</h5>
           <HelpTooltip
             text="Your account name provided by your administrator (or assigned when your account was created)."
@@ -204,23 +204,22 @@ function LoginPage() {
           </HelpTooltip>
 
           <div className="button-row" role="group">
-            <HelpTooltip text="Open steps to reset your password using email, user ID, and security questions.">
-              <button type="button" onClick={navToForgotPassword}>Forgot Password?</button>
-            </HelpTooltip>
             <HelpTooltip text="Submit a new account request for an administrator to review.">
               <button type="button" onClick={navToSignUp}>Sign Up</button>
             </HelpTooltip>
             <HelpTooltip text="Sign in with the username and password entered above.">
               <button type="button" className="login-button" onClick={handleLogin}>Login</button>
             </HelpTooltip>
-            <HelpTooltip text="Clear the username and password fields.">
-              <button type="button" onClick={handleClear}>Clear</button>
-            </HelpTooltip>
-          </div>
-
-          <div className="cancel-wrap">
             <HelpTooltip text="Return to the welcome screen without signing in.">
               <button type="button" className="cancel-button" onClick={navToWelcome}>Cancel</button>
+            </HelpTooltip>
+          </div>
+          <div className="forgot-clear-row" role="group">
+            <HelpTooltip text="Open steps to reset your password using email, user ID, and security questions.">
+              <button type="button" onClick={navToForgotPassword}>Forgot Password?</button>
+            </HelpTooltip>
+            <HelpTooltip text="Clear the username and password fields.">
+              <button type="button" onClick={handleClear}>Clear</button>
             </HelpTooltip>
           </div>
         </form>

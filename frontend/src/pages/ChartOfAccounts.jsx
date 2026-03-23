@@ -4,6 +4,7 @@ import { useAuth } from '../AuthContext';
 import { fetchFromTable, updateRecord } from '../supabaseUtils';
 import { sendAdminEmail } from '../services/emailService';
 import '../global.css';
+import './ChartOfAccounts.css';
 
 function ChartOfAccounts() {
   const [accounts, setAccounts] = useState([]);
@@ -94,7 +95,7 @@ Number: ${account.accountNumber}`;
   });
 
   return (
-    <div className="container">
+    <div className="page-chart-of-accounts">
       <h1>Chart of Accounts</h1>
       <div className="header-row">
         <div className="button-group">
@@ -107,14 +108,9 @@ Number: ${account.accountNumber}`;
             Back to Dashboard
           </button>
         </div>
-        <div className="search-group" style={{ marginRight: '20px' }}>
-          <button
-            onClick={() => setFilterPopupVisible(!filterPopupVisible)}
-            className="button"
-            style={{ padding: '8px 15px' }}
-          >
-            Filters {filterPopupVisible ? '▲' : '▼'}
-          </button>
+      </div>
+      <div className="search-and-filter">
+        <div className="search-group">
           <input
             type="text"
             placeholder="Search accounts..."
@@ -122,60 +118,66 @@ Number: ${account.accountNumber}`;
             onChange={(e) => setSearchTerm(e.target.value)}
             onKeyDown={handleKeyDown}
             className="input-field"
-            style={{ width: '250px' }}
+            style={{ width: '300px' }}
           />
           <button onClick={handleSearch} className="button" style={{ padding: '8px 15px' }}>
             Search
           </button>
+          <button
+            onClick={() => setFilterPopupVisible(!filterPopupVisible)}
+            className="button"
+            style={{ padding: '8px 15px' }}
+          >
+            Filters {filterPopupVisible ? '◀' : '▶'}
+          </button>
         </div>
-      </div>
-
-      {filterPopupVisible && (
-        <div className="filter-popup">
-          <div className="filter-item">
-            <label>Category:</label>
-            <select
-              value={filters.category}
-              onChange={(e) => setFilters({ ...filters, category: e.target.value })}
-              className="input-field"
-              style={{ padding: '5px', width: 'auto' }}
-            >
-              <option value="">All Categories</option>
-              <option value="Assets">Assets</option>
-              <option value="Liabilities">Liabilities</option>
-              <option value="Equity">Equity</option>
-              <option value="Revenue">Revenue</option>
-              <option value="Expenses">Expenses</option>
-            </select>
-          </div>
-          {isAdmin && (
+        {filterPopupVisible && (
+          <div className="filter-popup">
             <div className="filter-item">
-              <label>Status:</label>
+              <label>Category:</label>
               <select
-                value={filters.status}
-                onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                value={filters.category}
+                onChange={(e) => setFilters({ ...filters, category: e.target.value })}
                 className="input-field"
                 style={{ padding: '5px', width: 'auto' }}
               >
-                <option value="">All Statuses</option>
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
+                <option value="">All Categories</option>
+                <option value="Assets">Assets</option>
+                <option value="Liabilities">Liabilities</option>
+                <option value="Equity">Equity</option>
+                <option value="Revenue">Revenue</option>
+                <option value="Expenses">Expenses</option>
               </select>
             </div>
-          )}
-          <button
-            onClick={() => {
-              setFilters({ category: '', status: 'Active' });
-              setSearchTerm('');
-              setSearchQuery('');
-            }}
-            className="button"
-            style={{ padding: '5px 10px', backgroundColor: '#eee', color: '#333' }}
-          >
-            Reset
-          </button>
-        </div>
-      )}
+            {isAdmin && (
+              <div className="filter-item">
+                <label>Status:</label>
+                <select
+                  value={filters.status}
+                  onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                  className="input-field"
+                  style={{ padding: '5px', width: 'auto' }}
+                >
+                  <option value="">All Statuses</option>
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                </select>
+              </div>
+            )}
+            <button
+              onClick={() => {
+                setFilters({ category: '', status: 'Active' });
+                setSearchTerm('');
+                setSearchQuery('');
+              }}
+              className="button"
+              style={{ padding: '5px 10px' }}
+            >
+              Reset
+            </button>
+          </div>
+        )}
+      </div>
 
       {loading && <p>Loading accounts...</p>}
       {error && <p style={{ color: 'red' }}>{error}</p>}
