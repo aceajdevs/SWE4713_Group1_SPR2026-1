@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { HelpTooltip } from './HelpTooltip';
 import './PageHelpCorner.css';
 
 /**
@@ -17,13 +18,15 @@ export default function PageHelpCorner({ topic }) {
   };
 
   return (
-    <button
-      type="button"
-      className="page-help-corner"
-      onClick={openHelp}
-      aria-label="Open help and user manual"
-    >
-      Help
-    </button>
+    <HelpTooltip text="Open the user manual and help topics for this screen.">
+      <button
+        type="button"
+        className="page-help-corner"
+        onClick={openHelp}
+        aria-label="Open help and user manual"
+      >
+        Help
+      </button>
+    </HelpTooltip>
   );
 }

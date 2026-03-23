@@ -4,6 +4,7 @@ import { useAuth } from '../AuthContext';
 import { fetchFromTable } from '../supabaseUtils';
 import { sendAdminEmail } from '../services/emailService';
 import { setChartAccountActiveWithActor } from '../services/chartOfAccountsService';
+import { HelpTooltip } from '../components/HelpTooltip';
 import '../global.css';
 
 const defaultFilters = {
@@ -203,38 +204,48 @@ function ChartOfAccounts() {
       <div className="header-row">
         <div className="button-group">
           {isAdmin && (
-            <button onClick={() => navigate('/admin/add-account')} className="button">
-              Add New Account
-            </button>
+            <HelpTooltip text="Create a new account in the chart of accounts (administrators only).">
+              <button onClick={() => navigate('/admin/add-account')} className="button">
+                Add New Account
+              </button>
+            </HelpTooltip>
           )}
-          <button onClick={() => navigate(dashboardPath)} className="button">
-            Back to Dashboard
-          </button>
+          <HelpTooltip text="Return to your role dashboard without leaving the app.">
+            <button onClick={() => navigate(dashboardPath)} className="button">
+              Back to Dashboard
+            </button>
+          </HelpTooltip>
         </div>
         <div style={{ display: 'flex', gap: '8px', marginRight: '20px' }}>
-          <button
-            onClick={() => setViewMode('report')}
-            className="button"
-            style={{ padding: '8px 15px', opacity: viewMode === 'report' ? 1 : 0.8 }}
-          >
-            All Accounts Report
-          </button>
-          <button
-            onClick={() => setViewMode('individual')}
-            className="button"
-            style={{ padding: '8px 15px', opacity: viewMode === 'individual' ? 1 : 0.8 }}
-          >
-            Individual Account
-          </button>
+          <HelpTooltip text="Show all accounts in a single table report.">
+            <button
+              onClick={() => setViewMode('report')}
+              className="button"
+              style={{ padding: '8px 15px', opacity: viewMode === 'report' ? 1 : 0.8 }}
+            >
+              All Accounts Report
+            </button>
+          </HelpTooltip>
+          <HelpTooltip text="Pick one account from a list to view its details.">
+            <button
+              onClick={() => setViewMode('individual')}
+              className="button"
+              style={{ padding: '8px 15px', opacity: viewMode === 'individual' ? 1 : 0.8 }}
+            >
+              Individual Account
+            </button>
+          </HelpTooltip>
         </div>
         <div className="search-group" style={{ marginRight: '20px' }}>
-          <button
-            onClick={() => setFilterPopupVisible(!filterPopupVisible)}
-            className="button"
-            style={{ padding: '8px 15px' }}
-          >
-            Filters {filterPopupVisible ? '▲' : '▼'}
-          </button>
+          <HelpTooltip text="Show or hide advanced filters for accounts (name, number, category, amount, status).">
+            <button
+              onClick={() => setFilterPopupVisible(!filterPopupVisible)}
+              className="button"
+              style={{ padding: '8px 15px' }}
+            >
+              Filters {filterPopupVisible ? '▲' : '▼'}
+            </button>
+          </HelpTooltip>
           <input
             type="text"
             placeholder="Search by account name or number..."
@@ -244,9 +255,11 @@ function ChartOfAccounts() {
             className="input-field"
             style={{ width: '250px' }}
           />
-          <button onClick={handleSearch} className="button" style={{ padding: '8px 15px' }}>
-            Search
-          </button>
+          <HelpTooltip text="Apply the search box and current filters to narrow the account list.">
+            <button onClick={handleSearch} className="button" style={{ padding: '8px 15px' }}>
+              Search
+            </button>
+          </HelpTooltip>
         </div>
       </div>
 
@@ -341,13 +354,15 @@ function ChartOfAccounts() {
               <option value="Inactive">Inactive</option>
             </select>
           </div>
-          <button
-            onClick={resetAllFilters}
-            className="button"
-            style={{ padding: '5px 10px', backgroundColor: '#eee', color: '#333' }}
-          >
-            Reset
-          </button>
+          <HelpTooltip text="Clear all filter fields in the popup back to defaults.">
+            <button
+              onClick={resetAllFilters}
+              className="button"
+              style={{ padding: '5px 10px', backgroundColor: '#eee', color: '#333' }}
+            >
+              Reset
+            </button>
+          </HelpTooltip>
         </div>
       )}
 
@@ -373,20 +388,23 @@ function ChartOfAccounts() {
                   }}
                 >
                   {token.label}
-                  <button
-                    onClick={() => clearToken(token.key)}
-                    style={{
-                      border: 'none',
-                      background: 'transparent',
-                      cursor: 'pointer',
-                      color: '#6c757d',
-                      fontWeight: 700,
-                      lineHeight: 1
-                    }}
-                    aria-label={`Clear ${token.label}`}
-                  >
-                    x
-                  </button>
+                  <HelpTooltip text={`Remove the "${token.label}" filter from the active filters.`}>
+                    <button
+                      onClick={() => clearToken(token.key)}
+                      style={{
+                        border: 'none',
+                        background: 'transparent',
+                        cursor: 'pointer',
+                        color: '#6c757d',
+                        fontWeight: 700,
+                        lineHeight: 1
+                      }}
+                      aria-label={`Clear ${token.label}`}
+                      type="button"
+                    >
+                      x
+                    </button>
+                  </HelpTooltip>
                 </span>
               ))}
             </div>
@@ -450,23 +468,35 @@ function ChartOfAccounts() {
                   <td>{account.active ? 'Active' : 'Inactive'}</td>
                   {isAdmin && (
                     <td>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/admin/edit-account/${account.accountID}`);
-                        }}
-                        style={{ marginRight: '5px' }}
+                      <HelpTooltip text="Open the form to change this account’s details.">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/admin/edit-account/${account.accountID}`);
+                          }}
+                          style={{ marginRight: '5px' }}
+                        >
+                          Edit
+                        </button>
+                      </HelpTooltip>
+                      <HelpTooltip
+                        text={
+                          account.active
+                            ? 'Mark this account inactive so it cannot be used for new entries.'
+                            : 'Mark this account active again for use in the system.'
+                        }
                       >
-                        Edit
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeactivate(account.accountID, account.active);
-                        }}
-                      >
-                        {account.active ? 'Deactivate' : 'Activate'}
-                      </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeactivate(account.accountID, account.active);
+                          }}
+                        >
+                          {account.active ? 'Deactivate' : 'Activate'}
+                        </button>
+                      </HelpTooltip>
                     </td>
                   )}
                 </tr>
@@ -495,12 +525,15 @@ function ChartOfAccounts() {
               ))}
             </select>
             {selectedAccount && (
-              <button
-                onClick={() => navigate(`/admin/ledger/${selectedAccount.accountNumber}`)}
-                className="button"
-              >
-                Open Ledger
-              </button>
+              <HelpTooltip text="View journal activity and balances for the selected account.">
+                <button
+                  type="button"
+                  onClick={() => navigate(`/admin/ledger/${selectedAccount.accountNumber}`)}
+                  className="button"
+                >
+                  Open Ledger
+                </button>
+              </HelpTooltip>
             )}
           </div>
 

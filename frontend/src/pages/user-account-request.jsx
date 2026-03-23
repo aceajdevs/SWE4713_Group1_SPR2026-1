@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import '../global.css';
 import { getAllUserRequests, approveUserRequest, rejectUserRequest } from '../services/userService';
 import { useAuth } from '../AuthContext';
+import { HelpTooltip } from '../components/HelpTooltip';
 
 const ROLES = ['administrator', 'manager', 'accountant'];
 
@@ -218,20 +219,24 @@ function UserAccountRequestPage() {
                 </div>
 
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <button
-                        type="button"
-                        disabled={!selectedUserId || loading}
-                        onClick={handleApprove}
-                    >
-                        Approve
-                    </button>
-                    <button
-                        type="button"
-                        disabled={!selectedUserId || loading}
-                        onClick={handleReject}
-                    >
-                        Reject
-                    </button>
+                    <HelpTooltip text="Create an account for the selected request with the chosen role.">
+                        <button
+                            type="button"
+                            disabled={!selectedUserId || loading}
+                            onClick={handleApprove}
+                        >
+                            Approve
+                        </button>
+                    </HelpTooltip>
+                    <HelpTooltip text="Decline this account request and remove it from the pending list.">
+                        <button
+                            type="button"
+                            disabled={!selectedUserId || loading}
+                            onClick={handleReject}
+                        >
+                            Reject
+                        </button>
+                    </HelpTooltip>
                 </div>
             </section>
         </div>

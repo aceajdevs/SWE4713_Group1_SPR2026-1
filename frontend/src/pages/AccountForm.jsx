@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { supabase } from '../supabaseClient';
+import { fetchFromTable } from '../supabaseUtils';
 import {
   createChartAccountWithActor,
   updateChartAccountWithActor,
 } from '../services/chartOfAccountsService';
+import { HelpTooltip } from '../components/HelpTooltip';
 import '../global.css';
 
 const subcategoriesMap = {
@@ -426,12 +428,22 @@ Normal Side: ${accountData.normalSide}`;
           />
         </div>
         <div className="span-2">
-          <button type="submit" className="button" disabled={loading}>
-            {loading ? 'Saving...' : 'Save Account'}
-          </button>
-          <button type="button" onClick={() => navigate('/admin/chart-of-accounts')} className="button" style={{ marginLeft: '10px' }}>
-            Cancel
-          </button>
+          <HelpTooltip
+            text={
+              isEditing
+                ? 'Save changes to this account in the chart of accounts.'
+                : 'Add this new account to the chart of accounts.'
+            }
+          >
+            <button type="submit" className="button" disabled={loading}>
+              {loading ? 'Saving...' : 'Save Account'}
+            </button>
+          </HelpTooltip>
+          <HelpTooltip text="Discard unsaved changes and return to the chart of accounts list.">
+            <button type="button" onClick={() => navigate('/admin/chart-of-accounts')} className="button" style={{ marginLeft: '10px' }}>
+              Cancel
+            </button>
+          </HelpTooltip>
         </div>
       </form>
     </div>

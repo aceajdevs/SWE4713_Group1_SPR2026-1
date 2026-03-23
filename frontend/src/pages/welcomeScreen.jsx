@@ -28,7 +28,7 @@ function WelcomeScreen() {
           <p>Please log in to continue.</p>
           <div className="actions">
             <HelpTooltip text="Open the sign-in page to enter your username and password.">
-              <button className="btn-primary" onClick={navToLogin}>
+              <button type="button" className="btn-primary" onClick={navToLogin}>
                 Go to Login Page
               </button>
             </HelpTooltip>

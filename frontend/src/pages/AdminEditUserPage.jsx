@@ -11,6 +11,7 @@ import {
 import { validatePassword } from '../utils/passwordValidation';
 import { getAllUsers } from '../services/adminService';
 import { useAuth } from '../AuthContext';
+import { HelpTooltip } from '../components/HelpTooltip';
 
 const ROLES = ['administrator', 'manager', 'accountant'];
 
@@ -516,23 +517,29 @@ function AdminEditUserPage() {
           )}
 
           <div className="button-row" role="group">
-            <button type="submit" disabled={saving || !loadedUserId}>
-              {saving ? 'Saving...' : 'Save Changes'}
-            </button>
-            <button type="button" onClick={handleClear} disabled={saving}>
-              Clear
-            </button>
+            <HelpTooltip text="Save profile, password, and security answers for the selected user.">
+              <button type="submit" disabled={saving || !loadedUserId}>
+                {saving ? 'Saving...' : 'Save Changes'}
+              </button>
+            </HelpTooltip>
+            <HelpTooltip text="Reset all fields on this form to their last loaded values.">
+              <button type="button" onClick={handleClear} disabled={saving}>
+                Clear
+              </button>
+            </HelpTooltip>
           </div>
 
           <div className="cancel-wrap">
-            <button
-              type="button"
-              className="cancel-button"
-              onClick={() => navigate('/admin-dashboard')}
-              disabled={saving}
-            >
-              Cancel
-            </button>
+            <HelpTooltip text="Leave user editing and return to the administrator dashboard.">
+              <button
+                type="button"
+                className="cancel-button"
+                onClick={() => navigate('/admin-dashboard')}
+                disabled={saving}
+              >
+                Cancel
+              </button>
+            </HelpTooltip>
           </div>
         </form>
       </main>

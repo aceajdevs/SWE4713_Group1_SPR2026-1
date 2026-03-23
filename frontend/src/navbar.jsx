@@ -3,6 +3,7 @@ import './navbar.css';
 import logo from '../assets/Images/resourceDirectory/logo.png';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
+import { HelpTooltip } from './components/HelpTooltip';
 
 function Navbar() {
   const navigate = useNavigate();
@@ -156,7 +157,9 @@ function Navbar() {
             </li>
           )}
           <li className="nav-item">
-            <button className="nav-logout-btn" onClick={handleLogout}>Logout</button>
+            <HelpTooltip text="Sign out of the application and end your session.">
+              <button type="button" className="nav-logout-btn" onClick={handleLogout}>Logout</button>
+            </HelpTooltip>
           </li>
         </ul>
       </div>

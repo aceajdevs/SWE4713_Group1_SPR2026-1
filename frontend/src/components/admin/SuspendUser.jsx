@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { suspendUser } from '../../services/adminService';
 import { supabase } from '../../supabaseClient';
+import { HelpTooltip } from '../HelpTooltip';
 
 function SuspendUser() {
   const [userId, setUserId] = useState('')
@@ -64,7 +65,9 @@ function SuspendUser() {
         onChange={(e) => setEndDate(e.target.value)}
       />
 
-      <button onClick={handleSuspend}>Suspend</button>
+      <HelpTooltip text="Apply a suspension window so the user cannot sign in between the start and end dates.">
+        <button type="button" onClick={handleSuspend}>Suspend</button>
+      </HelpTooltip>
     </div>
   )
 }

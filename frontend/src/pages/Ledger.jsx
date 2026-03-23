@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { fetchFromTable } from '../supabaseUtils';
+import { HelpTooltip } from '../components/HelpTooltip';
 import '../global.css';
 
 function Ledger() {
@@ -43,7 +44,7 @@ function Ledger() {
 
     setAccount(accountData);
 
-    const { data: ledgerData, error: ledgerError } = await fetchFromTable('ledger', {
+    const { data: ledgerData, error: ledgerError } = await fetchFromTable('Ledger', {
       select: 'ledgerID, journalEntryID, entryDate, description, debit, credit, runningBalance',
       filters: { accountID: accountData.accountID },
       orderBy: { column: 'entryDate', ascending: false }
@@ -79,9 +80,11 @@ function Ledger() {
     <div className="container">
       <div className="header-row">
         <h1>General Ledger</h1>
-        <button onClick={() => navigate('/admin/chart-of-accounts')} className="button">
-          Back to Chart of Accounts
-        </button>
+        <HelpTooltip text="Return to the chart of accounts list.">
+          <button type="button" onClick={() => navigate('/admin/chart-of-accounts')} className="button">
+            Back to Chart of Accounts
+          </button>
+        </HelpTooltip>
       </div>
 
       <div style={{ marginBottom: '24px', lineHeight: '1.8' }}>

@@ -126,6 +126,17 @@
   color: #0f172a;
 }
 
+.user-manual-section h3 {
+  margin: 18px 0 8px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.user-manual-section h3:first-of-type {
+  margin-top: 0;
+}
+
 .user-manual-section p,
 .user-manual-section li {
   font-size: 15px;
