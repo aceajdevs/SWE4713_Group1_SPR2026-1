@@ -240,16 +240,6 @@ function ChartOfAccounts() {
       </div>
       <div className="search-and-filter">
         <div className="search-group">
-        <div className="search-group" style={{ marginRight: '20px' }}>
-          <HelpTooltip text="Show or hide advanced filters for accounts (name, number, category, amount, status).">
-            <button
-              onClick={() => setFilterPopupVisible(!filterPopupVisible)}
-              className="button"
-              style={{ padding: '8px 15px' }}
-            >
-              Filters {filterPopupVisible ? '▲' : '▼'}
-            </button>
-          </HelpTooltip>
           <input
             type="text"
             placeholder="Search by account name or number..."
@@ -259,9 +249,11 @@ function ChartOfAccounts() {
             className="input-field"
             style={{ width: '300px' }}
           />
-          <button onClick={handleSearch} className="button" style={{ padding: '8px 15px' }}>
-            Search
-          </button>
+          <HelpTooltip text="Apply the search box and current filters to narrow the account list.">
+            <button onClick={handleSearch} className="button" style={{ padding: '8px 15px' }}>
+              Search
+            </button>
+          </HelpTooltip>
           <button
             onClick={() => setFilterPopupVisible(!filterPopupVisible)}
             className="button"
@@ -269,166 +261,34 @@ function ChartOfAccounts() {
           >
             Filters {filterPopupVisible ? '◀' : '▶'}
           </button>
-          <HelpTooltip text="Apply the search box and current filters to narrow the account list.">
-            <button onClick={handleSearch} className="button" style={{ padding: '8px 15px' }}>
-              Search
-            </button>
-          </HelpTooltip>
         </div>
-      </div>
 
-      {filterPopupVisible && (
-        <div className="filter-popup">
-          <div className="filter-item">
-            <label style={{ marginRight: '8px' }}>Account Name:</label>
-            <input
-              type="text"
-              value={filters.accountName}
-              onChange={(e) => setFilters({ ...filters, accountName: e.target.value })}
-              className="input-field"
-              style={{ padding: '5px', width: '180px' }}
-              placeholder="e.g., Cash"
-            />
-          </div>
-          <div className="filter-item">
-            <label style={{ marginRight: '8px' }}>Account Number:</label>
-            <input
-              type="text"
-              value={filters.accountNumber}
-              onChange={(e) => setFilters({ ...filters, accountNumber: e.target.value })}
-              className="input-field"
-              style={{ padding: '5px', width: '140px' }}
-              placeholder="e.g., 10000001"
-            />
-          </div>
-          <div className="filter-item">
-            <label style={{ marginRight: '8px' }}>Category:</label>
-            <select
-              value={filters.category}
-              onChange={(e) => setFilters({ ...filters, category: e.target.value })}
-              className="input-field"
-              style={{ padding: '5px', width: 'auto' }}
-            >
-              <option value="">All Categories</option>
-              <option value="Assets">Assets</option>
-              <option value="Liabilities">Liabilities</option>
-              <option value="Equity">Equity</option>
-              <option value="Revenue">Revenue</option>
-              <option value="Expenses">Expenses</option>
-            </select>
-          </div>
-          <div className="filter-item">
-            <label style={{ marginRight: '8px' }}>Subcategory:</label>
-            <input
-              type="text"
-              value={filters.subCategory}
-              onChange={(e) => setFilters({ ...filters, subCategory: e.target.value })}
-              className="input-field"
-              style={{ padding: '5px', width: '180px' }}
-              placeholder="e.g., Current Assets"
-            />
-          </div>
-          <div className="filter-item" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <label style={{ marginRight: '8px' }}>Amount:</label>
-            <div style={{ display: 'flex', gap: '6px' }}>
-              <select
-                value={filters.amountOperator}
-                onChange={(e) => setFilters({ ...filters, amountOperator: e.target.value })}
-                className="input-field"
-                style={{ padding: '5px', width: '75px' }}
-              >
-                <option value="">-</option>
-                <option value="=">=</option>
-                <option value=">">&gt;</option>
-                <option value="<">&lt;</option>
-                <option value=">=">&gt;=</option>
-                <option value="<=">&lt;=</option>
-              </select>
-              <input
-                type="text"
-                inputMode="decimal"
-                value={filters.amountValue}
-                onChange={(e) => handleAmountValueChange(e.target.value)}
-                className="input-field"
-                style={{ padding: '5px', width: '130px' }}
-                placeholder="0.00"
-              />
-            </div>
-          </div>
-          <div className="filter-item">
-            <label style={{ marginRight: '8px' }}>Status:</label>
-            <select
-              value={filters.status}
-              onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-              className="input-field"
-              style={{ padding: '5px', width: 'auto' }}
-            >
-              <option value="">All Statuses</option>
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
-            </select>
-          </div>
-          <HelpTooltip text="Clear all filter fields in the popup back to defaults.">
-            <button
-              onClick={resetAllFilters}
-              className="button"
-              style={{ padding: '5px 10px', backgroundColor: '#eee', color: '#333' }}
-            >
-              Reset
-            </button>
-          </HelpTooltip>
-        </div>
-      )}
-
-      {!loading && !error && (
-        <div style={{ marginBottom: '12px' }}>
-          <p style={{ marginBottom: '6px' }}>
-            Showing {filteredAccounts.length} of {accounts.length} accounts.
-          </p>
-          {activeTokens.length > 0 && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-              {activeTokens.map((token) => (
-                <span
-                  key={token.key}
-                  style={{
-                    backgroundColor: '#e9ecef',
-                    border: '1px solid #ced4da',
-                    borderRadius: '12px',
-                    padding: '2px 10px',
-                    fontSize: '0.85rem',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px'
-                  }}
-                >
-                  {token.label}
-                  <HelpTooltip text={`Remove the "${token.label}" filter from the active filters.`}>
-                    <button
-                      onClick={() => clearToken(token.key)}
-                      style={{
-                        border: 'none',
-                        background: 'transparent',
-                        cursor: 'pointer',
-                        color: '#6c757d',
-                        fontWeight: 700,
-                        lineHeight: 1
-                      }}
-                      aria-label={`Clear ${token.label}`}
-                      type="button"
-                    >
-                      x
-                    </button>
-                  </HelpTooltip>
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
         {filterPopupVisible && (
           <div className="filter-popup">
             <div className="filter-item">
-              <label>Category:</label>
+              <label style={{ marginRight: '8px' }}>Account Name:</label>
+              <input
+                type="text"
+                value={filters.accountName}
+                onChange={(e) => setFilters({ ...filters, accountName: e.target.value })}
+                className="input-field"
+                style={{ padding: '5px', width: '180px' }}
+                placeholder="e.g., Cash"
+              />
+            </div>
+            <div className="filter-item">
+              <label style={{ marginRight: '8px' }}>Account Number:</label>
+              <input
+                type="text"
+                value={filters.accountNumber}
+                onChange={(e) => setFilters({ ...filters, accountNumber: e.target.value })}
+                className="input-field"
+                style={{ padding: '5px', width: '140px' }}
+                placeholder="e.g., 10000001"
+              />
+            </div>
+            <div className="filter-item">
+              <label style={{ marginRight: '8px' }}>Category:</label>
               <select
                 value={filters.category}
                 onChange={(e) => setFilters({ ...filters, category: e.target.value })}
@@ -443,32 +303,112 @@ function ChartOfAccounts() {
                 <option value="Expenses">Expenses</option>
               </select>
             </div>
-            {isAdmin && (
-              <div className="filter-item">
-                <label>Status:</label>
+            <div className="filter-item">
+              <label style={{ marginRight: '8px' }}>Subcategory:</label>
+              <input
+                type="text"
+                value={filters.subCategory}
+                onChange={(e) => setFilters({ ...filters, subCategory: e.target.value })}
+                className="input-field"
+                style={{ padding: '5px', width: '180px' }}
+                placeholder="e.g., Current Assets"
+              />
+            </div>
+            <div className="filter-item" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <label style={{ marginRight: '8px' }}>Amount:</label>
+              <div style={{ display: 'flex', gap: '6px' }}>
                 <select
-                  value={filters.status}
-                  onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                  value={filters.amountOperator}
+                  onChange={(e) => setFilters({ ...filters, amountOperator: e.target.value })}
                   className="input-field"
-                  style={{ padding: '5px', width: 'auto' }}
+                  style={{ padding: '5px', width: '75px' }}
                 >
-                  <option value="">All Statuses</option>
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
+                  <option value="">-</option>
+                  <option value="=">=</option>
+                  <option value=">">&gt;</option>
+                  <option value="<">&lt;</option>
+                  <option value=">=">&gt;=</option>
+                  <option value="<=">&lt;=</option>
                 </select>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={filters.amountValue}
+                  onChange={(e) => handleAmountValueChange(e.target.value)}
+                  className="input-field"
+                  style={{ padding: '5px', width: '130px' }}
+                  placeholder="0.00"
+                />
+              </div>
+            </div>
+            <div className="filter-item">
+              <label style={{ marginRight: '8px' }}>Status:</label>
+              <select
+                value={filters.status}
+                onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                className="input-field"
+                style={{ padding: '5px', width: 'auto' }}
+              >
+                <option value="">All Statuses</option>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+            </div>
+            <HelpTooltip text="Clear all filter fields in the popup back to defaults.">
+              <button
+                onClick={resetAllFilters}
+                className="button"
+                style={{ padding: '5px 10px', backgroundColor: '#eee', color: '#333' }}
+              >
+                Reset
+              </button>
+            </HelpTooltip>
+          </div>
+        )}
+
+        {!loading && !error && (
+          <div style={{ marginBottom: '12px' }}>
+            <p style={{ marginBottom: '6px' }}>
+              Showing {filteredAccounts.length} of {accounts.length} accounts.
+            </p>
+            {activeTokens.length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                {activeTokens.map((token) => (
+                  <span
+                    key={token.key}
+                    style={{
+                      backgroundColor: '#e9ecef',
+                      border: '1px solid #ced4da',
+                      borderRadius: '12px',
+                      padding: '2px 10px',
+                      fontSize: '0.85rem',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    {token.label}
+                    <HelpTooltip text={`Remove the "${token.label}" filter from the active filters.`}>
+                      <button
+                        onClick={() => clearToken(token.key)}
+                        style={{
+                          border: 'none',
+                          background: 'transparent',
+                          cursor: 'pointer',
+                          color: '#6c757d',
+                          fontWeight: 700,
+                          lineHeight: 1
+                        }}
+                        aria-label={`Clear ${token.label}`}
+                        type="button"
+                      >
+                        x
+                      </button>
+                    </HelpTooltip>
+                  </span>
+                ))}
               </div>
             )}
-            <button
-              onClick={() => {
-                setFilters({ category: '', status: 'Active' });
-                setSearchTerm('');
-                setSearchQuery('');
-              }}
-              className="button"
-              style={{ padding: '5px 10px' }}
-            >
-              Reset
-            </button>
           </div>
         )}
       </div>
@@ -529,7 +469,7 @@ function ChartOfAccounts() {
                   <td>{account.active ? 'Active' : 'Inactive'}</td>
                   {isAdmin && (
                     <td>
-                      <HelpTooltip text="Open the form to change this account’s details.">
+                      <HelpTooltip text="Open the form to change this account's details.">
                         <button
                           type="button"
                           onClick={(e) => {
