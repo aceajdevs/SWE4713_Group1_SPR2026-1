@@ -15,15 +15,6 @@ function AdminDashboard() {
       <h1>Administrator Dashboard</h1>
 
       <div className="button-group">
-        <button onClick={() => navigate('/admin/create-user')}>
-          Create User
-        </button>
-        <button onClick={() => navigate('/admin/edit-user')}>
-          Edit User
-        </button>
-        <button onClick={() => navigate('/admin/chart-of-accounts')}>
-          Chart of Accounts
-        </button>
       <div style={{ marginBottom: '16px' }}>
         <HelpTooltip text="Open the form to add a new user account (administrator).">
           <button type="button" onClick={() => navigate('/admin/create-user')} style={{ marginRight: '8px' }}>
@@ -56,6 +47,7 @@ function AdminDashboard() {
         </div>
       </div>
     </div>
+  </div>
   );
 }
 
