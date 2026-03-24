@@ -9,13 +9,13 @@
 }
 
 .navbar-container {
-  max-width: 1200px;
+  max-width: 80vw;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 8vw;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: 70px;
+  height: 65px;
 }
 
 /* Logo Section */
@@ -29,7 +29,7 @@
 }
 
 .navbar-logo:hover {
-  opacity: 0.85;
+  opacity: 0.70;
 }
 
 .navbar-logo-img {
@@ -49,8 +49,8 @@
 .nav-menu {
   display: flex;
   list-style: none;
-  gap: 0;
-  margin: 0;
+  gap: 1vw;
+  margin: 0, 1vw;
   padding: 0;
   align-items: center;
 }
@@ -62,17 +62,17 @@
 .nav-link {
   color: white;
   text-decoration: none;
-  padding: 10px 20px;
+  padding: 18px 1px;
   display: block;
   font-size: 16px;
   font-weight: 500;
   transition: all 0.3s ease;
-  border-bottom: 3px solid transparent;
+  border-bottom: 5px solid transparent;
 }
 
 .nav-link:hover {
   background-color: rgba(255, 255, 255, 0.1);
-  border-bottom-color: #ffffff;
+  border-bottom-color: #E3D081;
 }
 
 .nav-link:active {
@@ -158,7 +158,7 @@
 .nav-logout-btn {
   margin-left: 10px;
   padding: 8px 20px;
-  background-color: #ff6b6b;
+  background-color: #33A1Fd;
   color: white;
   border: none;
   border-radius: 5px;
@@ -169,7 +169,8 @@
 }
 
 .nav-logout-btn:hover {
-  background-color: #ee5a52;
+  background-color: #FFFAD9;
+  color: black;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(255, 107, 107, 0.3);
 }

@@ -6,6 +6,7 @@ import { sendAdminEmail } from '../services/emailService';
 import { setChartAccountActiveWithActor } from '../services/chartOfAccountsService';
 import { HelpTooltip } from '../components/HelpTooltip';
 import '../global.css';
+import './ChartOfAccounts.css';
 
 const defaultFilters = {
   accountName: '',
@@ -199,7 +200,7 @@ function ChartOfAccounts() {
   const fmt = (val) => (val || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   return (
-    <div className="container">
+    <div className="page-chart-of-accounts">
       <h1>Chart of Accounts</h1>
       <div className="header-row">
         <div className="button-group">
@@ -236,6 +237,9 @@ function ChartOfAccounts() {
             </button>
           </HelpTooltip>
         </div>
+      </div>
+      <div className="search-and-filter">
+        <div className="search-group">
         <div className="search-group" style={{ marginRight: '20px' }}>
           <HelpTooltip text="Show or hide advanced filters for accounts (name, number, category, amount, status).">
             <button
@@ -253,8 +257,18 @@ function ChartOfAccounts() {
             onChange={(e) => setSearchTerm(e.target.value)}
             onKeyDown={handleKeyDown}
             className="input-field"
-            style={{ width: '250px' }}
+            style={{ width: '300px' }}
           />
+          <button onClick={handleSearch} className="button" style={{ padding: '8px 15px' }}>
+            Search
+          </button>
+          <button
+            onClick={() => setFilterPopupVisible(!filterPopupVisible)}
+            className="button"
+            style={{ padding: '8px 15px' }}
+          >
+            Filters {filterPopupVisible ? '◀' : '▶'}
+          </button>
           <HelpTooltip text="Apply the search box and current filters to narrow the account list.">
             <button onClick={handleSearch} className="button" style={{ padding: '8px 15px' }}>
               Search
@@ -411,6 +425,53 @@ function ChartOfAccounts() {
           )}
         </div>
       )}
+        {filterPopupVisible && (
+          <div className="filter-popup">
+            <div className="filter-item">
+              <label>Category:</label>
+              <select
+                value={filters.category}
+                onChange={(e) => setFilters({ ...filters, category: e.target.value })}
+                className="input-field"
+                style={{ padding: '5px', width: 'auto' }}
+              >
+                <option value="">All Categories</option>
+                <option value="Assets">Assets</option>
+                <option value="Liabilities">Liabilities</option>
+                <option value="Equity">Equity</option>
+                <option value="Revenue">Revenue</option>
+                <option value="Expenses">Expenses</option>
+              </select>
+            </div>
+            {isAdmin && (
+              <div className="filter-item">
+                <label>Status:</label>
+                <select
+                  value={filters.status}
+                  onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                  className="input-field"
+                  style={{ padding: '5px', width: 'auto' }}
+                >
+                  <option value="">All Statuses</option>
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                </select>
+              </div>
+            )}
+            <button
+              onClick={() => {
+                setFilters({ category: '', status: 'Active' });
+                setSearchTerm('');
+                setSearchQuery('');
+              }}
+              className="button"
+              style={{ padding: '5px 10px' }}
+            >
+              Reset
+            </button>
+          </div>
+        )}
+      </div>
 
       {loading && <p>Loading accounts...</p>}
       {error && <p style={{ color: 'red' }}>{error}</p>}
