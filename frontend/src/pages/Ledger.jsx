@@ -1,9 +1,9 @@
 // TODO: hook up get-accounts edge function for inactive account protection once deployed
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
-import { fetchFromTable } from '../supabaseUtils';
+import { getLedgerByAccountNumber } from '../services/ledgerService';
 import { HelpTooltip } from '../components/HelpTooltip';
 import '../global.css';
 
@@ -16,49 +16,28 @@ function Ledger() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    loadLedger();
-  }, [accountNumber]);
-
-  const loadLedger = async () => {
+  const loadLedger = useCallback(async () => {
     setLoading(true);
     setError(null);
+    const { account: loadedAccount, entries: loadedEntries, error: loadError } = await getLedgerByAccountNumber(
+      accountNumber,
+      user?.role
+    );
 
-    const { data: accountData, error: accountError } = await fetchFromTable('chartOfAccounts', {
-      select: 'accountID, accountNumber, accountName, normalSide, initBalance, active',
-      filters: { accountNumber: parseInt(accountNumber, 10) },
-      single: true
-    });
-
-    if (accountError || !accountData) {
-      setError('Account not found.');
-      setLoading(false);
-      return;
-    }
-
-    if (!accountData.active && user?.role !== 'administrator') {
-      setError('You do not have permission to view this account.');
-      setLoading(false);
-      return;
-    }
-
-    setAccount(accountData);
-
-    const { data: ledgerData, error: ledgerError } = await fetchFromTable('Ledger', {
-      select: 'ledgerID, journalEntryID, entryDate, description, debit, credit, runningBalance',
-      filters: { accountID: accountData.accountID },
-      orderBy: { column: 'entryDate', ascending: false }
-    });
-
-    if (ledgerError) {
-      setError('Failed to load ledger entries.');
-      console.error('Ledger fetch error:', ledgerError);
+    if (loadError) {
+      setError(loadError.message);
+      setAccount(null);
+      setEntries([]);
     } else {
-      setEntries(ledgerData || []);
+      setAccount(loadedAccount);
+      setEntries(loadedEntries);
     }
-
     setLoading(false);
-  };
+  }, [accountNumber, user?.role]);
+
+  useEffect(() => {
+    loadLedger();
+  }, [loadLedger]);
 
   const formatCurrency = (value) => {
     if (value === null || value === undefined || value === '') return '-';
@@ -102,7 +81,7 @@ function Ledger() {
             <thead>
               <tr>
                 <th>Date</th>
-                <th>Journal Entry #</th>
+                <th>Post Reference (PR)</th>
                 <th>Description</th>
                 <th>Debit</th>
                 <th>Credit</th>
@@ -121,7 +100,28 @@ function Ledger() {
               {entries.map((entry) => (
                 <tr key={entry.ledgerID}>
                   <td>{formatDate(entry.entryDate)}</td>
-                  <td>{entry.journalEntryID}</td>
+                  <td>
+                    {entry.journalEntryID ? (
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/admin/journal-entry/${entry.journalEntryID}`)}
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          padding: 0,
+                          color: '#007bff',
+                          textDecoration: 'underline',
+                          cursor: 'pointer',
+                          fontWeight: 600
+                        }}
+                        aria-label={`Open journal entry ${entry.journalEntryID}`}
+                      >
+                        {entry.journalEntryID}
+                      </button>
+                    ) : (
+                      '-'
+                    )}
+                  </td>
                   <td>{entry.description || 'N/A'}</td>
                   <td>{entry.debit ? formatCurrency(entry.debit) : '-'}</td>
                   <td>{entry.credit ? formatCurrency(entry.credit) : '-'}</td>
