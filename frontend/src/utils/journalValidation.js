@@ -24,7 +24,7 @@ export function validateAccountsExist(lines, accounts) {
   lines.forEach((line, i) => {
     if (!line.accountID) {
       errors.push(`Line ${i + 1}: No account selected.`);
-    } else if (!activeIds.has(line.accountID)) {
+    } else if (!activeIds.has(Number(line.accountID))) {
       errors.push(`Line ${i + 1}: Account is inactive or does not exist.`);
     }
   });

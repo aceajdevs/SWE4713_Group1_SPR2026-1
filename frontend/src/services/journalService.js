@@ -8,7 +8,7 @@ import { fetchFromTable, insertRecord, uploadFile } from '../supabaseUtils';
  */
 export async function createJournalEntry({ entryType, createdBy, lines }) {
   const { data: header, error: headerError } = await insertRecord('journalEntry', {
-    entryType: entryType || '',
+entryType: parseInt(entryType, 10) || null,
     status: 'pending',
     createdBy,
     createdAt: new Date().toISOString(),
@@ -125,7 +125,7 @@ export async function uploadJournalAttachment(entryId, file) {
 
   if (error) throw error;
 
-  const { error: refError } = await insertRecord('JournalAttachment', {
+  const { error: refError } = await insertRecord('journalAttachment', {
     journalEntryID: entryId,
     filePath: path,
     fileType: file.type,
@@ -141,7 +141,7 @@ export async function uploadJournalAttachment(entryId, file) {
 
 // Fetch attachments for a journal entry.
 export async function getJournalAttachments(entryId) {
-  const { data, error } = await fetchFromTable('JournalAttachment', {
+  const { data, error } = await fetchFromTable('journalAttachment', {
     filters: { journalEntryID: entryId },
     orderBy: { column: 'uploadedAt', ascending: true },
   });
@@ -209,17 +209,8 @@ export function searchJournalEntries(entries, query) {
   const q = query.trim().toLowerCase();
 
   return entries.filter((entry) => {
-    // Match on entryType
-    if (entry.entryType?.toLowerCase().includes(q)) return true;
-
     // Match on date
     if (entry.createdAt?.includes(q)) return true;
-
-    // Match on entry ID
-    if (String(entry.journalEntryID) === q) return true;
-
-    // Match on status
-    if (entry.status?.toLowerCase().includes(q)) return true;
 
     // Match on account name in lines
     if (entry.lines?.some((l) => l.accountName?.toLowerCase().includes(q))) return true;
@@ -227,12 +218,11 @@ export function searchJournalEntries(entries, query) {
     // Match on account number in lines
     if (entry.lines?.some((l) => String(l.accountNumber).includes(q))) return true;
 
-    // Match on debit or credit amount in lines
-    if (entry.lines?.some((l) => {
-      const debitStr = l.debit ? l.debit.toFixed(2) : '';
-      const creditStr = l.credit ? l.credit.toFixed(2) : '';
-      return debitStr.includes(q) || creditStr.includes(q);
-    })) return true;
+    // Match on total amount (sum of debits)
+    if (entry.lines) {
+      const total = entry.lines.reduce((sum, l) => sum + (Number(l.debit) || 0), 0);
+      if (total.toFixed(2).startsWith(q)) return true;
+    }
 
     return false;
   });

@@ -98,6 +98,11 @@ function JournalEntryForm() {
   };
 
   const handleSubmit = async () => {
+    if (!entryType) {
+      setErrors(['Please select an entry type.']);
+      return;
+    }
+    
     const validation = validateJournalEntry(lines, accounts);
     if (!validation.valid) {
       setErrors(validation.errors);
@@ -157,14 +162,17 @@ function JournalEntryForm() {
       <div style={{ marginBottom: '16px' }}>
         <label>Entry Type:</label>
         <HelpTooltip text="Classify this entry (e.g. Regular, Adjusting, Closing).">
-          <input
-            type="text"
+          <select
             value={entryType}
             onChange={(e) => setEntryType(e.target.value)}
-            placeholder="e.g. Regular, Adjusting, Closing"
             className="input-field"
             style={{ width: '100%' }}
-          />
+          >
+            <option value="">Select entry type</option>
+            <option value="1">Regular</option>
+            <option value="2">Adjusting</option>
+            <option value="3">Closing</option>
+          </select>
         </HelpTooltip>
       </div>
 

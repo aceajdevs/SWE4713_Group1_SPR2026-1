@@ -164,12 +164,12 @@ function JournalEntries() {
 
         <div>
           <label style={{ display: 'block', fontSize: '12px' }}>Search:</label>
-          <HelpTooltip text="Search by account name, amount, entry type, date, or ID.">
+          <HelpTooltip text="Search by account name, amount, or date.">
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Account name, amount, date..."
+              placeholder="Account name, amount, or date"
               className="input-field"
             />
           </HelpTooltip>
