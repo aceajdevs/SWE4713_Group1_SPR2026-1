@@ -206,36 +206,21 @@ function ChartOfAccounts() {
         <div className="button-group">
           {isAdmin && (
             <HelpTooltip text="Create a new account in the chart of accounts (administrators only).">
-              <button onClick={() => navigate('/admin/add-account')} className="button">
-                Add New Account
-              </button>
+              <button className="button" onClick={() => navigate('/admin/add-account')}>Add New Account</button>
             </HelpTooltip>
           )}
+            <HelpTooltip text="Show all accounts in a single table report.">
+            <button className="button" onClick={() => setViewMode('report')}>All Accounts Report</button>
+          </HelpTooltip>
+          <HelpTooltip text="Pick one account from a list to view its details.">
+            <button className="button" onClick={() => setViewMode('individual')}>Individual Account</button>
+          </HelpTooltip>
           <HelpTooltip text="Return to your role dashboard without leaving the app.">
-            <button onClick={() => navigate(dashboardPath)} className="button">
-              Back to Dashboard
-            </button>
+            <button className="button" onClick={() => navigate(dashboardPath)}>Back to Dashboard</button>
           </HelpTooltip>
         </div>
         <div style={{ display: 'flex', gap: '8px', marginRight: '20px' }}>
-          <HelpTooltip text="Show all accounts in a single table report.">
-            <button
-              onClick={() => setViewMode('report')}
-              className="button"
-              style={{ padding: '8px 15px', opacity: viewMode === 'report' ? 1 : 0.8 }}
-            >
-              All Accounts Report
-            </button>
-          </HelpTooltip>
-          <HelpTooltip text="Pick one account from a list to view its details.">
-            <button
-              onClick={() => setViewMode('individual')}
-              className="button"
-              style={{ padding: '8px 15px', opacity: viewMode === 'individual' ? 1 : 0.8 }}
-            >
-              Individual Account
-            </button>
-          </HelpTooltip>
+
         </div>
       </div>
       <div className="search-and-filter">
@@ -417,7 +402,7 @@ function ChartOfAccounts() {
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
       {!loading && !error && viewMode === 'report' && (
-        <table className="user-report-table">
+        <table className="table">
           <thead>
             <tr>
               <th>Number</th>
@@ -541,7 +526,7 @@ function ChartOfAccounts() {
           {!selectedAccount && <p>Select an account to view individual details.</p>}
 
           {selectedAccount && (
-            <table className="user-report-table" style={{ maxWidth: '850px' }}>
+            <table className="table" style={{ maxWidth: '850px' }}>
               <tbody>
                 <tr><th>Account Number</th><td>{selectedAccount.accountNumber}</td></tr>
                 <tr><th>Account Name</th><td>{selectedAccount.accountName}</td></tr>

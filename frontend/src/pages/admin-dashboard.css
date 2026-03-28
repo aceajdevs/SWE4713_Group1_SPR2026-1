@@ -11,24 +11,11 @@
   font-weight: 700;
 }
 .admin-dashboard .button-group {
-  display: flex;
+  display: block;
   justify-content: center;
+  align-items: center;
   gap: 12px;
   margin-bottom: 30px;
-}
-.admin-dashboard button {
-  padding: 10px 20px;
-  font-size: 14px;
-  font-weight: 500;
-  color: white;
-  background-color: #0052ce;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-.admin-dashboard button:hover {
-  background-color: #2563EB;
 }
 .dashboard-content {
   display: flex;
@@ -52,4 +39,38 @@
   border-radius: 8px;
   padding: 20px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.suspend-group-column {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+.suspend-group-left, .suspend-group-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.suspend-group-column h5 {
+  margin: 0;
+  font-size: 14px;
+  color: var(--bff-primary);
+}
+.suspend-group-column input[type="date"] {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--bff-border);
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+.admin-dashboard .input {
+  height: 36px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--bff-border);
+  background: var(--bff-background);
+  font-size: 14px;
+  width: 100%;
+  box-sizing: border-box;
 }

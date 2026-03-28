@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import '../LoginPage.css'
+import '../global.css';
+import './LoginPage.css';
 import logo from '../../assets/Images/resourceDirectory/logo.png'
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
@@ -170,21 +171,17 @@ function LoginPage() {
             <img src={logo} alt="App Logo" />
         </div>
           <h1>Login</h1>
-          <p>Welcome back! Please enter your credentials to log in or Sign Up if you are a new user.</p>
+          <p>Welcome back! Please enter your credentials to log in or <span className="link" onClick={navToSignUp}>Create A New Account</span> if you are a new user.</p>
+
           <h5>Username</h5>
           <HelpTooltip
             text="Your account name provided by your administrator (or assigned when your account was created)."
             className="help-tooltip-block"
           >
-            <input
-              className="input"
-              type="text"
-              name="username"
-              placeholder="Username"
-              aria-label="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-            />
+            <div class="clear-input-wrapper" role="group">
+            <input className="input" type="text" name="username" placeholder="Username" aria-label="username" value={username} onChange={(e) => setUsername(e.target.value)} />
+            <button type="button" className="button-clear" onClick={() => setUsername('')} aria-label="Clear username input">X</button>
+            </div>
           </HelpTooltip>
 
           <h5>Password</h5>
@@ -192,34 +189,30 @@ function LoginPage() {
             text="Enter the password for your account. Too many failed attempts can temporarily lock sign-in."
             className="help-tooltip-block"
           >
-            <input
-              className="input"
-              type="password"
-              name="password"
-              placeholder="Password"
-              aria-label="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+            <div class="clear-input-container" role="group">
+            <input className="input"type="password" name="password" placeholder="Password" aria-label="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+            <button type="button" id="clearButton" className="button-clear" onClick={() => setPassword('')} aria-label="Clear password input">X</button>
+            </div>
           </HelpTooltip>
 
           <div className="button-row" role="group">
-            <HelpTooltip text="Submit a new account request for an administrator to review.">
-              <button type="button" onClick={navToSignUp}>Sign Up</button>
-            </HelpTooltip>
             <HelpTooltip text="Sign in with the username and password entered above.">
-              <button type="button" className="login-button" onClick={handleLogin}>Login</button>
+              <button type="button" className="button-primary" onClick={handleLogin}>Login</button>
             </HelpTooltip>
             <HelpTooltip text="Return to the welcome screen without signing in.">
-              <button type="button" className="cancel-button" onClick={navToWelcome}>Cancel</button>
+              <button type="button" className="button-primary" onClick={navToWelcome}>Cancel</button>
             </HelpTooltip>
           </div>
-          <div className="forgot-clear-row" role="group">
-            <HelpTooltip text="Open steps to reset your password using email, user ID, and security questions.">
-              <button type="button" onClick={navToForgotPassword}>Forgot Password?</button>
+
+          <div className="subpage-links" role="group">
+            <HelpTooltip text="Submit a new account request for an administrator to review.">
+              <span className="link" onClick={navToSignUp}>Create a User Account</span>
             </HelpTooltip>
-            <HelpTooltip text="Clear the username and password fields.">
-              <button type="button" onClick={handleClear}>Clear</button>
+          </div>
+
+          <div className="subpage-links" role="group">
+            <HelpTooltip text="Open steps to reset your password using email, user ID, and security questions.">
+              <span className="link" onClick={navToForgotPassword}>Forgot Password?</span>
             </HelpTooltip>
           </div>
         </form>
