@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
-import { fetchFromTable } from '../supabaseUtils';
+import { getLedgerByAccountId, sortLedgerEntriesChronological } from '../services/ledgerService';
+import { supabase } from '../supabaseClient';
 import '../global.css';
 
 function JournalEntry() {
@@ -13,16 +14,19 @@ function JournalEntry() {
   const [error, setError] = useState(null);
   const [entries, setEntries] = useState([]);
   const [accountsById, setAccountsById] = useState({});
+  const [accountLedgerRowsById, setAccountLedgerRowsById] = useState({});
 
   const pr = useMemo(() => {
     if (journalEntryID === undefined || journalEntryID === null || journalEntryID === '') return null;
     return journalEntryID;
   }, [journalEntryID]);
 
+// Load journal entry details and related account info on component mount or when PR changes
   useEffect(() => {
     const loadJournalEntry = async () => {
       setLoading(true);
       setError(null);
+      setAccountLedgerRowsById({});
 
       if (!pr) {
         setError('Journal entry not found.');
@@ -37,12 +41,10 @@ function JournalEntry() {
         return;
       }
 
-      // We treat the ledger's `journalEntryID` as the post reference (PR).
-      const { data: ledgerData, error: ledgerError } = await fetchFromTable('Ledger', {
-        select: 'ledgerID, journalEntryID, accountID, entryDate, description, debit, credit, runningBalance',
-        filters: { journalEntryID: prNum },
-        orderBy: { column: 'entryDate', ascending: false }
-      });
+      const { data: ledgerData, error: ledgerError } = await supabase
+        .from('Ledger')
+        .select('ledgerID, journalEntryID, accountID, entryDate, description, debit, credit')
+        .eq('journalEntryID', prNum);
 
       if (ledgerError) {
         console.error('Journal entry fetch error:', ledgerError);
@@ -51,52 +53,57 @@ function JournalEntry() {
         return;
       }
 
-      const loadedEntries = ledgerData || [];
+      const loadedEntries = sortLedgerEntriesChronological(ledgerData || []);
       setEntries(loadedEntries);
 
       const uniqueAccountIDs = Array.from(
-        new Set((loadedEntries || [])
-          .map((e) => e.accountID)
-          .filter((id) => id !== null && id !== undefined))
+        new Set(loadedEntries.map((e) => e.accountID).filter((id) => id !== null && id !== undefined))
       );
 
       if (uniqueAccountIDs.length === 0) {
         setAccountsById({});
+        setAccountLedgerRowsById({});
         setLoading(false);
         return;
       }
 
-      // Supabase utils don't support `in` clauses; load account details one-by-one.
-      const accountResults = await Promise.all(
-        uniqueAccountIDs.map(async (id) => {
-          const { data: accountData, error: accountError } = await fetchFromTable('chartOfAccounts', {
-            select: 'accountID, accountNumber, accountName, active',
-            filters: { accountID: id },
-            single: true
-          });
-
-          return {
-            accountID: id,
-            data: accountData || null,
-            error: accountError || null
-          };
-        })
+      const results = await Promise.all(
+        uniqueAccountIDs.map((id) => getLedgerByAccountId(id, user?.role))
       );
 
-      const byId = {};
-      for (const r of accountResults) {
-        byId[r.accountID] = r.data;
+      const byAccountId = {};
+      const rowsByAccountId = {};
+
+      for (const res of results) {
+        if (res.error || !res.account) continue;
+        const a = res.account;
+        byAccountId[a.accountID] = {
+          accountID: a.accountID,
+          accountNumber: a.accountNumber,
+          accountName: a.accountName,
+          active: a.active
+        };
+        rowsByAccountId[a.accountID] = res.entries;
       }
-      setAccountsById(byId);
+
+      setAccountsById(byAccountId);
+      setAccountLedgerRowsById(rowsByAccountId);
       setLoading(false);
     };
 
     loadJournalEntry();
-  }, [pr]);
+  }, [pr, user?.role]);
 
   const formatCurrency = (value) => {
     if (value === null || value === undefined || value === '') return '-';
     return `$${parseFloat(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
+
+  const formatDebitCreditCell = (value) => {
+    if (value === null || value === undefined || value === '') return '-';
+    const n = parseFloat(value);
+    if (!Number.isFinite(n)) return '-';
+    return formatCurrency(n);
   };
 
   const formatDate = (value) => {
@@ -104,8 +111,8 @@ function JournalEntry() {
     return new Date(value).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' });
   };
 
-  const totalDebits = entries.reduce((sum, e) => sum + (e.debit || 0), 0);
-  const totalCredits = entries.reduce((sum, e) => sum + (e.credit || 0), 0);
+  const totalDebits = entries.reduce((sum, e) => sum + (parseFloat(e.debit) || 0), 0);
+  const totalCredits = entries.reduce((sum, e) => sum + (parseFloat(e.credit) || 0), 0);
 
   const headerEntryDate = entries[0]?.entryDate;
   const canViewInactiveAccounts = user?.role === 'administrator';
@@ -139,26 +146,30 @@ function JournalEntry() {
               <th>Description</th>
               <th>Debit</th>
               <th>Credit</th>
-              <th>Running Balance</th>
+              <th>Balance</th>
             </tr>
           </thead>
           <tbody>
             {entries.map((entry) => {
-              const account = accountsById[entry.accountID];
-              const accountLabel = account
-                ? `${account.accountNumber} - ${account.accountName}`
+              const acct = accountsById[entry.accountID];
+              const accountLabel = acct
+                ? `${acct.accountNumber} - ${acct.accountName}`
                 : `Account ID ${entry.accountID}`;
 
-              // If RLS allowed the ledger lines but account lookup is incomplete, we still show something.
-              const hiddenInactive = !canViewInactiveAccounts && account && account.active === false;
+              const hiddenInactive = !canViewInactiveAccounts && acct && acct.active === false;
+              const linesForAcct = accountLedgerRowsById[entry.accountID];
+              const matchedRow = linesForAcct?.find(
+                (r) => String(r.ledgerID) === String(entry.ledgerID)
+              );
+              const rowBalance = matchedRow?.displayBalance;
 
               return (
                 <tr key={entry.ledgerID} style={hiddenInactive ? { display: 'none' } : undefined}>
                   <td>{accountLabel}</td>
-                  <td>{entry.description || 'N/A'}</td>
-                  <td>{entry.debit ? formatCurrency(entry.debit) : '-'}</td>
-                  <td>{entry.credit ? formatCurrency(entry.credit) : '-'}</td>
-                  <td>{formatCurrency(entry.runningBalance)}</td>
+                  <td>{entry.description?.trim() ? entry.description : ''}</td>
+                  <td>{formatDebitCreditCell(entry.debit)}</td>
+                  <td>{formatDebitCreditCell(entry.credit)}</td>
+                  <td>{rowBalance !== undefined && rowBalance !== null ? formatCurrency(rowBalance) : '-'}</td>
                 </tr>
               );
             })}
@@ -170,4 +181,3 @@ function JournalEntry() {
 }
 
 export default JournalEntry;
-

@@ -456,7 +456,27 @@ function ChartOfAccounts() {
                   <td>
                     <span style={{ color: '#007bff', textDecoration: 'underline' }}>{account.accountNumber}</span>
                   </td>
-                  <td>{account.accountName}</td>
+                  <td>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/admin/ledger/${account.accountNumber}`);
+                      }}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        padding: 0,
+                        color: '#007bff',
+                        textDecoration: 'underline',
+                        cursor: 'pointer',
+                        font: 'inherit',
+                        textAlign: 'left'
+                      }}
+                    >
+                      {account.accountName}
+                    </button>
+                  </td>
                   <td>{account.description || 'N/A'}</td>
                   <td>{account.subType}</td>
                   <td>{account.normalSide}</td>
@@ -544,7 +564,26 @@ function ChartOfAccounts() {
             <table className="user-report-table" style={{ maxWidth: '850px' }}>
               <tbody>
                 <tr><th>Account Number</th><td>{selectedAccount.accountNumber}</td></tr>
-                <tr><th>Account Name</th><td>{selectedAccount.accountName}</td></tr>
+                <tr>
+                  <th>Account Name</th>
+                  <td>
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/admin/ledger/${selectedAccount.accountNumber}`)}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        padding: 0,
+                        color: '#007bff',
+                        textDecoration: 'underline',
+                        cursor: 'pointer',
+                        font: 'inherit'
+                      }}
+                    >
+                      {selectedAccount.accountName}
+                    </button>
+                  </td>
+                </tr>
                 <tr><th>Description</th><td>{selectedAccount.description || 'N/A'}</td></tr>
                 <tr><th>Category</th><td>{selectedAccount.type || 'N/A'}</td></tr>
                 <tr><th>Subcategory</th><td>{selectedAccount.subType || 'N/A'}</td></tr>
