@@ -50,3 +50,11 @@ export async function setChartAccountActiveWithActor(accountId, isActive, actorU
   return data;
 }
 
+export async function fetchChartAccountEventLog(accountId) {
+  const { data, error } = await supabase.rpc('get_chart_of_accounts_event_log', {
+    p_account_id: accountId,
+  });
+  if (error) throw error;
+  return data ?? [];
+}
+
