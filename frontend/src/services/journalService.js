@@ -80,18 +80,50 @@ export async function getJournalEntryWithLines(entryId) {
 // Approve a journal entry (manager only).
 
 export async function approveJournalEntry(entryId, approvedBy) {
+  const approvedAt = new Date().toISOString();
+
   const { data, error } = await supabase
     .from('journalEntry')
     .update({
       status: 'approved',
       approvedBy,
-      approvedAt: new Date().toISOString(),
+      approvedAt,
     })
     .eq('journalEntryID', entryId)
     .select();
 
   if (error) throw error;
-  return data?.[0];
+
+  const approvedEntry = data?.[0];
+  if (!approvedEntry) throw new Error('Failed to approve journal entry.');
+
+  // Fetch the journal lines
+  const { data: lines, error: linesError } = await supabase
+    .from('journalLine')
+    .select('accountID, debit, credit')
+    .eq('journalEntryID', entryId);
+
+  if (linesError) throw linesError;
+
+  if (!lines || lines.length === 0) throw new Error('No lines found for journal entry.');
+
+  // Post to ledger
+  const ledgerRecords = lines.map((line) => ({
+    journalEntryID: entryId,
+    accountID: line.accountID,
+    entryDate: approvedAt,
+    description: `Journal Entry ${entryId}`,
+    debit: line.debit,
+    credit: line.credit,
+  }));
+
+  const { error: ledgerError } = await supabase
+    .from('Ledger')
+    .insert(ledgerRecords);
+
+  if (ledgerError) throw ledgerError;
+
+  return approvedEntry;
 }
 
 
