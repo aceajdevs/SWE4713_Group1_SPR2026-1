@@ -1,6 +1,5 @@
 import { supabase } from '../supabaseClient'
 
-// Get all users
 export const getAllUsers = async () => {
   const { data, error } = await supabase
     .from('user')
@@ -14,7 +13,22 @@ export const getAllUsers = async () => {
   return data
 }
 
-// Get expired passwords
+export const getEmailRecipientsByRoles = async (roles = ['manager', 'accountant', 'administrator']) => {
+  const { data, error } = await supabase
+    .from('user')
+    .select('userID, email, fName, lName, username, role')
+    .in('role', roles)
+    .eq('status', true)
+    .order('lName', { ascending: true })
+
+  if (error) {
+    console.error(error)
+    throw error
+  }
+
+  return (data || []).filter((u) => u.email && String(u.email).trim().length > 0)
+}
+
 export const getExpiredPasswords = async () => {
   const today = new Date().toISOString()
 
@@ -31,7 +45,6 @@ export const getExpiredPasswords = async () => {
   return data
 }
 
-// Suspend user
 export const suspendUser = async (userID, startDate, endDate) => {
   const { data, error } = await supabase
     .from('user')

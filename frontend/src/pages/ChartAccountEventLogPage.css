@@ -1,0 +1,29 @@
+.chart-account-event-log-page .event-log-table-wrap {
+  overflow-x: auto;
+  margin-top: 8px;
+}
+
+.chart-account-event-table .event-json-cell {
+  max-width: 320px;
+  vertical-align: top;
+}
+
+.chart-account-event-table .event-json-pre {
+  margin: 0;
+  padding: 8px 10px;
+  font-size: 12px;
+  line-height: 1.35;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 240px;
+  overflow: auto;
+  text-align: left;
+}
+
+.chart-account-event-table .event-json-empty {
+  color: #6b7280;
+  font-size: 13px;
+}

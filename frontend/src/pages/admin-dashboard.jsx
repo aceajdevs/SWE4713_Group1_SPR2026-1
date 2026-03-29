@@ -4,6 +4,7 @@ import { HelpTooltip } from '../components/HelpTooltip';
 import UserReport from '../components/admin/UserReport';
 import SuspendUser from '../components/admin/SuspendUser';
 import ExpiredPasswords from '../components/admin/ExpiredPasswords';
+import PasswordExpiryNotifyPanel from '../components/admin/PasswordExpiryNotifyPanel';
 import './admin-dashboard.css'
 
 function AdminDashboard() {
@@ -43,6 +44,9 @@ function AdminDashboard() {
           </div>
           <div className="right-block">
             <ExpiredPasswords />
+          </div>
+          <div className="right-block">
+            <PasswordExpiryNotifyPanel />
           </div>
         </div>
       </div>
