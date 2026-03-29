@@ -124,11 +124,8 @@ function JournalEntry() {
     <div className="container">
       <div className="header-row">
         <h1>Journal Entry</h1>
-        <button type="button" onClick={() => navigate(-1)} className="button">
-          Back
-        </button>
+        <button className="button-primary" onClick={() => navigate(-1)}>Back</button>
       </div>
-
       <div style={{ marginBottom: '24px', lineHeight: '1.8' }}>
         <p><strong>Post Reference (PR):</strong> {pr}</p>
         <p><strong>Date:</strong> {formatDate(headerEntryDate)}</p>

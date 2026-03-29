@@ -98,7 +98,7 @@ function JournalEntryDetail() {
       <div className="header-row">
         <h1>Journal Entry #{entry.journalEntryID}</h1>
         <HelpTooltip text="Return to the journal entries list.">
-          <button type="button" onClick={() => navigate('/journal-entries')} className="button">
+          <button type="button" onClick={() => navigate('/journal-entries')} className="button-primary" style={{ marginLeft: '16px' }}>
             Back to Journal Entries
           </button>
         </HelpTooltip>
