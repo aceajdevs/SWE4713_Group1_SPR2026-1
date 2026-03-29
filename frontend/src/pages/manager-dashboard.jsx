@@ -1,5 +1,6 @@
 import React from 'react';
 import '../global.css';
+import './manager-dashboard.css';
 import { useNavigate } from 'react-router-dom';
 
 function ManagerDashboard() {
@@ -13,14 +14,14 @@ function ManagerDashboard() {
           <h1>Manager Dashboard</h1>
           <p className="muted">Welcome! Select a service below.</p>
         </div>
-        <div style={{ display: 'flex', gap: '10px', marginTop: '16px', flexWrap: 'wrap' }}>
-          <button className="button" onClick={() => navigate('/journal-entry/new')}>
+        <div className="dashboard-buttons">
+          <button className="button-primary" onClick={() => navigate('/journal-entry/new')}>
             New Journal Entry
           </button>
-          <button className="button" onClick={() => navigate('/journal-entries')}>
+          <button className="button-primary" onClick={() => navigate('/journal-entries')}>
             Review Journal Entries
           </button>
-          <button className="button" onClick={() => navigate('/admin/chart-of-accounts')}>
+          <button className="button-primary" onClick={() => navigate('/admin/chart-of-accounts')}>
             Chart of Accounts
           </button>
         </div>

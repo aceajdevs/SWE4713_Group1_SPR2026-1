@@ -1,0 +1,19 @@
+.dashboard-main {
+  padding: 20px;
+}
+.dashboard-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.dashboard-card .dashboard-header h1 {
+  margin-bottom: 8px;
+}
+.dashboard-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+}

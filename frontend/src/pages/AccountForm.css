@@ -62,16 +62,4 @@
   gap: 10px;
     grid-column: span 1;
 }
-.button {
-  padding: 10px 20px;
-  background-color: #0052cc;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 16px;
-  font-weight: 500;
-}
-.button:hover {
-  background-color: #2563EB;
-}
+

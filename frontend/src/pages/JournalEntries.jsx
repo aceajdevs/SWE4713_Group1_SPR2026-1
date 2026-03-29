@@ -116,7 +116,7 @@ function JournalEntries() {
       <div style={{ display: 'flex', gap: '10px', marginBottom: '16px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
         {(isAccountant || isManager) && (
           <HelpTooltip text="Create a new journal entry with debits and credits.">
-            <button onClick={() => navigate('/journal-entry/new')} className="button">
+            <button onClick={() => navigate('/journal-entry/new')} className="button-primary">
               New Journal Entry
             </button>
           </HelpTooltip>
@@ -201,7 +201,7 @@ function JournalEntries() {
                 <tr key={entry.journalEntryID}>
                   <td>
                     <button
-                      type="button"
+                      type="button-primary"
                       onClick={() => navigate(`/journal-entry/${entry.journalEntryID}`)}
                       style={{ background: 'none', border: 'none', color: '#0066cc', cursor: 'pointer', textDecoration: 'underline' }}
                     >
@@ -226,13 +226,14 @@ function JournalEntries() {
                   {isManager && (
                     <td>
                       {entry.status === 'pending' && (
-                        <div style={{ display: 'flex', gap: '5px', flexDirection: 'column' }}>
+                        <div style={{ display: 'flex', gap: '5px' }}>
                           <HelpTooltip text="Approve this journal entry and post it to the ledger.">
                             <button
+                            className="button-table"
+                              style={{ width: '30px', height: '30px', justifyContent: 'center', fontSize: '16px'}}
                               onClick={() => handleApprove(entry.journalEntryID)}
-                              style={{ color: 'green' }}
                             >
-                              Approve
+                              ✓
                             </button>
                           </HelpTooltip>
                           {rejectingId === entry.journalEntryID ? (
@@ -260,10 +261,11 @@ function JournalEntries() {
                           ) : (
                             <HelpTooltip text="Reject this entry. You must provide a reason.">
                               <button
+                                className="button-table"
+                                style={{ width: '30px', height: '30px', justifyContent: 'center', fontSize: '16px'}}
                                 onClick={() => setRejectingId(entry.journalEntryID)}
-                                style={{ color: 'red' }}
                               >
-                                Reject
+                                X
                               </button>
                             </HelpTooltip>
                           )}

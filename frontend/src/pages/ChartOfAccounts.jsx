@@ -201,389 +201,380 @@ function ChartOfAccounts() {
 
   return (
     <div className="page-chart-of-accounts">
+      <div classname="page-header">
       <h1>Chart of Accounts</h1>
       <div className="header-row">
         <div className="button-group">
           {isAdmin && (
             <HelpTooltip text="Create a new account in the chart of accounts (administrators only).">
-              <button className="button" onClick={() => navigate('/admin/add-account')}>Add New Account</button>
+              <button className="button-primary" onClick={() => navigate('/admin/add-account')}>Add New Account</button>
             </HelpTooltip>
           )}
-            <HelpTooltip text="Show all accounts in a single table report.">
-            <button className="button" onClick={() => setViewMode('report')}>All Accounts Report</button>
+          <HelpTooltip text="Show all accounts in a single table report.">
+            <button className="button-primary" onClick={() => setViewMode('report')}>All Accounts Report</button>
           </HelpTooltip>
           <HelpTooltip text="Pick one account from a list to view its details.">
-            <button className="button" onClick={() => setViewMode('individual')}>Individual Account</button>
+            <button className="button-primary" onClick={() => setViewMode('individual')}>Individual Account</button>
           </HelpTooltip>
           <HelpTooltip text="Return to your role dashboard without leaving the app.">
-            <button className="button" onClick={() => navigate(dashboardPath)}>Back to Dashboard</button>
+            <button className="button-primary" onClick={() => navigate(dashboardPath)}>Back to Dashboard</button>
           </HelpTooltip>
-        </div>
-        <div style={{ display: 'flex', gap: '8px', marginRight: '20px' }}>
-
         </div>
       </div>
-      <div className="search-and-filter">
-        <div className="search-group">
-          <input
-            type="text"
-            placeholder="Search by account name or number..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            onKeyDown={handleKeyDown}
-            className="input-field"
-            style={{ width: '300px' }}
-          />
-          <HelpTooltip text="Apply the search box and current filters to narrow the account list.">
-            <button onClick={handleSearch} className="button" style={{ padding: '8px 15px' }}>
-              Search
-            </button>
-          </HelpTooltip>
-          <button
-            onClick={() => setFilterPopupVisible(!filterPopupVisible)}
-            className="button"
-            style={{ padding: '8px 15px' }}
-          >
-            Filters {filterPopupVisible ? '◀' : '▶'}
-          </button>
-        </div>
+      </div>
+      <div className="chart-of-accounts-container">
+        <div className="search-and-filter">
+          <div className="search-group">
+            <div className="clear-input-container" role="group">
+              <input className="input" type="text" placeholder="Search by account name or number..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} onKeyDown={handleKeyDown}/>
+              <button type="button" className="button-clear" onClick={() => setSearchTerm('')} aria-label="Clear search input">X</button>
+            </div>
+            <HelpTooltip text="Apply the search box and current filters to narrow the account list.">
+              <button className="button-primary" style={{ height: '44px' }} onClick={handleSearch}>Search</button>
+            </HelpTooltip>
+            <button className="button-primary" onClick={() => setFilterPopupVisible(!filterPopupVisible)}>Filters {filterPopupVisible ? '▲' : '▼'}</button>
+          </div>
 
-        {filterPopupVisible && (
-          <div className="filter-popup">
-            <div className="filter-item">
-              <label style={{ marginRight: '8px' }}>Account Name:</label>
-              <input
-                type="text"
-                value={filters.accountName}
-                onChange={(e) => setFilters({ ...filters, accountName: e.target.value })}
-                className="input-field"
-                style={{ padding: '5px', width: '180px' }}
-                placeholder="e.g., Cash"
-              />
-            </div>
-            <div className="filter-item">
-              <label style={{ marginRight: '8px' }}>Account Number:</label>
-              <input
-                type="text"
-                value={filters.accountNumber}
-                onChange={(e) => setFilters({ ...filters, accountNumber: e.target.value })}
-                className="input-field"
-                style={{ padding: '5px', width: '140px' }}
-                placeholder="e.g., 10000001"
-              />
-            </div>
-            <div className="filter-item">
-              <label style={{ marginRight: '8px' }}>Category:</label>
-              <select
-                value={filters.category}
-                onChange={(e) => setFilters({ ...filters, category: e.target.value })}
-                className="input-field"
-                style={{ padding: '5px', width: 'auto' }}
-              >
-                <option value="">All Categories</option>
-                <option value="Assets">Assets</option>
-                <option value="Liabilities">Liabilities</option>
-                <option value="Equity">Equity</option>
-                <option value="Revenue">Revenue</option>
-                <option value="Expenses">Expenses</option>
-              </select>
-            </div>
-            <div className="filter-item">
-              <label style={{ marginRight: '8px' }}>Subcategory:</label>
-              <input
-                type="text"
-                value={filters.subCategory}
-                onChange={(e) => setFilters({ ...filters, subCategory: e.target.value })}
-                className="input-field"
-                style={{ padding: '5px', width: '180px' }}
-                placeholder="e.g., Current Assets"
-              />
-            </div>
-            <div className="filter-item" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <label style={{ marginRight: '8px' }}>Amount:</label>
-              <div style={{ display: 'flex', gap: '6px' }}>
-                <select
-                  value={filters.amountOperator}
-                  onChange={(e) => setFilters({ ...filters, amountOperator: e.target.value })}
-                  className="input-field"
-                  style={{ padding: '5px', width: '75px' }}
-                >
-                  <option value="">-</option>
-                  <option value="=">=</option>
-                  <option value=">">&gt;</option>
-                  <option value="<">&lt;</option>
-                  <option value=">=">&gt;=</option>
-                  <option value="<=">&lt;=</option>
-                </select>
+          {filterPopupVisible && (
+            <div className="filter-popup">
+              <div className="filter-item">
+                <label>Account Name:</label>
                 <input
                   type="text"
-                  inputMode="decimal"
-                  value={filters.amountValue}
-                  onChange={(e) => handleAmountValueChange(e.target.value)}
-                  className="input-field"
-                  style={{ padding: '5px', width: '130px' }}
-                  placeholder="0.00"
+                  value={filters.accountName}
+                  onChange={(e) => setFilters({ ...filters, accountName: e.target.value })}
+                  className="input"
+                  style={{ width: '180px' }}
+                  placeholder="e.g., Cash"
                 />
               </div>
-            </div>
-            <div className="filter-item">
-              <label style={{ marginRight: '8px' }}>Status:</label>
-              <select
-                value={filters.status}
-                onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-                className="input-field"
-                style={{ padding: '5px', width: 'auto' }}
-              >
-                <option value="">All Statuses</option>
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-              </select>
-            </div>
-            <HelpTooltip text="Clear all filter fields in the popup back to defaults.">
-              <button
-                onClick={resetAllFilters}
-                className="button"
-                style={{ padding: '5px 10px', backgroundColor: '#eee', color: '#333' }}
-              >
-                Reset
-              </button>
-            </HelpTooltip>
-          </div>
-        )}
-
-        {!loading && !error && (
-          <div style={{ marginBottom: '12px' }}>
-            <p style={{ marginBottom: '6px' }}>
-              Showing {filteredAccounts.length} of {accounts.length} accounts.
-            </p>
-            {activeTokens.length > 0 && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                {activeTokens.map((token) => (
-                  <span
-                    key={token.key}
-                    style={{
-                      backgroundColor: '#e9ecef',
-                      border: '1px solid #ced4da',
-                      borderRadius: '12px',
-                      padding: '2px 10px',
-                      fontSize: '0.85rem',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '6px'
-                    }}
-                  >
-                    {token.label}
-                    <HelpTooltip text={`Remove the "${token.label}" filter from the active filters.`}>
-                      <button
-                        onClick={() => clearToken(token.key)}
-                        style={{
-                          border: 'none',
-                          background: 'transparent',
-                          cursor: 'pointer',
-                          color: '#6c757d',
-                          fontWeight: 700,
-                          lineHeight: 1
-                        }}
-                        aria-label={`Clear ${token.label}`}
-                        type="button"
-                      >
-                        x
-                      </button>
-                    </HelpTooltip>
-                  </span>
-                ))}
+              <div className="filter-item">
+                <label>Account Number:</label>
+                <input
+                  type="text"
+                  value={filters.accountNumber}
+                  onChange={(e) => setFilters({ ...filters, accountNumber: e.target.value })}
+                  className="input"
+                  style={{ width: '140px' }}
+                  placeholder="e.g., 10000001"
+                />
               </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {loading && <p>Loading accounts...</p>}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-
-      {!loading && !error && viewMode === 'report' && (
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Number</th>
-              <th>Account Name</th>
-              <th>Description</th>
-              <th>Type</th>
-              <th>Normal Side</th>
-              <th>Initial Balance</th>
-              <th>Debit</th>
-              <th>Credit</th>
-              <th>Current Balance</th>
-              <th>Added At</th>
-              <th>Last Modified</th>
-              <th>Status</th>
-              {isAdmin && <th>Actions</th>}
-            </tr>
-          </thead>
-          <tbody>
-            {filteredAccounts.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={isAdmin ? 13 : 12}
-                  style={{ textAlign: 'center', padding: '20px', color: '#6c757d' }}
+              <div className="filter-item">
+                <label>Category:</label>
+                <select
+                  value={filters.category}
+                  onChange={(e) => setFilters({ ...filters, category: e.target.value })}
+                  className="input"
+                  style={{ width: 'auto' }}
                 >
-                  No accounts exist for the selected filters.
-                </td>
-              </tr>
-            ) : (
-              filteredAccounts.map((account) => (
-                <tr
-                  key={account.accountID}
-                  onClick={() => navigate(`/admin/ledger/${account.accountNumber}`)}
-                  style={{ cursor: 'pointer' }}
-                  title="Open account ledger"
+                  <option value="">All Categories</option>
+                  <option value="Assets">Assets</option>
+                  <option value="Liabilities">Liabilities</option>
+                  <option value="Equity">Equity</option>
+                  <option value="Revenue">Revenue</option>
+                  <option value="Expenses">Expenses</option>
+                </select>
+              </div>
+              <div className="filter-item">
+                <label>Subcategory:</label>
+                <input
+                  type="text"
+                  value={filters.subCategory}
+                  onChange={(e) => setFilters({ ...filters, subCategory: e.target.value })}
+                  className="input"
+                  style={{ width: '180px' }}
+                  placeholder="e.g., Current Assets"
+                />
+              </div>
+              <div className="filter-item" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <label>Amount:</label>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <select
+                    value={filters.amountOperator}
+                    onChange={(e) => setFilters({ ...filters, amountOperator: e.target.value })}
+                    className="input"
+                    style={{ width: '75px' }}
+                  >
+                    <option value="">-</option>
+                    <option value="=">=</option>
+                    <option value=">">&gt;</option>
+                    <option value="<">&lt;</option>
+                    <option value=">=">&gt;=</option>
+                    <option value="<=">&lt;=</option>
+                  </select>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={filters.amountValue}
+                    onChange={(e) => handleAmountValueChange(e.target.value)}
+                    className="input"
+                    style={{ width: '130px' }}
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
+              <div className="filter-item">
+                <label>Status:</label>
+                <select
+                  value={filters.status}
+                  onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                  className="input"
+                  style={{  width: 'auto' }}
                 >
-                  <td>
-                    <span style={{ color: '#007bff', textDecoration: 'underline' }}>{account.accountNumber}</span>
-                  </td>
-                  <td>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/admin/ledger/${account.accountNumber}`);
-                      }}
-                      style={{
-                        background: 'transparent',
-                        border: 'none',
-                        padding: 0,
-                        color: '#007bff',
-                        textDecoration: 'underline',
-                        cursor: 'pointer',
-                        font: 'inherit',
-                        textAlign: 'left'
-                      }}
-                    >
-                      {account.accountName}
-                    </button>
-                  </td>
-                  <td>{account.description || 'N/A'}</td>
-                  <td>{account.subType}</td>
-                  <td>{account.normalSide}</td>
-                  <td>${fmt(account.initBalance)}</td>
-                  <td>{account.normalSide === 'Debit' ? `$${fmt(account.initBalance)}` : '-'}</td>
-                  <td>{account.normalSide === 'Credit' ? `$${fmt(account.initBalance)}` : '-'}</td>
-                  <td>${fmt(account.initBalance)}</td>
-                  <td>{account.createdAt ? new Date(account.createdAt).toLocaleString() : 'N/A'}</td>
-                  <td>{account.updatedAt ? new Date(account.updatedAt).toLocaleString() : 'N/A'}</td>
-                  <td>{account.active ? 'Active' : 'Inactive'}</td>
-                  {isAdmin && (
-                    <td>
-                      <HelpTooltip text="Open the form to change this account's details.">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/admin/edit-account/${account.accountID}`);
-                          }}
-                          style={{ marginRight: '5px' }}
-                        >
-                          Edit
-                        </button>
-                      </HelpTooltip>
-                      <HelpTooltip
-                        text={
-                          account.active
-                            ? 'Mark this account inactive so it cannot be used for new entries.'
-                            : 'Mark this account active again for use in the system.'
-                        }
-                      >
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeactivate(account.accountID, account.active);
-                          }}
-                        >
-                          {account.active ? 'Deactivate' : 'Activate'}
-                        </button>
-                      </HelpTooltip>
-                    </td>
-                  )}
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      )}
-
-      {!loading && !error && viewMode === 'individual' && (
-        <div>
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '15px' }}>
-            <label htmlFor="account-select"><strong>Select Account:</strong></label>
-            <select
-              id="account-select"
-              value={selectedAccountId}
-              onChange={(e) => setSelectedAccountId(e.target.value)}
-              className="input-field"
-              style={{ width: '340px' }}
-            >
-              <option value="">Choose an account</option>
-              {filteredAccounts.map((account) => (
-                <option key={account.accountID} value={account.accountID}>
-                  {account.accountNumber} - {account.accountName}
-                </option>
-              ))}
-            </select>
-            {selectedAccount && (
-              <HelpTooltip text="View journal activity and balances for the selected account.">
+                  <option value="">All Statuses</option>
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                </select>
+              </div>
+              <HelpTooltip text="Clear all filter fields in the popup back to defaults.">
                 <button
-                  type="button"
-                  onClick={() => navigate(`/admin/ledger/${selectedAccount.accountNumber}`)}
-                  className="button"
+                  onClick={resetAllFilters}
+                  className="button-primary"
+                  style={{ margin: '0 0 0 12px' }}
                 >
-                  Open Ledger
+                  Reset
                 </button>
               </HelpTooltip>
-            )}
-          </div>
-
-          {!selectedAccount && <p>Select an account to view individual details.</p>}
-
-          {selectedAccount && (
-            <table className="table" style={{ maxWidth: '850px' }}>
-              <tbody>
-                <tr><th>Account Number</th><td>{selectedAccount.accountNumber}</td></tr>
-                <tr>
-                  <th>Account Name</th>
-                  <td>
-                    <button
-                      type="button"
-                      onClick={() => navigate(`/admin/ledger/${selectedAccount.accountNumber}`)}
-                      style={{
-                        background: 'transparent',
-                        border: 'none',
-                        padding: 0,
-                        color: '#007bff',
-                        textDecoration: 'underline',
-                        cursor: 'pointer',
-                        font: 'inherit'
-                      }}
-                    >
-                      {selectedAccount.accountName}
-                    </button>
-                  </td>
-                </tr>
-                <tr><th>Description</th><td>{selectedAccount.description || 'N/A'}</td></tr>
-                <tr><th>Category</th><td>{selectedAccount.type || 'N/A'}</td></tr>
-                <tr><th>Subcategory</th><td>{selectedAccount.subType || 'N/A'}</td></tr>
-                <tr><th>Normal Side</th><td>{selectedAccount.normalSide || 'N/A'}</td></tr>
-                <tr><th>Initial Balance</th><td>${fmt(selectedAccount.initBalance)}</td></tr>
-                <tr><th>Current Balance</th><td>${fmt(selectedAccount.initBalance)}</td></tr>
-                <tr><th>Statement Type</th><td>{selectedAccount.statementType || 'N/A'}</td></tr>
-                <tr><th>Status</th><td>{selectedAccount.active ? 'Active' : 'Inactive'}</td></tr>
-                <tr><th>Added At</th><td>{selectedAccount.createdAt ? new Date(selectedAccount.createdAt).toLocaleString() : 'N/A'}</td></tr>
-                <tr><th>Last Modified</th><td>{selectedAccount.updatedAt ? new Date(selectedAccount.updatedAt).toLocaleString() : 'N/A'}</td></tr>
-              </tbody>
-            </table>
+            </div>
           )}
         </div>
-      )}
+        <div className="filter-tokens-container">
+                {activeTokens.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                  {activeTokens.map((token) => (
+                    <span
+                      key={token.key}
+                      style={{
+                        backgroundColor: 'var(--bff-accent)',
+                        border: '1px solid var(--bff-border)',
+                        color: 'var(--bff-dark-text)',
+                        borderRadius: '12px',
+                        padding: '2px 10px',
+                        fontSize: '0.85rem',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      {token.label}
+                      <HelpTooltip text={`Remove the "${token.label}" filter from the active filters.`}>
+                        <button
+                          onClick={() => clearToken(token.key)}
+                          style={{
+                            border: 'none',
+                            background: 'transparent',
+                            cursor: 'pointer',
+                            color: 'var(--bff-primary)',
+                            fontWeight: 700,
+                            lineHeight: 1,
+                          }}
+                          aria-label={`Clear ${token.label}`}
+                          type="button"
+                        >
+                          X
+                        </button>
+                      </HelpTooltip>
+                    </span>
+                  ))}
+                </div>
+              )}
+          </div>
+        {loading && <p>Loading accounts...</p>}
+        {error && <p style={{ color: 'red' }}>{error}</p>}
+
+        {!loading && !error && viewMode === 'report' && (
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Number</th>
+                <th>Account Name</th>
+                <th>Description</th>
+                <th>Type</th>
+                <th>Normal Side</th>
+                <th>Initial Balance</th>
+                <th>Debit</th>
+                <th>Credit</th>
+                <th>Current Balance</th>
+                <th>Added At</th>
+                <th>Last Modified</th>
+                <th>Status</th>
+                {isAdmin && <th>Actions</th>}
+              </tr>
+            </thead>
+            <tbody>
+              {filteredAccounts.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={isAdmin ? 13 : 12}
+                    style={{ textAlign: 'center', padding: '20px', color: '#6c757d' }}
+                  >
+                    No accounts exist for the selected filters.
+                  </td>
+                </tr>
+              ) : (
+                filteredAccounts.map((account) => (
+                  <tr
+                    key={account.accountID}
+                    onClick={() => navigate(`/admin/ledger/${account.accountNumber}`)}
+                    style={{ cursor: 'pointer' }}
+                    title="Open account ledger"
+                  >
+                    <td>
+                      <span style={{ color: '#007bff', textDecoration: 'underline' }}>{account.accountNumber}</span>
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/admin/ledger/${account.accountNumber}`);
+                        }}
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          padding: 0,
+                          color: '#007bff',
+                          textDecoration: 'underline',
+                          cursor: 'pointer',
+                          font: 'inherit',
+                          textAlign: 'left'
+                        }}
+                      >
+                        {account.accountName}
+                      </button>
+                    </td>
+                    <td>{account.description || 'N/A'}</td>
+                    <td>{account.subType}</td>
+                    <td>{account.normalSide}</td>
+                    <td>${fmt(account.initBalance)}</td>
+                    <td>{account.normalSide === 'Debit' ? `$${fmt(account.initBalance)}` : '-'}</td>
+                    <td>{account.normalSide === 'Credit' ? `$${fmt(account.initBalance)}` : '-'}</td>
+                    <td>${fmt(account.initBalance)}</td>
+                    <td>{account.createdAt ? new Date(account.createdAt).toLocaleString() : 'N/A'}</td>
+                    <td>{account.updatedAt ? new Date(account.updatedAt).toLocaleString() : 'N/A'}</td>
+                    <td>{account.active ? 'Active' : 'Inactive'}</td>
+                    {isAdmin && (
+                      <td>
+                        <HelpTooltip text="Open the form to change this account's details.">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/admin/edit-account/${account.accountID}`);
+                            }}
+                            style={{ marginRight: '5px' }}
+                          >
+                            Edit
+                          </button>
+                        </HelpTooltip>
+                        <HelpTooltip
+                          text={
+                            account.active
+                              ? 'Mark this account inactive so it cannot be used for new entries.'
+                              : 'Mark this account active again for use in the system.'
+                          }
+                        >
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeactivate(account.accountID, account.active);
+                            }}
+                          >
+                            {account.active ? 'Deactivate' : 'Activate'}
+                          </button>
+                        </HelpTooltip>
+                      </td>
+                    )}
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        )}
+
+        {!loading && !error && viewMode === 'individual' && (
+          <div>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '15px' }}>
+              <label htmlFor="account-select"><strong>Select Account:</strong></label>
+              <select
+                id="account-select"
+                value={selectedAccountId}
+                onChange={(e) => setSelectedAccountId(e.target.value)}
+                className="input"
+                style={{ width: '340px' }}
+              >
+                <option value="">Choose an account</option>
+                {filteredAccounts.map((account) => (
+                  <option key={account.accountID} value={account.accountID}>
+                    {account.accountNumber} - {account.accountName}
+                  </option>
+                ))}
+              </select>
+              {selectedAccount && (
+                <HelpTooltip text="View journal activity and balances for the selected account.">
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/admin/ledger/${selectedAccount.accountNumber}`)}
+                    className="button-primary"
+                  >
+                    Open Ledger
+                  </button>
+                </HelpTooltip>
+              )}
+            </div>
+
+            {!selectedAccount && <p>Select an account to view individual details.</p>}
+
+            {selectedAccount && 
+            (
+              <table>
+                <tbody>
+                  <tr><th>Account Number</th><td>{selectedAccount.accountNumber}</td></tr>
+                  <tr>
+                    <th>Account Name</th>
+                    <td>
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/admin/ledger/${selectedAccount.accountNumber}`)}
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          padding: 0,
+                          color: 'var(--bff-primary)',
+                          textDecoration: 'underline',
+                          cursor: 'pointer',
+                          font: 'inherit'
+                        }}
+                      >
+                        {selectedAccount.accountName}
+                      </button>
+                    </td>
+                  </tr>
+                  <tr><th>Description</th><td>{selectedAccount.description || 'N/A'}</td></tr>
+                  <tr><th>Category</th><td>{selectedAccount.type || 'N/A'}</td></tr>
+                  <tr><th>Subcategory</th><td>{selectedAccount.subType || 'N/A'}</td></tr>
+                  <tr><th>Normal Side</th><td>{selectedAccount.normalSide || 'N/A'}</td></tr>
+                  <tr><th>Initial Balance</th><td>${fmt(selectedAccount.initBalance)}</td></tr>
+                  <tr><th>Current Balance</th><td>${fmt(selectedAccount.initBalance)}</td></tr>
+                  <tr><th>Statement Type</th><td>{selectedAccount.statementType || 'N/A'}</td></tr>
+                  <tr><th>Status</th><td>{selectedAccount.active ? 'Active' : 'Inactive'}</td></tr>
+                  <tr><th>Added At</th><td>{selectedAccount.createdAt ? new Date(selectedAccount.createdAt).toLocaleString() : 'N/A'}</td></tr>
+                  <tr><th>Last Modified</th><td>{selectedAccount.updatedAt ? new Date(selectedAccount.updatedAt).toLocaleString() : 'N/A'}</td></tr>
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}
+                  {!loading && !error && (
+            <div style={{ marginBottom: '12px' }}>
+              <p style={{ marginBottom: '6px' }}>
+                Showing {filteredAccounts.length} of {accounts.length} accounts.
+              </p>
+            </div>
+          )}
+      </div>
     </div>
   );
 }
