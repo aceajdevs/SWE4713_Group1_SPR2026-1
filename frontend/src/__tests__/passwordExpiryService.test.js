@@ -39,14 +39,22 @@ describe('checkPasswordsAboutToExpire', () => {
 
     __mockSelect.mockResolvedValue({
       data: [
-        { passwordID: 1, userID: 10, activeTill: expiringDate },
+        {
+          userID: 10,
+          passwordExpires: expiringDate,
+          passwordExpiryWarningSentAt: null,
+          email: 'test@example.com',
+          fName: 'Test',
+          lName: 'User',
+          username: 'testuser',
+          status: true,
+        },
       ],
       error: null,
     });
 
     const result = await checkPasswordsAboutToExpire();
     expect(result).toHaveLength(1);
-    expect(result[0].passwordID).toBe(1);
     expect(result[0].userID).toBe(10);
   });
 
@@ -59,7 +67,16 @@ describe('checkPasswordsAboutToExpire', () => {
 
     __mockSelect.mockResolvedValue({
       data: [
-        { passwordID: 2, userID: 20, activeTill: expiringDate },
+        {
+          userID: 20,
+          passwordExpires: expiringDate,
+          passwordExpiryWarningSentAt: null,
+          email: 'user2@example.com',
+          fName: 'User',
+          lName: 'Two',
+          username: 'user2',
+          status: true,
+        },
       ],
       error: null,
     });
@@ -78,8 +95,26 @@ describe('checkPasswordsAboutToExpire', () => {
 
     __mockSelect.mockResolvedValue({
       data: [
-        { passwordID: 1, userID: 10, activeTill: inTwoDays },
-        { passwordID: 2, userID: 20, activeTill: inOneDay },
+        {
+          userID: 10,
+          passwordExpires: inTwoDays,
+          passwordExpiryWarningSentAt: null,
+          email: 'a@example.com',
+          fName: 'A',
+          lName: 'A',
+          username: 'a',
+          status: true,
+        },
+        {
+          userID: 20,
+          passwordExpires: inOneDay,
+          passwordExpiryWarningSentAt: null,
+          email: 'b@example.com',
+          fName: 'B',
+          lName: 'B',
+          username: 'b',
+          status: true,
+        },
       ],
       error: null,
     });
@@ -100,7 +135,16 @@ describe('checkPasswordsAboutToExpire', () => {
 
     __mockSelect.mockResolvedValue({
       data: [
-        { passwordID: 1, userID: 10, activeTill: expiredDate },
+        {
+          userID: 10,
+          passwordExpires: expiredDate,
+          passwordExpiryWarningSentAt: null,
+          email: 'x@example.com',
+          fName: 'X',
+          lName: 'X',
+          username: 'x',
+          status: true,
+        },
       ],
       error: null,
     });
@@ -118,7 +162,16 @@ describe('checkPasswordsAboutToExpire', () => {
 
     __mockSelect.mockResolvedValue({
       data: [
-        { passwordID: 1, userID: 10, activeTill: farDate },
+        {
+          userID: 10,
+          passwordExpires: farDate,
+          passwordExpiryWarningSentAt: null,
+          email: 'x@example.com',
+          fName: 'X',
+          lName: 'X',
+          username: 'x',
+          status: true,
+        },
       ],
       error: null,
     });
@@ -133,7 +186,16 @@ describe('checkPasswordsAboutToExpire', () => {
 
     __mockSelect.mockResolvedValue({
       data: [
-        { passwordID: 1, userID: 10, activeTill: null },
+        {
+          userID: 10,
+          passwordExpires: null,
+          passwordExpiryWarningSentAt: null,
+          email: 'x@example.com',
+          fName: 'X',
+          lName: 'X',
+          username: 'x',
+          status: true,
+        },
       ],
       error: null,
     });
@@ -181,7 +243,16 @@ describe('checkPasswordsAboutToExpire', () => {
 
     __mockSelect.mockResolvedValue({
       data: [
-        { passwordID: 1, userID: 10, activeTill: almostThreeDays },
+        {
+          userID: 10,
+          passwordExpires: almostThreeDays,
+          passwordExpiryWarningSentAt: null,
+          email: 'x@example.com',
+          fName: 'X',
+          lName: 'X',
+          username: 'x',
+          status: true,
+        },
       ],
       error: null,
     });
@@ -199,7 +270,16 @@ describe('checkPasswordsAboutToExpire', () => {
 
     __mockSelect.mockResolvedValue({
       data: [
-        { passwordID: 1, userID: 10, activeTill: almostNow },
+        {
+          userID: 10,
+          passwordExpires: almostNow,
+          passwordExpiryWarningSentAt: null,
+          email: 'x@example.com',
+          fName: 'X',
+          lName: 'X',
+          username: 'x',
+          status: true,
+        },
       ],
       error: null,
     });
@@ -211,6 +291,6 @@ describe('checkPasswordsAboutToExpire', () => {
   it('calls supabase with the correct table', async () => {
     __mockSelect.mockResolvedValue({ data: [], error: null });
     await checkPasswordsAboutToExpire();
-    expect(__mockFrom).toHaveBeenCalledWith('userPasswords');
+    expect(__mockFrom).toHaveBeenCalledWith('user');
   });
 });

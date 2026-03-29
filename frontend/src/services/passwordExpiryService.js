@@ -31,10 +31,11 @@ export async function checkPasswordsAboutToExpire(days = 3) {
         expiring.push({
           userID: row.userID,
           passwordExpires: expiresAt.toISOString(),
-          email: row.email,
-          fName: row.fName,
-          lName: row.lName,
-          username: row.username,
+          passwordExpiryWarningSentAt: row.passwordExpiryWarningSentAt ?? null,
+          email: row.email ?? null,
+          fName: row.fName ?? null,
+          lName: row.lName ?? null,
+          username: row.username ?? null,
         });
       }
     });
