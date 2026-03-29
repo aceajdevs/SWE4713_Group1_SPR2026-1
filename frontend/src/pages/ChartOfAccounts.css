@@ -23,26 +23,12 @@
   display: flex;
   gap: 12px;
 }
-.button-group button {
-  padding: 8px 16px;
-  font-size: 14px;
-  font-weight: 500;
-  color: white;
-  background-color: #0052cc;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-.button-group button:hover {
-  background-color: #2563EB;
-}
 
 /* Filters */
 .filter-popup {
   display: flex;
   margin: 0;
-  background-color: #0052cc;
+  background-color: var(--bff-secondary);
   border-radius: 6px;
   padding: 3px 1vw;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
@@ -76,17 +62,7 @@
   border-color: #33A1Fd;
   color: white;
 }
-.filter-popup button {
-  padding: 6px 12px;
-  font-size: 14px;
-  font-weight: 500;
-  color: white;
-  background-color: #33A1Fd;
-  border: 1px solid #0052cc;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
+
 .filter-popup button:hover {
   background-color: #2563EB;
 }

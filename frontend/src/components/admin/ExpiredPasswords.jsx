@@ -20,7 +20,7 @@ function ExpiredPasswords() {
   return (
     <div>
       <h2>Expired Passwords</h2>
-      <table border="1">
+      <table>
         <thead>
           <tr>
             <th>User ID</th>

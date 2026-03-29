@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { getAllUsers } from '../../services/adminService';
 import { sendAdminEmail } from '../../services/emailService';
-import { HelpTooltip } from '../HelpTooltip';
-import './UserReport.css';
 
 function UserReport() {
     const [selectedUser, setSelectedUser] = useState(null);
@@ -81,11 +79,9 @@ function UserReport() {
                             <td>{user.role}</td>
                             <td>{user.status ? "Active" : "Inactive"}</td>
                             <td>
-                                <HelpTooltip text="Open the email composer for this user’s address.">
-                                    <button type="button" onClick={() => setSelectedUser(user)}>
-                                        Email
-                                    </button>
-                                </HelpTooltip>
+                                <button onClick={() => setSelectedUser(user)}>
+                                    Email
+                                </button>
                             </td>
                         </tr>
                     ))}
@@ -112,17 +108,13 @@ function UserReport() {
                     style={{ width: "100%", marginBottom: "10px" }}
                     />
 
-                    <HelpTooltip text="Send the subject and message to this user using the configured email service.">
-                        <button type="button" onClick={handleSendEmail} disabled={sending}>
-                            {sending ? "Sending..." : "Send Email"}
-                        </button>
-                    </HelpTooltip>
+                    <button onClick={handleSendEmail} disabled={sending}>
+                    {sending ? "Sending..." : "Send Email"}
+                    </button>
 
-                    <HelpTooltip text="Close the email panel without sending.">
-                        <button type="button" onClick={() => setSelectedUser(null)} style={{ marginLeft: "10px" }}>
-                            Cancel
-                        </button>
-                    </HelpTooltip>
+                    <button onClick={() => setSelectedUser(null)} style={{ marginLeft: "10px" }}>
+                    Cancel
+                    </button>
                 </div>
             )}
         </div>

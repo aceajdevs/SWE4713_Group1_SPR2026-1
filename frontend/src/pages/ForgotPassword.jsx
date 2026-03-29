@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import '../LoginPage.css'
+import './LoginPage.css'
 import logo from '../../assets/Images/resourceDirectory/logo.png'
 import { useNavigate } from 'react-router-dom';
 import { validatePassword } from '../utils/passwordValidation';
@@ -182,13 +182,13 @@ function ForgotPasswordPage() {
         <div className="login-page">
             <PageHelpCorner topic="forgot-password" />
             <header className="login-header">
-                <div className="logo" aria-hidden="true">
-                    <img src={logo} alt="App Logo" />
-                </div>
             </header>
 
             <main className="login-main">
                 <form className="login-form">
+                    <div className="logo" aria-hidden="true">
+                    <img src={logo} alt="App Logo" />
+                    </div>
                     <h1>Forgot Password</h1>
                     <p>
                         Follow the steps below to reset your password. First confirm your identity,
@@ -208,7 +208,8 @@ function ForgotPasswordPage() {
                               text="Email address on file for your account. Used with user ID to load your security questions."
                               className="help-tooltip-block"
                             >
-                              <input
+                                <div class="clear-input-wrapper" role="group">
+                                <input
                                 className="input"
                                 type="email"
                                 name="email"
@@ -217,7 +218,9 @@ function ForgotPasswordPage() {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
-                              />
+                                />
+                                <button type="button" className="button-clear" onClick={() => setEmail('')} aria-label="Clear email input">X</button>
+                                </div>
                             </HelpTooltip>
 
                             <h5>User ID</h5>
@@ -225,7 +228,8 @@ function ForgotPasswordPage() {
                               text="Your unique user identifier (not your display name). Must match the account tied to the email."
                               className="help-tooltip-block"
                             >
-                              <input
+                                <div class="clear-input-wrapper" role="group">
+                                <input
                                 className="input"
                                 type="text"
                                 name="userId"
@@ -234,17 +238,17 @@ function ForgotPasswordPage() {
                                 value={userId}
                                 onChange={(e) => setUserId(e.target.value)}
                                 required
-                              />
+                                />
+                                <button type="button" className="button-clear" onClick={() => setUserId('')} aria-label="Clear user ID input">X</button>
+                                </div>
                             </HelpTooltip>
 
                             <div className="button-row" role="group">
-                                <HelpTooltip text="Clear all fields on this password reset flow.">
-                                  <button type="button" onClick={handleClearAll}>Clear</button>
-                                </HelpTooltip>
                                 <HelpTooltip text="Verify email and user ID, then load your security questions.">
-                                  <button type="button" className="login-button" onClick={handleStartReset}>
-                                    Continue
-                                  </button>
+                                    <button type="button" className="button-primary" onClick={handleStartReset}>Continue</button>
+                                </HelpTooltip>
+                                <HelpTooltip text="Leave password reset and return to the welcome screen.">
+                                    <button type="button" className="button-secondary" onClick={navToWelcome}>Cancel</button>
                                 </HelpTooltip>
                             </div>
                         </>
@@ -370,14 +374,6 @@ function ForgotPasswordPage() {
                             </div>
                         </>
                     )}
-
-                    <div className="cancel-wrap">
-                        <HelpTooltip text="Leave password reset and return to the welcome screen.">
-                          <button type="button" className="cancel-button" onClick={navToWelcome}>
-                            Cancel
-                          </button>
-                        </HelpTooltip>
-                    </div>
                 </form>
             </main>
         </div>

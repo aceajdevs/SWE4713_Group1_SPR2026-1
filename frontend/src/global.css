@@ -1,23 +1,33 @@
 /* Global CSS - Applied to the entire application */
-
+:root {
+  --bff-primary: #0052cc;
+  --bff-button-hover: #2563EB;
+  --bff-secondary: #33A1Fd;
+  --bff-background: #f5f7fb;
+  --bff-dark-text: #0f172a;
+  --bff-light-text: white;
+  --bff-border: #D1D5DB;
+  --bff-accent: #FFFAD9;
+  --bff-table-hover: #E3D081;
+  --bff-error: #dc2626;
+  --bff-error-accent: #fef2f2;
+  --bff-error-hover: #fca5a5;
+}
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
-
 html, body {
   width: 100%;
   height: 100%;
 }
-
 body {
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  background-color: #f8f9fa;
-  color: #0f172a;
+  background-color: var(--bff-background);
+  color: var(--bff-dark-text);
   line-height: 1.6;
 }
-
 #root {
   width: 100%;
   min-height: 100vh;
@@ -25,26 +35,98 @@ body {
   flex-direction: column;
 }
 
-/* Remove default button styles for custom styling */
-button {
+/* All Button Types */
+.button-primary {
+  color: var(--bff-light-text);
+  background-color: var(--bff-primary);
   font-family: inherit;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+.button-primary:hover {
+  background-color: var(--bff-button-hover);
+}
+.button-secondary {
+  color: var(--bff-light-text);
+  background-color: var(--bff-secondary);
+  font-family: inherit;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+.button-secondary:hover {
+  background-color: var(--bff-button-hover);
+}
+.button-clear {
+  background: transparent;
+  border: none;
+  color: var(--bff-border);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0 4px;
+
+}
+.button-clear:hover {
+  color: var(--bff-secondary);
+}
+.button-small:hover {
+  background-color: var(--bff-button-hover);
 }
 
-/* Remove default input styles */
+.table button {
+  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--bff-light-text);
+  background-color: var(--bff-primary);
+  border: none;
+  border-radius: 4px;
+}
+.table button:hover {
+  background-color: var(--bff-button-hover);
+}
+/* dropdown selectors*/
+.select {
+  padding: 6px 10px;
+  font-size: 14px;
+  border: 1px solid var(--bff-border);
+  background-color: var(--bff-primary);
+  border-radius: 6px;
+}
+
+
+
+/* inputs and text entry */
 input {
   font-family: inherit;
 }
-
-/* Ensure images scale properly */
+.link{
+  color: #0000ee;
+  text-decoration: underline;
+  cursor: pointer;
+}
+/* images */
 img {
-  max-width: 100%;
-  height: auto;
   display: block;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
 }
 
 /* Accessibility improvements */
 :focus-visible {
-  outline: 2px solid #0052cc;
+  outline: 2px solid var(--bff-primary);
   outline-offset: 2px;
 }
 

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import '../global.css';
+import './user-account-request.css';
 import { getAllUserRequests, approveUserRequest, rejectUserRequest } from '../services/userService';
 import { useAuth } from '../AuthContext';
 import { HelpTooltip } from '../components/HelpTooltip';
@@ -222,6 +223,7 @@ function UserAccountRequestPage() {
                     <HelpTooltip text="Create an account for the selected request with the chosen role.">
                         <button
                             type="button"
+                            className="button-primary"
                             disabled={!selectedUserId || loading}
                             onClick={handleApprove}
                         >
@@ -231,6 +233,7 @@ function UserAccountRequestPage() {
                     <HelpTooltip text="Decline this account request and remove it from the pending list.">
                         <button
                             type="button"
+                            className="button-primary"
                             disabled={!selectedUserId || loading}
                             onClick={handleReject}
                         >

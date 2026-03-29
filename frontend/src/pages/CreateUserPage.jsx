@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import '../LoginPage.css';
+import './LoginPage.css';
 import { useNavigate } from 'react-router-dom';
 import { checkEmail, getSecurityQuestions, admin_createUser } from '../services/userService';
 import { validatePassword } from '../utils/passwordValidation';
@@ -546,28 +546,27 @@ function CreateUserPage() {
 
                     <div className="button-row" role="group">
                         <HelpTooltip text="Creates a new user with the information filled in above.">
-                          <button type="submit" disabled={loading}>
+                          <button type="submit" className="button-primary" disabled={loading}>
                             {loading ? 'Creating...' : 'Create User'}
                           </button>
                         </HelpTooltip>
                         <HelpTooltip text="Clear all fields in this form.">
-                          <button type="button" onClick={handleClear} disabled={loading}>
-                            Clear
+                          <button type="button" className="button-primary" onClick={handleClear} disabled={loading}>
+                            Clear Form
                           </button>
                         </HelpTooltip>
-                    </div>
-
-                    <div className="cancel-wrap">
+                        <div className="cancel-wrap">
                         <HelpTooltip text="Leave this form and return to the administrator dashboard.">
                           <button
                             type="button"
-                            className="cancel-button"
+                            className="button-secondary"
                             onClick={() => navigate('/admin-dashboard')}
                             disabled={loading}
                           >
                             Cancel
                           </button>
                         </HelpTooltip>
+                    </div>
                     </div>
                 </form>
             </main>

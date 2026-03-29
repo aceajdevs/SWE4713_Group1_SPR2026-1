@@ -17,17 +17,17 @@ function AdminDashboard() {
       <div className="button-group">
       <div style={{ marginBottom: '16px' }}>
         <HelpTooltip text="Open the form to add a new user account (administrator).">
-          <button type="button" onClick={() => navigate('/admin/create-user')} style={{ marginRight: '8px' }}>
+          <button type="button" className="button-primary" onClick={() => navigate('/admin/create-user')} style={{ marginRight: '8px' }}>
             Create User
           </button>
         </HelpTooltip>
         <HelpTooltip text="Open user search and editing for existing users.">
-          <button type="button" onClick={() => navigate('/admin/edit-user')} style={{ marginRight: '8px' }}>
+          <button type="button" className="button-primary" onClick={() => navigate('/admin/edit-user')} style={{ marginRight: '8px' }}>
             Edit User
           </button>
         </HelpTooltip>
         <HelpTooltip text="Open the chart of accounts to view or manage accounts.">
-          <button type="button" onClick={() => navigate('/admin/chart-of-accounts')}>
+          <button type="button" className="button-primary" onClick={() => navigate('/admin/chart-of-accounts')}>
             Chart of Accounts
           </button>
         </HelpTooltip>
