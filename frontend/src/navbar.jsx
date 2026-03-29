@@ -21,6 +21,7 @@ function Navbar() {
   };
 
   const canAccessChartOfAccounts = ['administrator', 'manager', 'accountant'].includes(user?.role);
+  const canAccessJournalEntries = user?.role === 'manager' || user?.role === 'accountant';
   const isAdmin = user?.role === 'administrator';
 
   const handleDashboardNavigation = () => {
@@ -106,6 +107,17 @@ function Navbar() {
                 onClick={() => handleNavigation('/admin/chart-of-accounts')}
               >
                 Chart of Accounts
+              </a>
+            </li>
+          )}
+          {canAccessJournalEntries && (
+            <li className="nav-item">
+              <a
+                href="#/journal-entries"
+                className="nav-link"
+                onClick={() => handleNavigation('/journal-entries')}
+              >
+                Journal Entries
               </a>
             </li>
           )}
