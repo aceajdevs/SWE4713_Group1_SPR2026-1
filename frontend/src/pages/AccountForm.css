@@ -63,3 +63,88 @@
     grid-column: span 1;
 }
 
+
+.account-email-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 4000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(17, 24, 39, 0.45);
+}
+
+.account-email-modal {
+  width: 100%;
+  max-width: 520px;
+  max-height: min(90vh, 640px);
+  overflow: auto;
+  padding: 18px 20px 20px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+  text-align: left;
+}
+
+.account-email-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.account-email-modal-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: 0;
+  color: #111827;
+}
+
+.account-email-modal-close {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  background: #f3f4f6;
+  color: #374151;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.account-email-modal-close:hover:not(:disabled) {
+  background: #e5e7eb;
+}
+
+.account-email-modal-close:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.account-email-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.account-email-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.account-email-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.account-email-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+}

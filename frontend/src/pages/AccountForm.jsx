@@ -7,6 +7,7 @@ import {
   createChartAccountWithActor,
   updateChartAccountWithActor,
 } from '../services/chartOfAccountsService';
+import { getEmailRecipientsByRoles } from '../services/adminService';
 import { HelpTooltip } from '../components/HelpTooltip';
 import '../global.css';
 import './AccountForm.css';
@@ -66,6 +67,13 @@ function AccountForm() {
 
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(isEditing);
+  const [staffRecipients, setStaffRecipients] = useState([]);
+  const [staffLoadError, setStaffLoadError] = useState(null);
+  const [staffEmailModalOpen, setStaffEmailModalOpen] = useState(false);
+  const [selectedStaffId, setSelectedStaffId] = useState('');
+  const [staffEmailSubject, setStaffEmailSubject] = useState('');
+  const [staffEmailMessage, setStaffEmailMessage] = useState('');
+  const [staffEmailSending, setStaffEmailSending] = useState(false);
 
   useEffect(() => {
     if (user && user.role !== 'administrator') {
@@ -75,6 +83,35 @@ function AccountForm() {
     }
     if (isEditing) loadAccount();
   }, [id, user, navigate]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        setStaffLoadError(null);
+        const list = await getEmailRecipientsByRoles(['manager', 'administrator']);
+        const currentUserId = user?.userID != null ? String(user.userID) : null;
+        const filtered = currentUserId
+          ? (list || []).filter((u) => String(u.userID) !== currentUserId)
+          : list;
+        if (!cancelled) setStaffRecipients(filtered);
+      } catch (e) {
+        if (!cancelled) setStaffLoadError(e?.message ?? String(e));
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.userID]);
+
+  useEffect(() => {
+    if (!staffEmailModalOpen) return;
+    const onKey = (e) => {
+      if (e.key === 'Escape' && !staffEmailSending) setStaffEmailModalOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [staffEmailModalOpen, staffEmailSending]);
 
   useEffect(() => {
     if (isEditing && formData.type && !formData.statementType) {
@@ -151,7 +188,6 @@ function AccountForm() {
         updatedValue = cleanValue === '' ? 0 : parseFloat(cleanValue);
         if (isNaN(updatedValue)) updatedValue = 0;
       } else if (name === 'accountNumber') {
-        // Strip anything that isn't a digit
         updatedValue = value.replace(/\D/g, '').slice(0, 8);
       } else {
         updatedValue = type === 'number' ? parseFloat(value) : value;
@@ -169,15 +205,12 @@ function AccountForm() {
     });
   };
 
-  // Finds the next available account number starting from a given number
   const findAvailableAccountNumber = async (startingNumber, existingNumbers) => {
     let candidate = startingNumber;
     const prefix = startingNumber.toString()[0];
     while (existingNumbers.has(candidate.toString())) {
       candidate += 1;
-      // Guard: don't exceed 8 digits
       if (candidate.toString().length > 8) return null;
-      // Guard: don't cross into a different prefix
       if (candidate.toString()[0] !== prefix) return null;
     }
     return candidate.toString();
@@ -202,7 +235,6 @@ function AccountForm() {
       return;
     }
 
-    // Check for duplicate account number
     const { data: numberDuplicates } = await supabase
       .from('chartOfAccounts')
       .select('accountID')
@@ -217,7 +249,6 @@ function AccountForm() {
       return; 
     }
 
-    // Check for duplicate account name
     const { data: nameDuplicates } = await supabase
       .from('chartOfAccounts')
       .select('accountID')
@@ -241,7 +272,6 @@ function AccountForm() {
       return;
     }
 
-    // Check subcategory validity
     const validSubcategories = subcategoriesMap[formData.type] || [];
     if (!validSubcategories.includes(formData.subType)) {
       alert(`Invalid subcategory "${formData.subType}" for category "${formData.type}". Please select a valid subcategory.`);
@@ -249,7 +279,6 @@ function AccountForm() {
       return;
     }
 
-    // Check if account number already exists and resolve conflict
     let resolvedAccountNumber = formData.accountNumber.toString();
     if (!isEditing) {
       const { data: allAccounts, error: fetchError } = await fetchFromTable('chartOfAccounts', {
@@ -337,11 +366,180 @@ Normal Side: ${accountData.normalSide}`;
     setLoading(false);
   };
 
+  const handleSendStaffEmail = async (e) => {
+    e.preventDefault();
+    if (!selectedStaffId) {
+      alert('Select a manager or administrator to email.');
+      return;
+    }
+    const subject = staffEmailSubject.trim();
+    const message = staffEmailMessage.trim();
+    if (!subject || !message) {
+      alert('Subject and message are required.');
+      return;
+    }
+    const recipient = staffRecipients.find((u) => String(u.userID) === String(selectedStaffId));
+    if (!recipient?.email) {
+      alert('Selected user has no email on file.');
+      return;
+    }
+
+    const displayName =
+      [recipient.fName, recipient.lName].filter(Boolean).join(' ') || recipient.username || 'User';
+
+    const accountLabel = formData?.accountNumber ? `Account ${formData.accountNumber}` : 'Account';
+    const composedSubject = subject || `${accountLabel}: update`;
+    const composedMessage = [
+      message,
+      '',
+      '---',
+      'Chart of Accounts / Account page context',
+      `From admin userID: ${user?.userID ?? 'N/A'}`,
+      `Account ID: ${isEditing ? id : '(new)'}`,
+      `Account Number: ${formData.accountNumber || 'N/A'}`,
+      `Account Name: ${formData.accountName || 'N/A'}`,
+    ].join('\n');
+
+    setStaffEmailSending(true);
+    try {
+      await sendAdminEmail(recipient.email.trim(), displayName, composedSubject, composedMessage);
+      alert(`Email sent to ${displayName} (${recipient.role}).`);
+      setStaffEmailSubject('');
+      setStaffEmailMessage('');
+      setStaffEmailModalOpen(false);
+    } catch (err) {
+      console.error(err);
+      alert(err?.message ?? 'Failed to send email.');
+    } finally {
+      setStaffEmailSending(false);
+    }
+  };
+
   if (fetching) return <p>Loading account details...</p>;
 
   return (
     <div className="container">
       <h1>{isEditing ? 'Edit Account' : 'Add New Account'}</h1>
+
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+        <HelpTooltip text="Open a popup to email a manager or administrator about this account.">
+          <button type="button" className="button" onClick={() => setStaffEmailModalOpen(true)}>
+            Email manager/admin
+          </button>
+        </HelpTooltip>
+      </div>
+
+      {staffEmailModalOpen && (
+        <div
+          className="account-email-modal-backdrop"
+          onClick={() => !staffEmailSending && setStaffEmailModalOpen(false)}
+          role="presentation"
+        >
+          <div
+            className="account-email-modal"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="account-email-modal-title"
+          >
+            <div className="account-email-modal-header">
+              <h2 id="account-email-modal-title" className="account-email-modal-title">
+                Email manager or administrator
+              </h2>
+              <button
+                type="button"
+                className="account-email-modal-close"
+                aria-label="Close"
+                disabled={staffEmailSending}
+                onClick={() => setStaffEmailModalOpen(false)}
+              >
+                ×
+              </button>
+            </div>
+
+            {staffLoadError && (
+              <p style={{ color: '#b91c1c', fontSize: '0.9rem' }} role="alert">
+                Could not load recipients: {staffLoadError}
+              </p>
+            )}
+
+            {!staffLoadError && staffRecipients.length === 0 && (
+              <p style={{ color: '#6b7280', fontSize: '0.9rem' }}>
+                No active managers or administrators with an email address were found.
+              </p>
+            )}
+
+            <form onSubmit={handleSendStaffEmail} className="account-email-form">
+              <div className="account-email-row">
+                <label htmlFor="account-email-recipient" className="account-email-label">
+                  Recipient
+                </label>
+                <select
+                  id="account-email-recipient"
+                  className="input-field"
+                  value={selectedStaffId}
+                  onChange={(e) => setSelectedStaffId(e.target.value)}
+                  disabled={staffRecipients.length === 0}
+                >
+                  <option value="">— Select manager or administrator —</option>
+                  {staffRecipients.map((u) => (
+                    <option key={u.userID} value={u.userID}>
+                      {[u.fName, u.lName].filter(Boolean).join(' ') || u.username} ({u.role}) — {u.email}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="account-email-row">
+                <label htmlFor="account-email-subject" className="account-email-label">
+                  Subject
+                </label>
+                <input
+                  id="account-email-subject"
+                  type="text"
+                  className="input-field"
+                  value={staffEmailSubject}
+                  onChange={(e) => setStaffEmailSubject(e.target.value)}
+                  placeholder="Subject…"
+                  autoComplete="off"
+                />
+              </div>
+
+              <div className="account-email-row">
+                <label htmlFor="account-email-message" className="account-email-label">
+                  Message
+                </label>
+                <textarea
+                  id="account-email-message"
+                  className="input-field"
+                  rows={4}
+                  value={staffEmailMessage}
+                  onChange={(e) => setStaffEmailMessage(e.target.value)}
+                  placeholder="Your message…"
+                />
+              </div>
+
+              <div className="account-email-actions">
+                <button
+                  type="button"
+                  className="button"
+                  style={{ marginRight: '8px', background: '#6b7280' }}
+                  disabled={staffEmailSending}
+                  onClick={() => setStaffEmailModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <HelpTooltip text="Send this message using the configured EmailJS admin template.">
+                  <button type="submit" className="button" disabled={staffEmailSending || staffRecipients.length === 0}>
+                    {staffEmailSending ? 'Sending…' : 'Send email'}
+                  </button>
+                </HelpTooltip>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="form-grid">
         <div>
           <label>Account Name:</label>

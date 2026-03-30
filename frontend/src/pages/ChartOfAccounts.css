@@ -84,8 +84,8 @@
   align-items: flex-start;
 }
 .search-group{
-  display: flex;   
-  width: fit-content; 
+  display: flex;
+  width: fit-content;
   gap: 8px;
   margin-bottom: 8px;
 }
@@ -96,6 +96,150 @@
 
 /* Chart of Accounts Container */
 .chart-of-accounts-container {
+table {
+  display: block;
+    margin: 0 auto;
   width: fit-content;
   margin: 0 auto;
+}
+table .header-row {
+  background-color: #0052cc;
+  color: white;
+}
+table th, table td {
+  padding: 4px 10px;
+  border: 1px solid #D1D5DB;
+}
+tbody tr:nth-child(even) {
+  background-color: #CCE8FF;
+}
+tbody tr:hover {
+  background-color: #E3D081;
+  color: black;
+}
+table button {
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: white;
+  background-color: #0052cc;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.coa-email-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 4000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(17, 24, 39, 0.45);
+}
+
+.coa-email-modal {
+  width: 100%;
+  max-width: 520px;
+  max-height: min(90vh, 640px);
+  overflow: auto;
+  padding: 18px 20px 20px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+  text-align: left;
+}
+
+.coa-email-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.coa-email-modal-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: 0;
+  color: #111827;
+}
+
+.coa-email-modal-close {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  background: #f3f4f6;
+  color: #374151;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.coa-email-modal-close:hover:not(:disabled) {
+  background: #e5e7eb;
+}
+
+.coa-email-modal-close:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.coa-email-modal-lead {
+  margin: 0 0 14px;
+  font-size: 0.9rem;
+  color: #4b5563;
+}
+
+.coa-email-staff-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.coa-email-staff-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+@media (min-width: 640px) {
+  .coa-email-staff-row:not(.coa-email-staff-row-grow) {
+    flex-direction: row;
+    align-items: center;
+  }
+  .coa-email-staff-label {
+    flex: 0 0 100px;
+  }
+  .coa-email-staff-row .input-field,
+  .coa-email-staff-select {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.coa-email-staff-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.coa-email-staff-select {
+  max-width: 100%;
+}
+
+.coa-email-staff-textarea {
+  resize: vertical;
+  min-height: 96px;
+  font-family: inherit;
+}
+
+.coa-email-staff-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
 }

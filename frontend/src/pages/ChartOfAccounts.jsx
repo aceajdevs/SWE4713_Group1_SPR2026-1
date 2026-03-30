@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { fetchFromTable } from '../supabaseUtils';
 import { sendAdminEmail } from '../services/emailService';
+import { getEmailRecipientsByRoles } from '../services/adminService';
 import { setChartAccountActiveWithActor } from '../services/chartOfAccountsService';
 import { HelpTooltip } from '../components/HelpTooltip';
 import '../global.css';
@@ -28,6 +29,13 @@ function ChartOfAccounts() {
   const [selectedAccountId, setSelectedAccountId] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [staffRecipients, setStaffRecipients] = useState([]);
+  const [staffLoadError, setStaffLoadError] = useState(null);
+  const [selectedStaffId, setSelectedStaffId] = useState('');
+  const [staffEmailSubject, setStaffEmailSubject] = useState('');
+  const [staffEmailMessage, setStaffEmailMessage] = useState('');
+  const [staffEmailSending, setStaffEmailSending] = useState(false);
+  const [staffEmailModalOpen, setStaffEmailModalOpen] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
   const isAdmin = user?.role === 'administrator';
@@ -47,6 +55,35 @@ function ChartOfAccounts() {
     }
     loadAccounts();
   }, [user]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        setStaffLoadError(null);
+        const list = await getEmailRecipientsByRoles(['manager', 'accountant', 'administrator']);
+        const currentUserId = user?.userID != null ? String(user.userID) : null;
+        const filtered = currentUserId
+          ? (list || []).filter((u) => String(u.userID) !== currentUserId)
+          : list;
+        if (!cancelled) setStaffRecipients(filtered);
+      } catch (e) {
+        if (!cancelled) setStaffLoadError(e?.message ?? String(e));
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.userID]);
+
+  useEffect(() => {
+    if (!staffEmailModalOpen) return;
+    const onKey = (e) => {
+      if (e.key === 'Escape' && !staffEmailSending) setStaffEmailModalOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [staffEmailModalOpen, staffEmailSending]);
 
   const loadAccounts = async () => {
     setLoading(true);
@@ -199,10 +236,45 @@ function ChartOfAccounts() {
 
   const fmt = (val) => (val || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+  const handleSendStaffEmail = async (e) => {
+    e.preventDefault();
+    if (!selectedStaffId) {
+      alert('Select a manager or accountant to email.');
+      return;
+    }
+    const subject = staffEmailSubject.trim();
+    const message = staffEmailMessage.trim();
+    if (!subject || !message) {
+      alert('Subject and message are required.');
+      return;
+    }
+    const recipient = staffRecipients.find((u) => String(u.userID) === String(selectedStaffId));
+    if (!recipient?.email) {
+      alert('Selected user has no email on file.');
+      return;
+    }
+    const displayName =
+      [recipient.fName, recipient.lName].filter(Boolean).join(' ') || recipient.username || 'User';
+    setStaffEmailSending(true);
+    try {
+      await sendAdminEmail(recipient.email.trim(), displayName, subject, message);
+      alert(`Email sent to ${displayName} (${recipient.role}).`);
+      setStaffEmailSubject('');
+      setStaffEmailMessage('');
+      setStaffEmailModalOpen(false);
+    } catch (err) {
+      console.error(err);
+      alert(err?.message ?? 'Failed to send email.');
+    } finally {
+      setStaffEmailSending(false);
+    }
+  };
+
   return (
     <div className="page-chart-of-accounts">
       <div classname="page-header">
       <h1>Chart of Accounts</h1>
+
       <div className="header-row">
         <div className="button-group">
           {isAdmin && (
@@ -210,6 +282,22 @@ function ChartOfAccounts() {
               <button className="button-primary" onClick={() => navigate('/admin/add-account')}>Add New Account</button>
             </HelpTooltip>
           )}
+          <HelpTooltip text="Return to your role dashboard without leaving the app.">
+            <button onClick={() => navigate(dashboardPath)} className="button">
+              Back to Dashboard
+            </button>
+          </HelpTooltip>
+          <HelpTooltip text="Open a window to email a manager, accountant, or administrator about the chart of accounts.">
+            <button
+              type="button"
+              onClick={() => setStaffEmailModalOpen(true)}
+              className="button"
+            >
+              Email manager/accountant/admin
+            </button>
+          </HelpTooltip>
+        </div>
+        <div style={{ display: 'flex', gap: '8px', marginRight: '10px', marginLeft: '10px' }}>
           <HelpTooltip text="Show all accounts in a single table report.">
             <button className="button-primary" onClick={() => setViewMode('report')}>All Accounts Report</button>
           </HelpTooltip>
@@ -383,6 +471,109 @@ function ChartOfAccounts() {
         {loading && <p>Loading accounts...</p>}
         {error && <p style={{ color: 'red' }}>{error}</p>}
 
+      {!loading && !error && viewMode === 'report' && (
+        <table className="user-report-table">
+          <thead>
+            <tr>
+              <th>Number</th>
+              <th>Account Name</th>
+              <th>Description</th>
+              <th>Type</th>
+              <th>Normal Side</th>
+              <th>Initial Balance</th>
+              <th>Debit</th>
+              <th>Credit</th>
+              <th>Current Balance</th>
+              <th>Added At</th>
+              <th>Last Modified</th>
+              <th>Status</th>
+              <th>Event log</th>
+              {isAdmin && <th>Actions</th>}
+            </tr>
+          </thead>
+          <tbody>
+            {filteredAccounts.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={isAdmin ? 14 : 13}
+                  style={{ textAlign: 'center', padding: '20px', color: '#6c757d' }}
+                >
+                  No accounts exist for the selected filters.
+                </td>
+              </tr>
+            ) : (
+              filteredAccounts.map((account) => (
+                <tr
+                  key={account.accountID}
+                  onClick={() => navigate(`/admin/ledger/${account.accountNumber}`)}
+                  style={{ cursor: 'pointer' }}
+                  title="Open account ledger"
+                >
+                  <td>
+                    <span style={{ color: '#007bff', textDecoration: 'underline' }}>{account.accountNumber}</span>
+                  </td>
+                  <td>{account.accountName}</td>
+                  <td>{account.description || 'N/A'}</td>
+                  <td>{account.subType}</td>
+                  <td>{account.normalSide}</td>
+                  <td>${fmt(account.initBalance)}</td>
+                  <td>{account.normalSide === 'Debit' ? `$${fmt(account.initBalance)}` : '-'}</td>
+                  <td>{account.normalSide === 'Credit' ? `$${fmt(account.initBalance)}` : '-'}</td>
+                  <td>${fmt(account.initBalance)}</td>
+                  <td>{account.createdAt ? new Date(account.createdAt).toLocaleString() : 'N/A'}</td>
+                  <td>{account.updatedAt ? new Date(account.updatedAt).toLocaleString() : 'N/A'}</td>
+                  <td>{account.active ? 'Active' : 'Inactive'}</td>
+                  <td onClick={(e) => e.stopPropagation()}>
+                    <HelpTooltip text="View audit events for this account (before/after snapshots, who changed it, when).">
+                      <button
+                        type="button"
+                        className="button"
+                        style={{ padding: '4px 10px', fontSize: '13px' }}
+                        onClick={() => navigate(`/admin/chart-of-accounts/account/${account.accountID}/events`)}
+                      >
+                        Events
+                      </button>
+                    </HelpTooltip>
+                  </td>
+                  {isAdmin && (
+                    <td>
+                      <HelpTooltip text="Open the form to change this account's details.">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/admin/edit-account/${account.accountID}`);
+                          }}
+                          style={{ marginRight: '5px' }}
+                        >
+                          Edit
+                        </button>
+                      </HelpTooltip>
+                      <HelpTooltip
+                        text={
+                          account.active
+                            ? 'Mark this account inactive so it cannot be used for new entries.'
+                            : 'Mark this account active again for use in the system.'
+                        }
+                      >
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeactivate(account.accountID, account.active);
+                          }}
+                        >
+                          {account.active ? 'Deactivate' : 'Activate'}
+                        </button>
+                      </HelpTooltip>
+                    </td>
+                  )}
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      )}
         {!loading && !error && viewMode === 'report' && (
           <table className="table">
             <thead>
@@ -494,40 +685,54 @@ function ChartOfAccounts() {
           </table>
         )}
 
-        {!loading && !error && viewMode === 'individual' && (
-          <div>
-            <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '15px' }}>
-              <label htmlFor="account-select"><strong>Select Account:</strong></label>
-              <select
-                id="account-select"
-                value={selectedAccountId}
-                onChange={(e) => setSelectedAccountId(e.target.value)}
-                className="input"
-                style={{ width: '340px' }}
-              >
-                <option value="">Choose an account</option>
-                {filteredAccounts.map((account) => (
-                  <option key={account.accountID} value={account.accountID}>
-                    {account.accountNumber} - {account.accountName}
-                  </option>
-                ))}
-              </select>
-              {selectedAccount && (
+      {!loading && !error && viewMode === 'individual' && (
+        <div>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '15px' }}>
+            <label htmlFor="account-select"><strong>Select Account:</strong></label>
+            <select
+              id="account-select"
+              value={selectedAccountId}
+              onChange={(e) => setSelectedAccountId(e.target.value)}
+              className="input-field"
+              style={{ width: '340px' }}
+            >
+              <option value="">Choose an account</option>
+              {filteredAccounts.map((account) => (
+                <option key={account.accountID} value={account.accountID}>
+                  {account.accountNumber} - {account.accountName}
+                </option>
+              ))}
+            </select>
+            {selectedAccount && (
+              <>
                 <HelpTooltip text="View journal activity and balances for the selected account.">
                   <button
                     type="button"
                     onClick={() => navigate(`/admin/ledger/${selectedAccount.accountNumber}`)}
-                    className="button-primary"
+                    className="button"
                   >
                     Open Ledger
                   </button>
                 </HelpTooltip>
-              )}
-            </div>
+                <HelpTooltip text="View audit events for this account (before/after snapshots).">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      navigate(`/admin/chart-of-accounts/account/${selectedAccount.accountID}/events`)
+                    }
+                    className="button"
+                    style={{ marginLeft: '8px' }}
+                  >
+                    Event log
+                  </button>
+                </HelpTooltip>
+              </>
+            )}
+          </div>
 
             {!selectedAccount && <p>Select an account to view individual details.</p>}
 
-            {selectedAccount && 
+            {selectedAccount &&
             (
               <table>
                 <tbody>
@@ -574,7 +779,116 @@ function ChartOfAccounts() {
               </p>
             </div>
           )}
-      </div>
+        </div>
+      )}
+
+      {staffEmailModalOpen && (
+        <div
+          className="coa-email-modal-backdrop"
+          onClick={() => !staffEmailSending && setStaffEmailModalOpen(false)}
+          role="presentation"
+        >
+          <div
+            className="coa-email-modal"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="coa-email-modal-title"
+          >
+            <div className="coa-email-modal-header">
+              <h2 id="coa-email-modal-title" className="coa-email-modal-title">
+                Email a manager or accountant
+              </h2>
+              <button
+                type="button"
+                className="coa-email-modal-close"
+                aria-label="Close"
+                disabled={staffEmailSending}
+                onClick={() => setStaffEmailModalOpen(false)}
+              >
+                ×
+              </button>
+            </div>
+            <p className="coa-email-modal-lead">
+              Send a message about the chart of accounts using the same email integration as other admin notifications.
+            </p>
+            {staffLoadError && (
+              <p style={{ color: '#b91c1c', fontSize: '0.9rem' }} role="alert">
+                Could not load recipients: {staffLoadError}
+              </p>
+            )}
+            {!staffLoadError && staffRecipients.length === 0 && (
+              <p style={{ color: '#6b7280', fontSize: '0.9rem' }}>
+            No active managers, accountants, or administrators with an email address were found.
+              </p>
+            )}
+            <form onSubmit={handleSendStaffEmail} className="coa-email-staff-form">
+              <div className="coa-email-staff-row">
+                <label htmlFor="coa-staff-recipient" className="coa-email-staff-label">
+                  Recipient
+                </label>
+                <select
+                  id="coa-staff-recipient"
+                  className="input-field coa-email-staff-select"
+                  value={selectedStaffId}
+                  onChange={(e) => setSelectedStaffId(e.target.value)}
+                  disabled={staffRecipients.length === 0}
+                >
+                  <option value="">— Select manager, accountant, or administrator —</option>
+                  {staffRecipients.map((u) => (
+                    <option key={u.userID} value={u.userID}>
+                      {[u.fName, u.lName].filter(Boolean).join(' ') || u.username} ({u.role}) — {u.email}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="coa-email-staff-row">
+                <label htmlFor="coa-staff-subject" className="coa-email-staff-label">
+                  Subject
+                </label>
+                <input
+                  id="coa-staff-subject"
+                  type="text"
+                  className="input-field"
+                  value={staffEmailSubject}
+                  onChange={(e) => setStaffEmailSubject(e.target.value)}
+                  placeholder="e.g., Question about account 10000001"
+                  autoComplete="off"
+                />
+              </div>
+              <div className="coa-email-staff-row coa-email-staff-row-grow">
+                <label htmlFor="coa-staff-message" className="coa-email-staff-label">
+                  Message
+                </label>
+                <textarea
+                  id="coa-staff-message"
+                  className="input-field coa-email-staff-textarea"
+                  rows={4}
+                  value={staffEmailMessage}
+                  onChange={(e) => setStaffEmailMessage(e.target.value)}
+                  placeholder="Your message…"
+                />
+              </div>
+              <div className="coa-email-staff-actions">
+                <button
+                  type="button"
+                  className="button"
+                  style={{ marginRight: '8px', background: '#6b7280' }}
+                  disabled={staffEmailSending}
+                  onClick={() => setStaffEmailModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <HelpTooltip text="Send this message to the selected user’s email using the configured EmailJS admin template.">
+                  <button type="submit" className="button" disabled={staffEmailSending || staffRecipients.length === 0}>
+                    {staffEmailSending ? 'Sending…' : 'Send email'}
+                  </button>
+                </HelpTooltip>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
