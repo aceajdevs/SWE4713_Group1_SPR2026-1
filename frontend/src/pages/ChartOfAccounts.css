@@ -243,3 +243,15 @@ table button {
   justify-content: flex-end;
   margin-top: 4px;
 }
+
+.coa-email-staff-actions button {
+  padding: 8px 16px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: white;
+  background-color: #0052cc;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}

@@ -6,17 +6,6 @@ import { supabase } from '../supabaseClient';
 import { HelpTooltip } from '../components/HelpTooltip';
 import '../global.css';
 
-const linkButtonStyle = {
-  background: 'transparent',
-  border: 'none',
-  padding: 0,
-  color: '#007bff',
-  textDecoration: 'underline',
-  cursor: 'pointer',
-  fontWeight: 600,
-  font: 'inherit',
-  textAlign: 'inherit'
-};
 
 // Ledger component displays the general ledger entries for a specific account, with filtering and navigation options.
 function Ledger() {
@@ -161,10 +150,9 @@ function Ledger() {
   if (loading) return <p>Loading ledger...</p>;
   if (error) return <p style={{ color: 'red' }}>{error}</p>;
 
-// Render the ledger page with account details, filters, account search, and the ledger entries table. Include navigation buttons and tooltips for user guidance.
   return (
     <div className="container">
-      <div className="header-row">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <h1>General Ledger</h1>
         <HelpTooltip text="Return to the chart of accounts list.">
           <button type="button" onClick={() => navigate('/admin/chart-of-accounts')} className="button-primary" style={{ marginLeft: '12px' }}>
@@ -180,19 +168,9 @@ function Ledger() {
         <p><strong>Opening Balance:</strong> {formatCurrency(account.initBalance)}</p>
       </div>
 
-      <div
-        style={{
-          marginBottom: '20px',
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: '12px',
-          alignItems: 'flex-end',
-          justifyContent: 'center',
-          maxWidth: '960px'
-        }}
-      >
+      <div style={{ marginBottom: '20px', display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'flex-end' }}>
         <div>
-          <label htmlFor="ledger-date-from" style={{ display: 'block', fontWeight: 600, fontSize: '0.9rem' }}>
+          <label htmlFor="ledger-date-from" style={{ display: 'block', fontWeight: 600, fontSize: '0.9rem', marginBottom: '4px' }}>
             From date
           </label>
           <input
@@ -203,14 +181,15 @@ function Ledger() {
             style={{
               padding: '6px 8px',
               minWidth: '140px',
-              border: '1px solid #ccc',
+              border: `1px solid var(--bff-border)`,
               borderRadius: '4px',
-              font: 'inherit'
+              font: 'inherit',
+              backgroundColor: 'var(--bff-light-text)'
             }}
           />
         </div>
         <div>
-          <label htmlFor="ledger-date-to" style={{ display: 'block', fontWeight: 600, fontSize: '0.9rem' }}>
+          <label htmlFor="ledger-date-to" style={{ display: 'block', fontWeight: 600, fontSize: '0.9rem', marginBottom: '4px' }}>
             To date
           </label>
           <input
@@ -221,14 +200,15 @@ function Ledger() {
             style={{
               padding: '6px 8px',
               minWidth: '140px',
-              border: '1px solid #ccc',
+              border: `1px solid var(--bff-border)`,
               borderRadius: '4px',
-              font: 'inherit'
+              font: 'inherit',
+              backgroundColor: 'var(--bff-light-text)'
             }}
           />
         </div>
         <div>
-          <label htmlFor="ledger-amount" style={{ display: 'block', fontWeight: 600, fontSize: '0.9rem' }}>
+          <label htmlFor="ledger-amount" style={{ display: 'block', fontWeight: 600, fontSize: '0.9rem', marginBottom: '4px' }}>
             Amount
           </label>
           <input
@@ -241,16 +221,17 @@ function Ledger() {
             style={{
               padding: '6px 8px',
               width: '160px',
-              border: '1px solid #ccc',
+              border: `1px solid var(--bff-border)`,
               borderRadius: '4px',
-              font: 'inherit'
+              font: 'inherit',
+              backgroundColor: 'var(--bff-light-text)'
             }}
           />
         </div>
         <HelpTooltip text="Clear date and amount filters.">
           <button
             type="button"
-            className="button-primary"
+            className="button"
             onClick={() => {
               setDateFrom('');
               setDateTo('');
@@ -263,7 +244,7 @@ function Ledger() {
         </HelpTooltip>
       </div>
 
-      <div style={{ marginBottom: '24px', maxWidth: '960px' }}>
+      <div style={{ marginBottom: '24px' }}>
         <label htmlFor="ledger-account-search" style={{ display: 'block', fontWeight: 600, fontSize: '0.9rem', marginBottom: '6px' }}>
           Search by account name or number (open another ledger)
         </label>
@@ -277,9 +258,10 @@ function Ledger() {
             padding: '8px',
             width: '100%',
             maxWidth: '400px',
-            border: '1px solid #ccc',
+            border: `1px solid var(--bff-border)`,
             borderRadius: '4px',
-            font: 'inherit'
+            font: 'inherit',
+            backgroundColor: 'var(--bff-light-text)'
           }}
         />
         {accountMatches.length > 0 && (
@@ -288,12 +270,13 @@ function Ledger() {
               listStyle: 'none',
               margin: '8px 0 0',
               padding: 0,
-              border: '1px solid #ced4da',
+              border: `1px solid var(--bff-border)`,
               borderRadius: '6px',
               maxWidth: '400px',
               maxHeight: '180px',
               overflowY: 'auto',
-              background: '#fff'
+              background: 'var(--bff-light-text)',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
             }}
           >
             {accountMatches.slice(0, 12).map((row) => (
@@ -307,10 +290,16 @@ function Ledger() {
                     textAlign: 'left',
                     padding: '8px 10px',
                     border: 'none',
-                    borderBottom: '1px solid #eee',
-                    background: '#fff',
-                    cursor: 'pointer'
+                    borderBottom: `1px solid var(--bff-border)`,
+                    background: 'var(--bff-light-text)',
+                    cursor: 'pointer',
+                    fontSize: 'inherit',
+                    fontFamily: 'inherit',
+                    color: 'var(--bff-dark-text)',
+                    transition: 'background-color 0.2s ease'
                   }}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--bff-table-hover)'}
+                  onMouseLeave={(e) => e.target.style.backgroundColor = 'var(--bff-light-text)'}
                 >
                   {row.accountNumber} — {row.accountName}
                 </button>
@@ -336,7 +325,7 @@ function Ledger() {
           </tr>
         </thead>
         <tbody>
-          <tr style={{ fontStyle: 'italic', backgroundColor: '#f9f9f9' }}>
+          <tr style={{ fontStyle: 'italic', backgroundColor: 'var(--bff-background)' }}>
             <td>-</td>
             <td>-</td>
             <td>Opening Balance</td>
@@ -346,7 +335,7 @@ function Ledger() {
           </tr>
           {filteredEntries.length === 0 && entries.length > 0 ? (
             <tr>
-              <td colSpan={6} style={{ textAlign: 'center', padding: '16px', color: '#6c757d' }}>
+              <td colSpan={6} style={{ textAlign: 'center', padding: '16px', color: 'var(--bff-border)' }}>
                 No rows match the current filters. Adjust date range or amount.
               </td>
             </tr>
@@ -359,7 +348,8 @@ function Ledger() {
                   <button
                     type="button"
                     onClick={() => navigate(`/admin/journal-entry/${entry.journalEntryID}`)}
-                    style={linkButtonStyle}
+                    className="link"
+                    style={{ padding: 0, border: 'none', background: 'none', cursor: 'pointer' }}
                     aria-label={`Open journal entry ${entry.journalEntryID}`}
                   >
                     {entry.journalEntryID}
@@ -376,7 +366,7 @@ function Ledger() {
           ))}
         </tbody>
         <tfoot>
-          <tr style={{ fontWeight: 'bold', borderTop: '2px solid #333' }}>
+          <tr style={{ fontWeight: 'bold', borderTop: '2px solid var(--bff-dark-text)' }}>
             <td colSpan={3}>Totals (filtered)</td>
             <td>{formatCurrency(totalDebits)}</td>
             <td>{formatCurrency(totalCredits)}</td>

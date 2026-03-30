@@ -573,116 +573,6 @@ function ChartOfAccounts() {
             )}
           </tbody>
         </table>
-      )}
-        {!loading && !error && viewMode === 'report' && (
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Number</th>
-                <th>Account Name</th>
-                <th>Description</th>
-                <th>Type</th>
-                <th>Normal Side</th>
-                <th>Initial Balance</th>
-                <th>Debit</th>
-                <th>Credit</th>
-                <th>Current Balance</th>
-                <th>Added At</th>
-                <th>Last Modified</th>
-                <th>Status</th>
-                {isAdmin && <th>Actions</th>}
-              </tr>
-            </thead>
-            <tbody>
-              {filteredAccounts.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={isAdmin ? 13 : 12}
-                    style={{ textAlign: 'center', padding: '20px', color: '#6c757d' }}
-                  >
-                    No accounts exist for the selected filters.
-                  </td>
-                </tr>
-              ) : (
-                filteredAccounts.map((account) => (
-                  <tr
-                    key={account.accountID}
-                    onClick={() => navigate(`/admin/ledger/${account.accountNumber}`)}
-                    style={{ cursor: 'pointer' }}
-                    title="Open account ledger"
-                  >
-                    <td>
-                      <span style={{ color: '#007bff', textDecoration: 'underline' }}>{account.accountNumber}</span>
-                    </td>
-                    <td>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/admin/ledger/${account.accountNumber}`);
-                        }}
-                        style={{
-                          background: 'transparent',
-                          border: 'none',
-                          padding: 0,
-                          color: '#007bff',
-                          textDecoration: 'underline',
-                          cursor: 'pointer',
-                          font: 'inherit',
-                          textAlign: 'left'
-                        }}
-                      >
-                        {account.accountName}
-                      </button>
-                    </td>
-                    <td>{account.description || 'N/A'}</td>
-                    <td>{account.subType}</td>
-                    <td>{account.normalSide}</td>
-                    <td>${fmt(account.initBalance)}</td>
-                    <td>{account.normalSide === 'Debit' ? `$${fmt(account.initBalance)}` : '-'}</td>
-                    <td>{account.normalSide === 'Credit' ? `$${fmt(account.initBalance)}` : '-'}</td>
-                    <td>${fmt(account.initBalance)}</td>
-                    <td>{account.createdAt ? new Date(account.createdAt).toLocaleString() : 'N/A'}</td>
-                    <td>{account.updatedAt ? new Date(account.updatedAt).toLocaleString() : 'N/A'}</td>
-                    <td>{account.active ? 'Active' : 'Inactive'}</td>
-                    {isAdmin && (
-                      <td>
-                        <HelpTooltip text="Open the form to change this account's details.">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/admin/edit-account/${account.accountID}`);
-                            }}
-                            style={{ marginRight: '5px' }}
-                          >
-                            Edit
-                          </button>
-                        </HelpTooltip>
-                        <HelpTooltip
-                          text={
-                            account.active
-                              ? 'Mark this account inactive so it cannot be used for new entries.'
-                              : 'Mark this account active again for use in the system.'
-                          }
-                        >
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeactivate(account.accountID, account.active);
-                            }}
-                          >
-                            {account.active ? 'Deactivate' : 'Activate'}
-                          </button>
-                        </HelpTooltip>
-                      </td>
-                    )}
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
         )}
 
       {!loading && !error && viewMode === 'individual' && (
@@ -709,7 +599,7 @@ function ChartOfAccounts() {
                   <button
                     type="button"
                     onClick={() => navigate(`/admin/ledger/${selectedAccount.accountNumber}`)}
-                    className="button"
+                    className="button-primary"
                   >
                     Open Ledger
                   </button>
@@ -720,7 +610,7 @@ function ChartOfAccounts() {
                     onClick={() =>
                       navigate(`/admin/chart-of-accounts/account/${selectedAccount.accountID}/events`)
                     }
-                    className="button"
+                    className="button-primary"
                     style={{ marginLeft: '8px' }}
                   >
                     Event log
@@ -780,7 +670,7 @@ function ChartOfAccounts() {
             </div>
           )}
         </div>
-      )}
+
 
       {staffEmailModalOpen && (
         <div
