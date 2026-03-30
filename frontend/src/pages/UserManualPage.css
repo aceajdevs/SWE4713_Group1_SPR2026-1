@@ -2,8 +2,8 @@
   min-height: 100vh;
   padding: 24px 20px 48px;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  background: #f8fafc;
-  color: #0f172a;
+  background: var(--bff-background);
+  color: var(--bff-dark-text);
   box-sizing: border-box;
 }
 

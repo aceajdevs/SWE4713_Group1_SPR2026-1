@@ -1,8 +1,16 @@
 .page-chart-of-accounts {
   padding: 20px;
+  margin: 0 auto;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  justify-content: center;
+  display: flex;
+  flex-direction: column;
+}
+.page-header {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
+  width: 100%;
+  margin-bottom: 20px;
 }
 .page-chart-of-accounts h1 {
   font-size: 32px;
@@ -19,32 +27,27 @@
   
 }
 /* Top Buttons */
-.button-group {
+.header-row .button-group {
   display: flex;
   gap: 12px;
-}
-.button-group button {
-  padding: 8px 16px;
-  font-size: 14px;
-  font-weight: 500;
-  color: white;
-  background-color: #0052cc;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-.button-group button:hover {
-  background-color: #2563EB;
+  justify-content: center;
+  width: 100%;
 }
 
 /* Filters */
+.filter-tokens-container {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
 .filter-popup {
   display: flex;
+  width: 100%;
   margin: 0;
-  background-color: #0052cc;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--bff-accent);
   border-radius: 6px;
-  padding: 3px 1vw;
+  padding: 0.5% 1%;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 .filter-item {
@@ -52,43 +55,22 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding-right: 20px;
 }
 .filter-item label {
   font-size: 14px;
   font-weight: 500;
-  color: white;
-  margin-right: 8px;
+  color: var(--bff-dark-text);
 }
 .filter-item select {
   padding: 6px 10px;
   font-size: 14px;
-  border: 1px solid #D1D5DB;
+  border: 1px solid var(--bff-border);
   border-radius: 6px;
 }
 .filter-popup select:focus {
   outline: none;
-  border-color: #2563EB;
+  border-color: var(--bff-button-hover);
   box-shadow: 0 0 0 2px white;
-}
-.filter-popup .filter-item select{
-  background-color: #33A1Fd;
-  border-color: #33A1Fd;
-  color: white;
-}
-.filter-popup button {
-  padding: 6px 12px;
-  font-size: 14px;
-  font-weight: 500;
-  color: white;
-  background-color: #33A1Fd;
-  border: 1px solid #0052cc;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-.filter-popup button:hover {
-  background-color: #2563EB;
 }
 .filter-item + .filter-item {
   margin-left: 10px;
@@ -97,44 +79,28 @@
 /* The whole Search */
 .search-and-filter {
   display: flex;
+  flex-direction: column;
   position: relative;
-  justify-content: left + 10%;
-  margin-bottom: 10px;
+  align-items: flex-start;
 }
 .search-group{
-  display: flex;    
-  margin: 0 0 0 4vw;
-}
-.search-group button {
-    margin: 0 5px;
-    font-size: 14px;
-    font-weight: 500;
-    color: white;
-    background-color: #0052cc;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-.search-group button:hover {
-    background-color: #2563EB;
+  display: flex;
+  width: fit-content;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 .search-group input {
   padding: 8px 12px;
-  font-size: 14px;
-  border: 1px solid #D1D5DB;
-  border-radius: 6px;
-  width: 250px;
+  width: 400px;
 }
 
+/* Chart of Accounts Container */
+.chart-of-accounts-container {
 table {
   display: block;
     margin: 0 auto;
   width: fit-content;
-  border-radius: 6px;
-  border-collapse: collapse;
-  border-style: solid;
-  border-color: #0052cc;
+  margin: 0 auto;
 }
 table .header-row {
   background-color: #0052cc;
@@ -276,4 +242,16 @@ table button {
   display: flex;
   justify-content: flex-end;
   margin-top: 4px;
+}
+
+.coa-email-staff-actions button {
+  padding: 8px 16px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: white;
+  background-color: #0052cc;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
 }

@@ -634,12 +634,12 @@ Normal Side: ${accountData.normalSide}`;
                 : 'Add this new account to the chart of accounts.'
             }
           >
-            <button type="submit" className="button" disabled={loading}>
+            <button type="submit" className="button-primary" disabled={loading}>
               {loading ? 'Saving...' : 'Save Account'}
             </button>
           </HelpTooltip>
           <HelpTooltip text="Discard unsaved changes and return to the chart of accounts list.">
-            <button type="button" onClick={() => navigate('/admin/chart-of-accounts')} className="button" style={{ marginLeft: '10px' }}>
+            <button type="button" onClick={() => navigate('/admin/chart-of-accounts')} className="button-primary" style={{ marginLeft: '10px' }}>
               Cancel
             </button>
           </HelpTooltip>

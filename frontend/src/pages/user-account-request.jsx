@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import '../global.css';
+import './user-account-request.css';
 import { getAllUserRequests, approveUserRequest, rejectUserRequest } from '../services/userService';
 import { useAuth } from '../AuthContext';
 import { HelpTooltip } from '../components/HelpTooltip';
@@ -131,15 +132,15 @@ function UserAccountRequestPage() {
         <div className="page-container">
             <h1>User Account Requests</h1>
 
-            {error && <p style={{ color: 'red' }}>{error}</p>}
+            {error && <p style={{ color: 'var(--error-color)' }}>{error}</p>}
 
-            <section style={{ marginBottom: '1.5rem' }}>
+            <section className="pending-requests" style={{ marginBottom: '1.5rem' }}>
                 <h2>Pending Requests</h2>
                 {loading && <p>Loading...</p>}
                 {!loading && requests.length === 0 && <p>No pending user account requests.</p>}
 
                 {requests.length > 0 && (
-                    <table border="1">
+                    <table>
                         <thead>
                             <tr>
                                 <th>User Request ID</th>
@@ -170,12 +171,12 @@ function UserAccountRequestPage() {
                 )}
             </section>
 
-            <section>
+            <section className="review-decision">
                 <h2>Review & Decision</h2>
                 <div style={{ marginBottom: '1rem' }}>
                     <label>
                         Select User Request ID:{' '}
-                        <select
+                        <select className="input"
                             value={selectedUserId}
                             onChange={handleSelectChange}
                         >
@@ -203,7 +204,7 @@ function UserAccountRequestPage() {
                 <div style={{ marginBottom: '1rem' }}>
                     <label>
                         Assign Role:{' '}
-                        <select
+                        <select className="input"
                             value={selectedRole}
                             onChange={handleRoleChange}
                             disabled={!selectedUserId}
@@ -222,6 +223,7 @@ function UserAccountRequestPage() {
                     <HelpTooltip text="Create an account for the selected request with the chosen role.">
                         <button
                             type="button"
+                            className="button-primary"
                             disabled={!selectedUserId || loading}
                             onClick={handleApprove}
                         >
@@ -231,6 +233,7 @@ function UserAccountRequestPage() {
                     <HelpTooltip text="Decline this account request and remove it from the pending list.">
                         <button
                             type="button"
+                            className="button-primary"
                             disabled={!selectedUserId || loading}
                             onClick={handleReject}
                         >

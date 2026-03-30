@@ -1,0 +1,114 @@
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial;
+  background: var(--bff-background);
+}
+.login-header {
+  height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.login-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.login-form {
+  width: min(560px, calc(100vw - 48px));
+  background: var(--bff-background);
+  padding: 28px;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(16,24,40,0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.login-form .logo {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+/* Raw Text */
+.login-form h1 {
+  color: var(--bff-primary);
+}
+.login-form p {
+  font-size: 14px;
+  color: var(--bff-dark-text);
+}
+.login-form h5{
+  font-size: 17px;
+  color: var(--bff-primary);
+  margin-top: 4px;
+}
+
+/* input fields */
+.input {
+  height: 44px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--bff-border);
+  background: var(--bff-background);
+  font-size: 14px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.input.compact {
+  max-width: 220px;
+  width: 100%;
+  justify-self: start;
+}
+.input:focus {
+  outline: 2px solid var(--bff-secondary);
+  border-color: var(--bff-secondary);
+}
+
+/* errors */
+.input-error {
+  border-color: var(--bff-error);
+  background: var(--bff-error-accent);
+}
+.input-error:focus {
+  outline: 2px solid var(--bff-error-hover);
+  border-color: var(--bff-error);
+}
+.error-messages {
+  color: var(--bff-error);
+  font-size: 13px;
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+.error-messages ul {
+  margin: 4px 0;
+  padding-left: 20px;
+  list-style-type: disc;
+}
+.error-messages li {
+  margin: 2px 0;
+}
+
+/* Login and Cancel buttons */
+.button-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+  justify-content: center;
+  width: 100%;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* create new account and forgot password links */
+.subpage-links {
+  display: flex;
+  text-align: center;
+  justify-content: center;
+  width: 100%;
+}

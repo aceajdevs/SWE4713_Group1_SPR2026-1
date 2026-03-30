@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import '../LoginPage.css'
+import './LoginPage.css'
 import logo from '../../assets/Images/resourceDirectory/logo.png'
 import { useNavigate } from 'react-router-dom';
 import { validatePassword } from '../utils/passwordValidation';
@@ -260,61 +260,67 @@ function SignUpPage() {
     return (
         <div className="login-page">
             <PageHelpCorner topic="signup" />
-            <header className="login-header">
+            <main className="login-main">
+                <form className="login-form" onSubmit={handleSubmit}>
                 <div className="logo" aria-hidden="true">
                     <img src={logo} alt="App Logo" />
                 </div>
-            </header>
-
-            <main className="login-main">
-                <form className="login-form" onSubmit={handleSubmit}>
                     <h1>Sign Up</h1>
-                    <p>Request access to the application. Please enter your information.</p>
+                    <p>Please enter your information.</p>
                     
                     {step === 1 && (
                         <>
                             <div className="form-grid-2">
                                 <div className="form-field">
                                     <h5>First Name</h5>
-                                    <input
-                                        className="input"
-                                        type="text"
-                                        name="firstName"
-                                        placeholder="First Name"
+                                    <div className="clear-input-container" role="group">
+                                        <input
+                                            className="input"
+                                            type="text"
+                                            name="firstName"
+                                            placeholder="First Name"
                                         aria-label="first name"
                                         value={firstName}
                                         onChange={(e) => setFirstName(e.target.value)}
                                         required
                                     />
+                                    <button type="button" className="button-clear" onClick={() => setFirstName('')} aria-label="Clear first name input">X</button>
+                                    </div>
                                 </div>
 
                                 <div className="form-field">
                                     <h5>Last Name</h5>
+                                    <div className="clear-input-container" role="group">
+                                        <input
+                                            className="input"
+                                            type="text"
+                                            name="lastName"
+                                            placeholder="Last Name"
+                                            aria-label="last name"
+                                            value={lastName}
+                                            onChange={(e) => setLastName(e.target.value)}
+                                            required
+                                        />
+                                        <button type="button" className="button-clear" onClick={() => setLastName('')} aria-label="Clear last name input">X</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="form-field">
+                                <h5>Address</h5>
+                                <div className="clear-input-container" role="group">
                                     <input
                                         className="input"
                                         type="text"
-                                        name="lastName"
-                                        placeholder="Last Name"
-                                        aria-label="last name"
-                                        value={lastName}
-                                        onChange={(e) => setLastName(e.target.value)}
+                                        name="address"
+                                        placeholder="Address"
+                                        aria-label="address"
+                                        value={address}
+                                        onChange={(e) => setAddress(e.target.value)}
                                         required
                                     />
+                                    <button type="button" className="button-clear" onClick={() => setAddress('')} aria-label="Clear address input">X</button>
                                 </div>
                             </div>
-
-                            <h5>Address</h5>
-                            <input
-                                className="input"
-                                type="text"
-                                name="address"
-                                placeholder="Address"
-                                aria-label="address"
-                                value={address}
-                                onChange={(e) => setAddress(e.target.value)}
-                                required
-                            />
-
                             <div className="form-grid-2">
                                 <div className="form-field">
                                     <h5>Email</h5>
@@ -322,16 +328,19 @@ function SignUpPage() {
                                       text="Contact email for your account. It must be unique and reachable by administrators."
                                       className="help-tooltip-block"
                                     >
-                                      <input
-                                        className={`input ${showEmailError && emailError ? 'input-error' : ''}`}
-                                        type="email"
-                                        name="email"
-                                        placeholder="Email"
-                                        aria-label="email"
-                                        value={email}
-                                        onChange={handleEmailChange}
-                                        required
-                                      />
+                                        <div className="clear-input-container" role="group">
+                                            <input
+                                              className={`input ${showEmailError && emailError ? 'input-error' : ''}`}
+                                              type="email"
+                                              name="email"
+                                              placeholder="Email"
+                                              aria-label="email"
+                                              value={email}
+                                              onChange={handleEmailChange}
+                                              required
+                                            />
+                                            <button type="button" className="button-clear" onClick={() => setEmail('')} aria-label="Clear email input">X</button>
+                                        </div>
                                     </HelpTooltip>
                                     {showEmailError && emailError && (
                                         <div className="error-messages" role="alert">
@@ -362,17 +371,19 @@ function SignUpPage() {
                             <div className="form-grid-2">
                                 <div className="form-field">
                                     <h5>Password</h5>
-                                    <input
-                                        className={`input ${showPasswordErrors && passwordErrors.length > 0 ? 'input-error' : ''}`}
-                                        type="password"
-                                        name="password"
-                                        placeholder="Password"
-                                        aria-label="password"
-                                        value={password}
-                                        onChange={handlePasswordChange}
-                                        required
-                                    />
-
+                                    <div className="clear-input-container" role="group">
+                                        <input
+                                            className={`input ${showPasswordErrors && passwordErrors.length > 0 ? 'input-error' : ''}`}
+                                            type="password"
+                                            name="password"
+                                            placeholder="Password"
+                                            aria-label="password"
+                                            value={password}
+                                            onChange={handlePasswordChange}
+                                            required
+                                        />
+                                        <button type="button" className="button-clear" onClick={() => setPassword('')} aria-label="Clear password input">X</button>
+                                    </div>
                                     {showPasswordErrors && passwordErrors.length > 0 && (
                                         <div className="error-messages" role="alert">
                                             <ul style={{ margin: '4px 0', paddingLeft: '20px', color: '#dc2626', fontSize: '13px' }}>
@@ -386,17 +397,19 @@ function SignUpPage() {
 
                                 <div className="form-field">
                                     <h5>Confirm Password</h5>
-                                    <input
-                                        className={`input ${confirmPasswordError ? 'input-error' : ''}`}
-                                        type="password"
-                                        name="confirmPassword"
-                                        placeholder="Confirm Password"
-                                        aria-label="confirm password"
-                                        value={confirmPassword}
-                                        onChange={handleConfirmPasswordChange}
-                                        required
-                                    />
-
+                                    <div className="clear-input-container" role="group">
+                                        <input
+                                            className={`input ${confirmPasswordError ? 'input-error' : ''}`}
+                                            type="password"
+                                            name="confirmPassword"
+                                            placeholder="Confirm Password"
+                                            aria-label="confirm password"
+                                            value={confirmPassword}
+                                            onChange={handleConfirmPasswordChange}
+                                            required
+                                        />
+                                        <button type="button" className="button-clear" onClick={() => setConfirmPassword('')} aria-label="Clear confirm password input">X</button>
+                                    </div>
                                     {confirmPasswordError && (
                                         <div className="error-messages" role="alert" style={{ color: '#dc2626', fontSize: '13px', marginTop: '4px' }}>
                                             {confirmPasswordError}
@@ -407,10 +420,15 @@ function SignUpPage() {
 
                             <div className="button-row" role="group">
                                 <HelpTooltip text="Continue to security questions with the profile and password entered above.">
-                                  <button type="submit" className="login-button">Submit Request</button>
+                                  <button type="submit" className="button-primary">Submit</button>
                                 </HelpTooltip>
+                                <div className="cancel-wrap">
+                                    <HelpTooltip text="Leave sign-up and return to the welcome screen.">
+                                    <button type="button" className="button-primary" onClick={navToWelcome}>Cancel</button>
+                                    </HelpTooltip>
+                                </div>
                                 <HelpTooltip text="Reset all fields on this sign-up form.">
-                                  <button type="button" onClick={handleClear}>Clear</button>
+                                  <button type="button" className="button-secondary" onClick={handleClear}>Clear All</button>
                                 </HelpTooltip>
                             </div>
                         </>
@@ -535,15 +553,13 @@ function SignUpPage() {
 
                             <div className="button-row" role="group">
                                 <HelpTooltip text="Return to profile and password step.">
-                                  <button type="button" onClick={() => { setSecurityQuestionsError(''); setStep(1); }}>
-                                    Back
-                                  </button>
+                                  <button type="button" className="button-secondary" onClick={() => { setSecurityQuestionsError(''); setStep(1); }}>Back</button>
                                 </HelpTooltip>
                                 <HelpTooltip text="Send your account request to administrators for approval.">
-                                  <button type="submit" className="login-button">Finish Signup</button>
+                                  <button type="submit" className="button-primary">Finish Signup</button>
                                 </HelpTooltip>
                                 <HelpTooltip text="Reset all fields on this sign-up form.">
-                                  <button type="button" onClick={handleClear}>Clear</button>
+                                  <button type="button" className="button-primary" onClick={handleClear}>Clear</button>
                                 </HelpTooltip>
                             </div>
                         </>
@@ -551,20 +567,9 @@ function SignUpPage() {
 
                     <div className="button-row" role="group">
                         <HelpTooltip text="Go to the sign-in page if you already have an account.">
-                          <button type="button" onClick={navToLogin}>
-                            Already have an account?
-                          </button>
+                          <span className="link" onClick={navToLogin}>Already have an account?</span>
                         </HelpTooltip>
-                    </div>
-                    <div className="cancel-wrap">
-                        <HelpTooltip text="Leave sign-up and return to the welcome screen.">
-                          <button type="button" className="cancel-button" onClick={navToWelcome}>
-                            Cancel
-                          </button>
-                        </HelpTooltip>
-                    </div>
-
-                    
+                    </div>                    
                 </form>
             </main>
         </div>
