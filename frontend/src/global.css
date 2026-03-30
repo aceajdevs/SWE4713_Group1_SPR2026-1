@@ -122,6 +122,17 @@ body {
 input {
   font-family: inherit;
 }
+
+.input-error {
+  border-color: var(--bff-error);
+  background: var(--bff-error-accent);
+}
+
+.input-error:focus {
+  outline: 2px solid var(--bff-error-hover);
+  border-color: var(--bff-error);
+}
+
 .link{
   color: #0000ee;
   text-decoration: underline;

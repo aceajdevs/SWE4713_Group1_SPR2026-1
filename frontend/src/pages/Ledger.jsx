@@ -167,7 +167,7 @@ function Ledger() {
       <div className="header-row">
         <h1>General Ledger</h1>
         <HelpTooltip text="Return to the chart of accounts list.">
-          <button type="button" onClick={() => navigate('/admin/chart-of-accounts')} className="button">
+          <button type="button" onClick={() => navigate('/admin/chart-of-accounts')} className="button-primary" style={{ marginLeft: '12px' }}>
             Back to Chart of Accounts
           </button>
         </HelpTooltip>
@@ -250,7 +250,7 @@ function Ledger() {
         <HelpTooltip text="Clear date and amount filters.">
           <button
             type="button"
-            className="button"
+            className="button-primary"
             onClick={() => {
               setDateFrom('');
               setDateTo('');
@@ -324,7 +324,7 @@ function Ledger() {
         <p>No ledger activity has been posted for this account yet.</p>
       ) : null}
 
-      <table className="user-report-table" style={{ marginTop: entries.length === 0 ? '0' : undefined }}>
+      <table>
         <thead>
           <tr>
             <th>Date</th>

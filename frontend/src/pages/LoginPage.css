@@ -69,19 +69,6 @@
   outline: 2px solid var(--bff-secondary);
   border-color: var(--bff-secondary);
 }
-.clear-input-container {
-    position: relative;
-    display: inline-block;
-    width: 100%;
-}
-.button-clear {
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%); /* Vertically center the button */
-    cursor: pointer;
-    font-size: 20px;
-}
 
 /* errors */
 .input-error {

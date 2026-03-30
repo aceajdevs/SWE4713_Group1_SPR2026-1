@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
+import { supabase } from '../supabaseClient';
 import { fetchFromTable } from '../supabaseUtils';
 import { createJournalEntry, uploadJournalAttachment } from '../services/journalService';
 import {
@@ -22,6 +23,8 @@ function JournalEntryForm() {
   const [accounts, setAccounts] = useState([]);
   const [attachments, setAttachments] = useState([]);
   const [errors, setErrors] = useState([]);
+  const [validationMessages, setValidationMessages] = useState([]);
+  const [fieldErrors, setFieldErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -41,6 +44,78 @@ function JournalEntryForm() {
     }
     setLoading(false);
   };
+
+  const loadErrorMessagesByCode = async (errorIDs) => {
+    if (!errorIDs?.length) return {};
+    const { data, error } = await supabase
+      .from('Error')
+      .select('errorID, message')
+      .in('errorID', errorIDs);
+
+    if (error || !data) {
+      console.error('Error lookup failed:', error);
+      return {};
+    }
+
+    return Object.fromEntries(data.map((row) => [String(row.errorID), row.message]));
+  };
+
+  const runValidation = async () => {
+    const validation = validateJournalEntry(lines, accounts);
+    const fieldMap = {};
+
+    if (!entryType) {
+      validation.valid = false;
+      validation.errors.push({
+        errorID: '1009',
+        code: '1009',
+        message: 'Entry type must be selected.',
+        field: 'entryType',
+      });
+      fieldMap.entryType = true;
+    }
+
+    validation.errors.forEach((err) => {
+      if (err?.field) {
+        fieldMap[err.field] = true;
+      }
+      if (err?.field === 'line') {
+        // line-level markers apply to every line input
+        for (let i = 0; i < lines.length; i += 1) {
+          fieldMap[`line-${i}-accountID`] = true;
+          fieldMap[`line-${i}-debit`] = true;
+          fieldMap[`line-${i}-credit`] = true;
+        }
+      }
+    });
+
+    setFieldErrors(fieldMap);
+
+    if (!validation.valid) {
+      const errorIDs = [...new Set(validation.errors.map((e) => (e.errorID || e.code)).filter(Boolean))];
+      const dbMessages = await loadErrorMessagesByCode(errorIDs);
+
+      const formattedMessages = validation.errors.map((err) => {
+        const code = err.code || err.errorID || 'UNKNOWN';
+        const lineNumber = err.lineIndex !== undefined && err.lineIndex !== null
+          ? err.lineIndex
+          : (err.field?.match(/^line-(\d+)-/) || [])[1];
+        const linePart = lineNumber ? `Line ${lineNumber} - ` : '';
+        const baseMessage = dbMessages[String(err.errorID || err.code)] || err.message || 'Validation error';
+        return `Code: ${code}: ${linePart}${baseMessage}`;
+      });
+
+      setValidationMessages(formattedMessages);
+      return false;
+    }
+
+    setValidationMessages([]);
+    return true;
+  };
+
+  useEffect(() => {
+    runValidation();
+  }, [lines, entryType, accounts]);
 
   const updateLine = (index, field, value) => {
     setLines((prev) => {
@@ -95,17 +170,19 @@ function JournalEntryForm() {
     setEntryType('');
     setAttachments([]);
     setErrors([]);
+    setValidationMessages([]);
+    setFieldErrors({});
   };
 
   const handleSubmit = async () => {
     if (!entryType) {
-      setErrors(['Please select an entry type.']);
+      setFieldErrors((prev) => ({ ...prev, entryType: true }));
+      setValidationMessages(['Please select an entry type.']);
       return;
     }
-    
-    const validation = validateJournalEntry(lines, accounts);
-    if (!validation.valid) {
-      setErrors(validation.errors);
+
+    const isValid = await runValidation();
+    if (!isValid) {
       return;
     }
 
@@ -160,12 +237,11 @@ function JournalEntryForm() {
       )}
 
       <div style={{ marginBottom: '16px' }}>
-        <label>Entry Type:</label>
         <HelpTooltip text="Classify this entry (e.g. Regular, Adjusting, Closing).">
           <select
             value={entryType}
             onChange={(e) => setEntryType(e.target.value)}
-            className="input-field"
+            className={`input ${fieldErrors.entryType ? 'input-error' : ''}`}
             style={{ width: '100%' }}
           >
             <option value="">Select entry type</option>
@@ -176,7 +252,7 @@ function JournalEntryForm() {
         </HelpTooltip>
       </div>
 
-      <table className="user-report-table">
+      <table className="table">
         <thead>
           <tr>
             <th>#</th>
@@ -195,7 +271,7 @@ function JournalEntryForm() {
                   <select
                     value={line.accountID}
                     onChange={(e) => updateLine(index, 'accountID', e.target.value)}
-                    className="input-field"
+                    className={`input ${fieldErrors[`line-${index}-accountID`] ? 'input-error' : ''}`}
                   >
                     <option value="">Select account</option>
                     {accounts
@@ -224,7 +300,7 @@ function JournalEntryForm() {
                     value={line.debit}
                     onChange={(e) => updateLine(index, 'debit', e.target.value)}
                     placeholder="0.00"
-                    className="input-field"
+                    className={`input ${fieldErrors[`line-${index}-debit`] && !(parseFloat(line.credit) > 0) ? 'input-error' : ''}`}
                     disabled={parseFloat(line.credit) > 0}
                   />
                 </HelpTooltip>
@@ -238,22 +314,22 @@ function JournalEntryForm() {
                     value={line.credit}
                     onChange={(e) => updateLine(index, 'credit', e.target.value)}
                     placeholder="0.00"
-                    className="input-field"
+                    className={`input ${fieldErrors[`line-${index}-credit`] && !(parseFloat(line.debit) > 0) ? 'input-error' : ''}`}
                     disabled={parseFloat(line.debit) > 0}
                   />
                 </HelpTooltip>
               </td>
               <td>
-                <HelpTooltip text="Remove this line. At least two lines are required.">
-                  <button
-                    type="button"
-                    onClick={() => removeLine(index)}
-                    disabled={lines.length <= 2}
-                    style={{ color: 'red' }}
-                  >
-                    Remove
-                  </button>
-                </HelpTooltip>
+                {lines.length > 2 && (
+                  <HelpTooltip text="Remove this line. At least two lines are required.">
+                    <button
+                      type="button-table"
+                      onClick={() => removeLine(index)}
+                    >
+                      Remove
+                    </button>
+                  </HelpTooltip>
+                )}
               </td>
             </tr>
           ))}
@@ -261,10 +337,10 @@ function JournalEntryForm() {
         <tfoot>
           <tr style={{ fontWeight: 'bold' }}>
             <td colSpan={2}>Totals</td>
-            <td style={{ color: isBalanced ? 'inherit' : 'red' }}>
+            <td style={{ color: isBalanced ? 'inherit' : 'var(--color-error)' }}>
               ${totalDebits.toFixed(2)}
             </td>
-            <td style={{ color: isBalanced ? 'inherit' : 'red' }}>
+            <td style={{ color: isBalanced ? 'inherit' : 'var(--color-error)' }}>
               ${totalCredits.toFixed(2)}
             </td>
             <td></td>
@@ -274,7 +350,7 @@ function JournalEntryForm() {
 
       <div style={{ margin: '16px 0', display: 'flex', gap: '10px' }}>
         <HelpTooltip text="Add another debit or credit line to this journal entry.">
-          <button type="button" onClick={addLine} className="button">
+          <button type="button" onClick={addLine} className="button-primary">
             Add Line
           </button>
         </HelpTooltip>
@@ -285,20 +361,26 @@ function JournalEntryForm() {
           <strong>Attachments</strong> (allowed: {ALLOWED_EXTENSIONS.join(', ')}):
         </label>
         <HelpTooltip text="Attach source documents such as receipts, invoices, or supporting files.">
-          <input
-            type="file"
-            multiple
-            onChange={handleAddAttachment}
-            accept={ALLOWED_EXTENSIONS.map((e) => `.${e}`).join(',')}
-            style={{ display: 'block', marginTop: '8px' }}
-          />
+          <label
+            className="button-primary"
+            style={{ display: 'inline-flex', alignItems: 'center', marginTop: '8px', marginLeft: '12px',cursor: 'pointer' }}
+          >
+            Browse...
+            <input
+              type="file"
+              multiple
+              onChange={handleAddAttachment}
+              accept={ALLOWED_EXTENSIONS.map((e) => `.${e}`).join(',')}
+              style={{ display: 'none' }}
+            />
+          </label>
         </HelpTooltip>
         {attachments.length > 0 && (
           <ul style={{ marginTop: '8px' }}>
             {attachments.map((file, i) => (
               <li key={i}>
                 {file.name}{' '}
-                <button type="button" onClick={() => removeAttachment(i)} style={{ color: 'red', marginLeft: '8px' }}>
+                <button type="button" onClick={() => removeAttachment(i)} className="button-secondary">
                   Remove
                 </button>
               </li>
@@ -307,24 +389,34 @@ function JournalEntryForm() {
         )}
       </div>
 
+      {validationMessages.length > 0 && (
+        <div className="error-messages" style={{ color: 'var(--bff-error)', marginBottom: '12px' }}>
+          <ul>
+            {validationMessages.map((msg, i) => (
+              <li key={i}>{msg}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       <div style={{ display: 'flex', gap: '10px' }}>
         <HelpTooltip text="Validate and submit this journal entry for manager approval.">
           <button
             type="button"
             onClick={handleSubmit}
             disabled={submitting}
-            className="button"
+            className="button-primary"
           >
             {submitting ? 'Submitting...' : 'Submit Journal Entry'}
           </button>
         </HelpTooltip>
         <HelpTooltip text="Clear all fields and start over. This will not delete a submitted entry.">
-          <button type="button" onClick={handleReset} className="button" style={{ backgroundColor: '#eee', color: '#333' }}>
+          <button type="button" onClick={handleReset} className="button-primary">
             Reset / Cancel
           </button>
         </HelpTooltip>
         <HelpTooltip text="View all journal entries and their approval status.">
-          <button type="button" onClick={() => navigate('/journal-entries')} className="button">
+          <button type="button" onClick={() => navigate('/journal-entries')} className="button-primary">
             View Journal Entries
           </button>
         </HelpTooltip>

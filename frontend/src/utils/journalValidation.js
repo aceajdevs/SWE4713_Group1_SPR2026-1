@@ -21,26 +21,52 @@ export function validateAccountsExist(lines, accounts) {
   const errors = [];
   const activeIds = new Set(accounts.filter((a) => a.active).map((a) => a.accountID));
 
+/* "No account selected" and "Account is inactive or does not exist" errors. */
   lines.forEach((line, i) => {
     if (!line.accountID) {
-      errors.push(`Line ${i + 1}: No account selected.`);
+      errors.push({
+        errorID: '1001',
+        code: '1001',
+        field: `line-${i}-accountID`,
+        lineIndex: i + 1,
+        message: 'No account selected.',
+      });
     } else if (!activeIds.has(Number(line.accountID))) {
-      errors.push(`Line ${i + 1}: Account is inactive or does not exist.`);
+      errors.push({
+        errorID: '1002',
+        code: '1002',
+        field: `line-${i}-accountID`,
+        lineIndex: i + 1,
+      });
     }
   });
 
   return { valid: errors.length === 0, errors };
 }
 
-// Validate that journal entry has at least one debit line and one credit line.
 
 export function validateHasDebitAndCredit(lines) {
   const hasDebit = lines.some((l) => parseFloat(l.debit) > 0);
   const hasCredit = lines.some((l) => parseFloat(l.credit) > 0);
   const errors = [];
 
-  if (!hasDebit) errors.push('Journal entry must have at least one debit line.');
-  if (!hasCredit) errors.push('Journal entry must have at least one credit line.');
+  /* "Journal entry must have at least one debit line" and "Journal entry must have at least one credit line" errors. */
+  if (!hasDebit) {
+    errors.push({
+      errorID: '1003',
+      code: '1003',
+      field: 'line',
+      lineIndex: null,
+    });
+  }
+  if (!hasCredit) {
+    errors.push({
+      errorID: '1004',
+      code: '1004',
+      field: 'line',
+      lineIndex: null,
+    });
+  }
 
   return { valid: errors.length === 0, errors };
 }
@@ -55,11 +81,18 @@ export function validateDebitsEqualCredits(lines) {
   // Round to 2 decimal places to avoid floating point issues
   const diff = Math.abs(Math.round(totalDebits * 100) - Math.round(totalCredits * 100));
 
+  /* "Total debits must equal total credits" error with details on the amounts and difference. */
   if (diff !== 0) {
     return {
       valid: false,
       errors: [
-        `Total debits ($${totalDebits.toFixed(2)}) must equal total credits ($${totalCredits.toFixed(2)}). Difference: $${(diff / 100).toFixed(2)}.`,
+        {
+          errorID: '1005',
+          code: '1005',
+          field: 'line',
+          lineIndex: null,
+          message: `Total debits must equal total credits. Debits: ($${totalDebits.toFixed(2)}) Credits: ($${totalCredits.toFixed(2)}). Difference: $${(diff / 100).toFixed(2)}.`
+        },
       ],
       totalDebits,
       totalCredits,
@@ -79,14 +112,23 @@ export function validateLineAmounts(lines) {
     const debit = parseFloat(line.debit) || 0;
     const credit = parseFloat(line.credit) || 0;
 
-    if (debit > 0 && credit > 0) {
-      errors.push(`Line ${i + 1}: A line cannot have both a debit and a credit.`);
-    }
     if (debit === 0 && credit === 0) {
-      errors.push(`Line ${i + 1}: A line must have either a debit or a credit amount.`);
+      errors.push({
+        errorID: '1006',
+        code: '1006',
+        message: `A line must have either a debit or a credit amount.`,
+        field: `line-${i}-debit`,
+        lineIndex: i + 1,
+      });
     }
     if (debit < 0 || credit < 0) {
-      errors.push(`Line ${i + 1}: Amounts cannot be negative.`);
+      errors.push({
+        errorID: '1007',
+        code: '1007',
+        message: `Line ${i + 1}: Amounts cannot be negative.`,
+        field: debit < 0 ? `line-${i}-debit` : `line-${i}-credit`,
+        lineIndex: i + 1,
+      });
     }
   });
 
@@ -107,7 +149,15 @@ export function validateDebitBeforeCredit(lines) {
     if (debit > 0 && foundCredit) {
       return {
         valid: false,
-        errors: ['All debit lines must appear before credit lines in the journal entry.'],
+        errors: [
+          {
+            errorID: '1008',
+            code: '1008',
+            message: 'All debit lines must appear before credit lines in the journal entry.',
+            field: 'line',
+            lineIndex: null,
+          },
+        ],
       };
     }
   }
