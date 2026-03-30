@@ -1,14 +1,13 @@
-// passwordExpiryService.js
 import { supabase } from '../supabaseClient';
 
 export async function checkPasswordsAboutToExpire(days = 3) {
   try {
     const { data, error } = await supabase
-      .from('userPasswords')
-      .select('passwordID, activeTill, userID');
+      .from('user')
+      .select('userID, passwordExpires, passwordExpiryWarningSentAt, email, fName, lName, username, status');
 
     if (error) {
-      console.error('Error fetching userPasswords:', error);
+      console.error('Error fetching users for password expiry:', error);
       return [];
     }
 
@@ -21,16 +20,22 @@ export async function checkPasswordsAboutToExpire(days = 3) {
     const expiring = [];
 
     data.forEach((row) => {
-      if (!row.activeTill) return;
+      if (!row.passwordExpires) return;
+      if (row.passwordExpiryWarningSentAt) return;
+      if (row.status === false) return;
 
-      const expiresAt = new Date(row.activeTill);
+      const expiresAt = new Date(row.passwordExpires);
       const diffMs = expiresAt.getTime() - now.getTime();
 
       if (diffMs > 0 && diffMs <= windowMs) {
         expiring.push({
-          passwordID: row.passwordID,
           userID: row.userID,
-          activeTill: expiresAt.toISOString(),
+          passwordExpires: expiresAt.toISOString(),
+          passwordExpiryWarningSentAt: row.passwordExpiryWarningSentAt ?? null,
+          email: row.email ?? null,
+          fName: row.fName ?? null,
+          lName: row.lName ?? null,
+          username: row.username ?? null,
         });
       }
     });
