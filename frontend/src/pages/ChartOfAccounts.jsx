@@ -393,7 +393,7 @@ function ChartOfAccounts() {
                       <button
                         type="button"
                         className="button-primary"
-                        style={{ marginRight: '8px', background: '#6b7280' }}
+                        style={{ marginRight: '8px', marginBottom: '12px' }}
                         disabled={staffEmailSending}
                         onClick={() => setStaffEmailModalOpen(false)}
                       >
