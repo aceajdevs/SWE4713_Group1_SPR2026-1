@@ -282,22 +282,15 @@ function ChartOfAccounts() {
               <button className="button-primary" onClick={() => navigate('/admin/add-account')}>Add New Account</button>
             </HelpTooltip>
           )}
-          <HelpTooltip text="Return to your role dashboard without leaving the app.">
-            <button onClick={() => navigate(dashboardPath)} className="button">
-              Back to Dashboard
-            </button>
-          </HelpTooltip>
           <HelpTooltip text="Open a window to email a manager, accountant, or administrator about the chart of accounts.">
             <button
               type="button"
               onClick={() => setStaffEmailModalOpen(true)}
-              className="button"
+              className="button-primary"
             >
               Email manager/accountant/admin
             </button>
           </HelpTooltip>
-        </div>
-        <div style={{ display: 'flex', gap: '8px', marginRight: '10px', marginLeft: '10px' }}>
           <HelpTooltip text="Show all accounts in a single table report.">
             <button className="button-primary" onClick={() => setViewMode('report')}>All Accounts Report</button>
           </HelpTooltip>
@@ -309,6 +302,113 @@ function ChartOfAccounts() {
           </HelpTooltip>
         </div>
       </div>
+      {staffEmailModalOpen && (
+              <div
+                className="coa-email-modal-backdrop"
+                onClick={() => !staffEmailSending && setStaffEmailModalOpen(false)}
+                role="presentation"
+              >
+                <div
+                  className="coa-email-modal"
+                  onClick={(e) => e.stopPropagation()}
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby="coa-email-modal-title"
+                >
+                  <div className="coa-email-modal-header">
+                    <h2 id="coa-email-modal-title" className="coa-email-modal-title">
+                      Email a manager or accountant
+                    </h2>
+                    <button
+                      type="button"
+                      className="button-primary coa-email-modal-close"
+                      aria-label="Close"
+                      disabled={staffEmailSending}
+                      onClick={() => setStaffEmailModalOpen(false)}
+                    >
+                      ×
+                    </button>
+                  </div>
+                  <p className="coa-email-modal-lead">
+                    Send a message about the chart of accounts using the same email integration as other admin notifications.
+                  </p>
+                  {staffLoadError && (
+                    <p style={{ color: '#b91c1c', fontSize: '0.9rem' }} role="alert">
+                      Could not load recipients: {staffLoadError}
+                    </p>
+                  )}
+                  {!staffLoadError && staffRecipients.length === 0 && (
+                    <p style={{ color: '#6b7280', fontSize: '0.9rem' }}>
+                  No active managers, accountants, or administrators with an email address were found.
+                    </p>
+                  )}
+                  <form onSubmit={handleSendStaffEmail} className="coa-email-staff-form">
+                    <div className="coa-email-staff-row">
+                      <label htmlFor="coa-staff-recipient" className="coa-email-staff-label">
+                        Recipient
+                      </label>
+                      <select
+                        id="coa-staff-recipient"
+                        className="input coa-email-staff-select"
+                        value={selectedStaffId}
+                        onChange={(e) => setSelectedStaffId(e.target.value)}
+                        disabled={staffRecipients.length === 0}
+                      >
+                        <option value="">— Select manager, accountant, or administrator —</option>
+                        {staffRecipients.map((u) => (
+                          <option key={u.userID} value={u.userID}>
+                            {[u.fName, u.lName].filter(Boolean).join(' ') || u.username} ({u.role}) — {u.email}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="coa-email-staff-row">
+                      <label htmlFor="coa-staff-subject" className="coa-email-staff-label">
+                        Subject
+                      </label>
+                      <input
+                        id="coa-staff-subject"
+                        type="text"
+                        className="input"
+                        value={staffEmailSubject}
+                        onChange={(e) => setStaffEmailSubject(e.target.value)}
+                        placeholder="e.g., Question about account 10000001"
+                        autoComplete="off"
+                      />
+                    </div>
+                    <div className="coa-email-staff-row coa-email-staff-row-grow">
+                      <label htmlFor="coa-staff-message" className="coa-email-staff-label">
+                        Message
+                      </label>
+                      <textarea
+                        id="coa-staff-message"
+                        className="input coa-email-staff-textarea"
+                        rows={4}
+                        value={staffEmailMessage}
+                        onChange={(e) => setStaffEmailMessage(e.target.value)}
+                        placeholder="Your message…"
+                      />
+                    </div>
+                    <div className="coa-email-staff-actions">
+                      <button
+                        type="button"
+                        className="button-primary"
+                        style={{ marginRight: '8px', background: '#6b7280' }}
+                        disabled={staffEmailSending}
+                        onClick={() => setStaffEmailModalOpen(false)}
+                      >
+                        Cancel
+                      </button>
+                      <HelpTooltip text="Send this message to the selected user’s email using the configured EmailJS admin template.">
+                        <button type="submit" className="button-primary" disabled={staffEmailSending || staffRecipients.length === 0}>
+                          {staffEmailSending ? 'Sending…' : 'Send email'}
+                        </button>
+                      </HelpTooltip>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
       </div>
       <div className="chart-of-accounts-container">
         <div className="search-and-filter">
@@ -527,7 +627,7 @@ function ChartOfAccounts() {
                     <HelpTooltip text="View audit events for this account (before/after snapshots, who changed it, when).">
                       <button
                         type="button"
-                        className="button"
+                        className="button-primary"
                         style={{ padding: '4px 10px', fontSize: '13px' }}
                         onClick={() => navigate(`/admin/chart-of-accounts/account/${account.accountID}/events`)}
                       >
@@ -540,6 +640,7 @@ function ChartOfAccounts() {
                       <HelpTooltip text="Open the form to change this account's details.">
                         <button
                           type="button"
+                          className="button-primary"
                           onClick={(e) => {
                             e.stopPropagation();
                             navigate(`/admin/edit-account/${account.accountID}`);
@@ -583,7 +684,7 @@ function ChartOfAccounts() {
               id="account-select"
               value={selectedAccountId}
               onChange={(e) => setSelectedAccountId(e.target.value)}
-              className="input-field"
+              className="input"
               style={{ width: '340px' }}
             >
               <option value="">Choose an account</option>
@@ -632,6 +733,7 @@ function ChartOfAccounts() {
                     <td>
                       <button
                         type="button"
+                        className="button-primary"
                         onClick={() => navigate(`/admin/ledger/${selectedAccount.accountNumber}`)}
                         style={{
                           background: 'transparent',
@@ -670,117 +772,9 @@ function ChartOfAccounts() {
             </div>
           )}
         </div>
-
-
-      {staffEmailModalOpen && (
-        <div
-          className="coa-email-modal-backdrop"
-          onClick={() => !staffEmailSending && setStaffEmailModalOpen(false)}
-          role="presentation"
-        >
-          <div
-            className="coa-email-modal"
-            onClick={(e) => e.stopPropagation()}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="coa-email-modal-title"
-          >
-            <div className="coa-email-modal-header">
-              <h2 id="coa-email-modal-title" className="coa-email-modal-title">
-                Email a manager or accountant
-              </h2>
-              <button
-                type="button"
-                className="coa-email-modal-close"
-                aria-label="Close"
-                disabled={staffEmailSending}
-                onClick={() => setStaffEmailModalOpen(false)}
-              >
-                ×
-              </button>
-            </div>
-            <p className="coa-email-modal-lead">
-              Send a message about the chart of accounts using the same email integration as other admin notifications.
-            </p>
-            {staffLoadError && (
-              <p style={{ color: '#b91c1c', fontSize: '0.9rem' }} role="alert">
-                Could not load recipients: {staffLoadError}
-              </p>
-            )}
-            {!staffLoadError && staffRecipients.length === 0 && (
-              <p style={{ color: '#6b7280', fontSize: '0.9rem' }}>
-            No active managers, accountants, or administrators with an email address were found.
-              </p>
-            )}
-            <form onSubmit={handleSendStaffEmail} className="coa-email-staff-form">
-              <div className="coa-email-staff-row">
-                <label htmlFor="coa-staff-recipient" className="coa-email-staff-label">
-                  Recipient
-                </label>
-                <select
-                  id="coa-staff-recipient"
-                  className="input-field coa-email-staff-select"
-                  value={selectedStaffId}
-                  onChange={(e) => setSelectedStaffId(e.target.value)}
-                  disabled={staffRecipients.length === 0}
-                >
-                  <option value="">— Select manager, accountant, or administrator —</option>
-                  {staffRecipients.map((u) => (
-                    <option key={u.userID} value={u.userID}>
-                      {[u.fName, u.lName].filter(Boolean).join(' ') || u.username} ({u.role}) — {u.email}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="coa-email-staff-row">
-                <label htmlFor="coa-staff-subject" className="coa-email-staff-label">
-                  Subject
-                </label>
-                <input
-                  id="coa-staff-subject"
-                  type="text"
-                  className="input-field"
-                  value={staffEmailSubject}
-                  onChange={(e) => setStaffEmailSubject(e.target.value)}
-                  placeholder="e.g., Question about account 10000001"
-                  autoComplete="off"
-                />
-              </div>
-              <div className="coa-email-staff-row coa-email-staff-row-grow">
-                <label htmlFor="coa-staff-message" className="coa-email-staff-label">
-                  Message
-                </label>
-                <textarea
-                  id="coa-staff-message"
-                  className="input-field coa-email-staff-textarea"
-                  rows={4}
-                  value={staffEmailMessage}
-                  onChange={(e) => setStaffEmailMessage(e.target.value)}
-                  placeholder="Your message…"
-                />
-              </div>
-              <div className="coa-email-staff-actions">
-                <button
-                  type="button"
-                  className="button"
-                  style={{ marginRight: '8px', background: '#6b7280' }}
-                  disabled={staffEmailSending}
-                  onClick={() => setStaffEmailModalOpen(false)}
-                >
-                  Cancel
-                </button>
-                <HelpTooltip text="Send this message to the selected user’s email using the configured EmailJS admin template.">
-                  <button type="submit" className="button" disabled={staffEmailSending || staffRecipients.length === 0}>
-                    {staffEmailSending ? 'Sending…' : 'Send email'}
-                  </button>
-                </HelpTooltip>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
 
 export default ChartOfAccounts;
+
