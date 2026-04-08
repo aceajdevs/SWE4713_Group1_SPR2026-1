@@ -347,7 +347,7 @@ function Ledger() {
                 {entry.journalEntryID ? (
                   <button
                     type="button"
-                    onClick={() => navigate(`/admin/journal-entry/${entry.journalEntryID}`)}
+                    onClick={() => navigate(`/journal-entry/${entry.journalEntryID}`)}
                     className="link"
                     style={{ padding: 0, border: 'none', background: 'none', cursor: 'pointer' }}
                     aria-label={`Open journal entry ${entry.journalEntryID}`}
