@@ -28,6 +28,7 @@ function JournalEntries() {
   const isManager = user?.role === 'manager';
   const isAccountant = user?.role === 'accountant';
   const canView = isManager || isAccountant || user?.role === 'administrator';
+  const ledgerBasePath = '/admin/ledger';
 
   useEffect(() => {
     loadEntries();
@@ -211,7 +212,26 @@ function JournalEntries() {
                   <td>{formatDate(entry.createdAt)}</td>
                   <td>{entry.entryType || '-'}</td>
                   <td>
-                    {(entry.lines || []).map((l) => l.accountName).filter(Boolean).filter((v, i, a) => a.indexOf(v) === i).join(', ') || '-'}
+                    {(entry.lines || []).length > 0 ? (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                        {(entry.lines || [])
+                          .filter((l) => l.accountID && l.accountName && l.accountNumber)
+                          .filter((line, index, all) => all.findIndex((x) => x.accountID === line.accountID) === index)
+                          .map((line) => (
+                            <button
+                              key={`${entry.journalEntryID}-${line.accountID}`}
+                              type="button"
+                              onClick={() => navigate(`${ledgerBasePath}/${line.accountNumber}`)}
+                              style={{ background: 'none', border: 'none', color: '#0066cc', cursor: 'pointer', textDecoration: 'underline', padding: 0 }}
+                              title="Open account ledger"
+                            >
+                              {line.accountNumber} - {line.accountName}
+                            </button>
+                          ))}
+                      </div>
+                    ) : (
+                      '-'
+                    )}
                   </td>
                   <td>${totalDebit.toFixed(2)}</td>
                   <td style={{ color: statusColor(entry.status), fontWeight: 'bold' }}>

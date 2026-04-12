@@ -12,13 +12,13 @@ function AccountantDashboard() {
           <p className="muted">Welcome! Select a service below.</p>
         </div>
         <div style={{ display: 'flex', gap: '10px', marginTop: '16px', flexWrap: 'wrap' }}>
-          <button className="button" onClick={() => navigate('/journal-entry/new')}>
+          <button className="button-primary" onClick={() => navigate('/journal-entry/new')}>
             New Journal Entry
           </button>
-          <button className="button" onClick={() => navigate('/journal-entries')}>
+          <button className="button-primary" onClick={() => navigate('/journal-entries')}>
             View Journal Entries
           </button>
-          <button className="button" onClick={() => navigate('/admin/chart-of-accounts')}>
+          <button className="button-primary" onClick={() => navigate('/admin/chart-of-accounts')}>
             Chart of Accounts
           </button>
         </div>

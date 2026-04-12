@@ -24,6 +24,9 @@ function ManagerDashboard() {
           <button className="button-primary" onClick={() => navigate('/admin/chart-of-accounts')}>
             Chart of Accounts
           </button>
+          <button className="button-primary" onClick={() => navigate('/report')}>
+            Reports
+          </button>
         </div>
       </div>
   </main>

@@ -23,6 +23,7 @@ import { useEffect } from 'react';
 import JournalEntryForm from './pages/JournalEntryForm'
 import JournalEntries from './pages/JournalEntries'
 import JournalEntryDetail from './pages/JournalEntryDetail'
+import Report from './pages/Report'
 
 function AppLayout() {
   const location = useLocation();
@@ -74,7 +75,8 @@ function AppLayout() {
         <Route path="/help" element={<UserManualPage />} />
         <Route path="/journal-entries" element={<JournalEntries />} />
         <Route path="/journal-entry/new" element={<JournalEntryForm />} />
-        <Route path="/journal-entry/:id" element={<JournalEntryDetail />} />      
+        <Route path="/journal-entry/:id" element={<JournalEntryDetail />} />
+        <Route path="/report" element={<Report />} />
       </Routes>
     </>
   );
