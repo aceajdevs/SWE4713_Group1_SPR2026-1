@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { getLedgerByAccountId, sortLedgerEntriesChronological } from '../services/ledgerService';
 import { supabase } from '../supabaseClient';
+import { getErrorMessage, logErrorWithCode, ERROR_IDS } from '../services/errorMessages';
 import '../global.css';
 
 function JournalEntry() {
@@ -29,14 +30,14 @@ function JournalEntry() {
       setAccountLedgerRowsById({});
 
       if (!pr) {
-        setError('Journal entry not found.');
+        setError(await getErrorMessage(ERROR_IDS.JOURNAL_NOT_FOUND));
         setLoading(false);
         return;
       }
 
       const prNum = parseInt(pr, 10);
       if (!Number.isFinite(prNum)) {
-        setError('Invalid post reference (PR).');
+        setError(await getErrorMessage(ERROR_IDS.INVALID_POST_REFERENCE));
         setLoading(false);
         return;
       }
@@ -47,8 +48,8 @@ function JournalEntry() {
         .eq('journalEntryID', prNum);
 
       if (ledgerError) {
-        console.error('Journal entry fetch error:', ledgerError);
-        setError('Failed to load journal entry.');
+        await logErrorWithCode(ERROR_IDS.LOAD_JOURNAL_ENTRY_FAILED, ledgerError);
+        setError(await getErrorMessage(ERROR_IDS.LOAD_JOURNAL_ENTRY_FAILED));
         setLoading(false);
         return;
       }

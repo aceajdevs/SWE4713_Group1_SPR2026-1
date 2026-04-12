@@ -1,9 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
-import { supabase } from '../supabaseClient';
 import { fetchFromTable } from '../supabaseUtils';
 import { createJournalEntry, uploadJournalAttachment } from '../services/journalService';
+import {
+  getErrorMessagesByIds,
+  getErrorMessage,
+  resolveThrownErrorMessage,
+  logErrorWithCode,
+  ERROR_IDS,
+  ERROR_FALLBACK,
+} from '../services/errorMessages';
 import {
   validateJournalEntry,
   validateAttachmentType,
@@ -13,6 +20,14 @@ import { HelpTooltip } from '../components/HelpTooltip';
 import '../global.css';
 
 const emptyLine = () => ({ accountID: '', debit: '', credit: '' });
+
+function PermissionDeniedMessage() {
+  const [text, setText] = useState(() => ERROR_FALLBACK[ERROR_IDS.NO_PERMISSION_CREATE_JOURNAL]);
+  useEffect(() => {
+    getErrorMessage(ERROR_IDS.NO_PERMISSION_CREATE_JOURNAL).then(setText);
+  }, []);
+  return <p style={{ color: 'red' }}>{text}</p>;
+}
 
 function JournalEntryForm() {
   const navigate = useNavigate();
@@ -45,21 +60,6 @@ function JournalEntryForm() {
     setLoading(false);
   };
 
-  const loadErrorMessagesByCode = async (errorIDs) => {
-    if (!errorIDs?.length) return {};
-    const { data, error } = await supabase
-      .from('Error')
-      .select('errorID, message')
-      .in('errorID', errorIDs);
-
-    if (error || !data) {
-      console.error('Error lookup failed:', error);
-      return {};
-    }
-
-    return Object.fromEntries(data.map((row) => [String(row.errorID), row.message]));
-  };
-
   const runValidation = async () => {
     const validation = validateJournalEntry(lines, accounts);
     const fieldMap = {};
@@ -69,7 +69,6 @@ function JournalEntryForm() {
       validation.errors.push({
         errorID: '1009',
         code: '1009',
-        message: 'Entry type must be selected.',
         field: 'entryType',
       });
       fieldMap.entryType = true;
@@ -93,17 +92,26 @@ function JournalEntryForm() {
 
     if (!validation.valid) {
       const errorIDs = [...new Set(validation.errors.map((e) => (e.errorID || e.code)).filter(Boolean))];
-      const dbMessages = await loadErrorMessagesByCode(errorIDs);
+      const dbMessages = await getErrorMessagesByIds(errorIDs);
 
-      const formattedMessages = validation.errors.map((err) => {
-        const code = err.code || err.errorID || 'UNKNOWN';
-        const lineNumber = err.lineIndex !== undefined && err.lineIndex !== null
-          ? err.lineIndex
-          : (err.field?.match(/^line-(\d+)-/) || [])[1];
-        const linePart = lineNumber ? `Line ${lineNumber} - ` : '';
-        const baseMessage = dbMessages[String(err.errorID || err.code)] || err.message || 'Validation error';
-        return `Code: ${code}: ${linePart}${baseMessage}`;
-      });
+      const formattedMessages = await Promise.all(
+        validation.errors.map(async (err) => {
+          const code = err.code || err.errorID || 'UNKNOWN';
+          const lineNumber =
+            err.lineIndex !== undefined && err.lineIndex !== null
+              ? err.lineIndex
+              : (err.field?.match(/^line-(\d+)-/) || [])[1];
+          const linePart = lineNumber ? `Line ${lineNumber} - ` : '';
+          const key = String(err.errorID || err.code);
+          let baseMessage =
+            dbMessages[key] || ERROR_FALLBACK[Number(key)] || (await getErrorMessage(ERROR_IDS.UNEXPECTED));
+          if ((key === '1005' || Number(key) === 1005) && err.detail) {
+            const d = err.detail;
+            baseMessage += ` Debits: ($${d.totalDebits.toFixed(2)}) Credits: ($${d.totalCredits.toFixed(2)}). Difference: $${d.diffDollars.toFixed(2)}.`;
+          }
+          return `${code}: ${linePart}${baseMessage}`;
+        })
+      );
 
       setValidationMessages(formattedMessages);
       return false;
@@ -141,7 +149,7 @@ function JournalEntryForm() {
     setLines((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleAddAttachment = (e) => {
+  const handleAddAttachment = async (e) => {
     const files = Array.from(e.target.files);
     const newErrors = [];
 
@@ -155,7 +163,16 @@ function JournalEntryForm() {
     });
 
     if (newErrors.length > 0) {
-      setErrors((prev) => [...prev, ...newErrors]);
+      const lines = await Promise.all(
+        newErrors.map(async (e) => {
+          const base = await getErrorMessage(ERROR_IDS.ATTACHMENT_TYPE_INVALID);
+          if (e.fileName) {
+            return `${base} (${e.fileName}). Allowed: ${e.allowedHint}.`;
+          }
+          return base;
+        })
+      );
+      setErrors((prev) => [...prev, ...lines]);
     }
 
     e.target.value = '';
@@ -177,7 +194,7 @@ function JournalEntryForm() {
   const handleSubmit = async () => {
     if (!entryType) {
       setFieldErrors((prev) => ({ ...prev, entryType: true }));
-      setValidationMessages(['Please select an entry type.']);
+      setValidationMessages([await getErrorMessage(ERROR_IDS.ENTRY_TYPE_REQUIRED)]);
       return;
     }
 
@@ -207,8 +224,9 @@ function JournalEntryForm() {
       alert('Journal entry submitted successfully!');
       navigate('/journal-entries');
     } catch (err) {
-      console.error('Submit error:', err);
-      setErrors([`Failed to submit: ${err.message}`]);
+      const id = err?.errorID ?? ERROR_IDS.SUBMIT_JOURNAL_FAILED;
+      await logErrorWithCode(id, err);
+      setErrors([await resolveThrownErrorMessage(err, ERROR_IDS.SUBMIT_JOURNAL_FAILED)]);
     } finally {
       setSubmitting(false);
     }
@@ -219,7 +237,7 @@ function JournalEntryForm() {
   const isBalanced = Math.abs(totalDebits - totalCredits) < 0.005;
 
   if (!canCreate) {
-    return <p style={{ color: 'red' }}>You do not have permission to create journal entries.</p>;
+    return <PermissionDeniedMessage />;
   }
 
   if (loading) return <p>Loading accounts...</p>;

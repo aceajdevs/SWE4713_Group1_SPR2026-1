@@ -29,7 +29,6 @@ export function validateAccountsExist(lines, accounts) {
         code: '1001',
         field: `line-${i}-accountID`,
         lineIndex: i + 1,
-        message: 'No account selected.',
       });
     } else if (!activeIds.has(Number(line.accountID))) {
       errors.push({
@@ -91,7 +90,11 @@ export function validateDebitsEqualCredits(lines) {
           code: '1005',
           field: 'line',
           lineIndex: null,
-          message: `Total debits must equal total credits. Debits: ($${totalDebits.toFixed(2)}) Credits: ($${totalCredits.toFixed(2)}). Difference: $${(diff / 100).toFixed(2)}.`
+          detail: {
+            totalDebits,
+            totalCredits,
+            diffDollars: diff / 100,
+          },
         },
       ],
       totalDebits,
@@ -116,7 +119,6 @@ export function validateLineAmounts(lines) {
       errors.push({
         errorID: '1006',
         code: '1006',
-        message: `A line must have either a debit or a credit amount.`,
         field: `line-${i}-debit`,
         lineIndex: i + 1,
       });
@@ -125,7 +127,6 @@ export function validateLineAmounts(lines) {
       errors.push({
         errorID: '1007',
         code: '1007',
-        message: `Line ${i + 1}: Amounts cannot be negative.`,
         field: debit < 0 ? `line-${i}-debit` : `line-${i}-credit`,
         lineIndex: i + 1,
       });
@@ -153,7 +154,6 @@ export function validateDebitBeforeCredit(lines) {
           {
             errorID: '1008',
             code: '1008',
-            message: 'All debit lines must appear before credit lines in the journal entry.',
             field: 'line',
             lineIndex: null,
           },
@@ -173,7 +173,14 @@ export function validateAttachmentType(file) {
   if (!ALLOWED_EXTENSIONS.includes(ext)) {
     return {
       valid: false,
-      errors: [`File "${file.name}" is not an allowed type. Allowed: ${ALLOWED_EXTENSIONS.join(', ')}.`],
+      errors: [
+        {
+          errorID: '1010',
+          code: '1010',
+          fileName: file.name,
+          allowedHint: ALLOWED_EXTENSIONS.join(', '),
+        },
+      ],
     };
   }
   return { valid: true, errors: [] };
