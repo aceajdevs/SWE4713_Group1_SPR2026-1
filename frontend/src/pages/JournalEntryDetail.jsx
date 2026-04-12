@@ -4,6 +4,7 @@ import { useAuth } from '../AuthContext';
 import { getJournalEntryWithLines, getJournalAttachments } from '../services/journalService';
 import { fetchFromTable } from '../supabaseUtils';
 import { HelpTooltip } from '../components/HelpTooltip';
+import { getErrorMessage, logErrorWithCode, ERROR_IDS } from '../services/errorMessages';
 import '../global.css';
 
 function JournalEntryDetail() {
@@ -49,11 +50,11 @@ function JournalEntryDetail() {
         const attachData = await getJournalAttachments(parseInt(id, 10));
         setAttachments(attachData);
       } catch (attErr) {
-        console.error('Failed to load attachments:', attErr);
+        await logErrorWithCode(ERROR_IDS.LOAD_JOURNAL_ENTRY_FAILED, attErr);
       }
     } catch (err) {
-      console.error('Failed to load journal entry:', err);
-      setError('Journal entry not found.');
+      await logErrorWithCode(err?.errorID ?? ERROR_IDS.JOURNAL_NOT_FOUND, err);
+      setError(await getErrorMessage(err?.errorID ?? ERROR_IDS.JOURNAL_NOT_FOUND));
     } finally {
       setLoading(false);
     }

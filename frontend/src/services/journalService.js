@@ -1,5 +1,6 @@
 import { supabase } from '../supabaseClient';
 import { fetchFromTable, insertRecord, uploadFile } from '../supabaseUtils';
+import { createAppError, ERROR_IDS, logErrorWithCode } from './errorMessages';
 
 /**
  * Create a new journal entry with its lines.
@@ -15,7 +16,7 @@ entryType: parseInt(entryType, 10) || null,
   });
 
   if (headerError || !header) {
-    throw headerError || new Error('Failed to create journal entry.');
+    throw createAppError(ERROR_IDS.JOURNAL_HEADER_FAILED, headerError);
   }
 
   const entryId = header.journalEntryID;
@@ -32,7 +33,7 @@ entryType: parseInt(entryType, 10) || null,
     .insert(lineRecords);
 
   if (linesError) {
-    throw linesError;
+    throw createAppError(ERROR_IDS.JOURNAL_LINES_INSERT_FAILED, linesError);
   }
 
   return header;
@@ -65,7 +66,7 @@ export async function getJournalEntryWithLines(entryId) {
     single: true,
   });
 
-  if (entryError || !entry) throw entryError || new Error('Journal entry not found.');
+  if (entryError || !entry) throw createAppError(ERROR_IDS.JOURNAL_NOT_FOUND, entryError);
 
   const { data: lines, error: linesError } = await fetchFromTable('journalLine', {
     filters: { journalEntryID: entryId },
@@ -92,10 +93,10 @@ export async function approveJournalEntry(entryId, approvedBy) {
     .eq('journalEntryID', entryId)
     .select();
 
-  if (error) throw error;
+  if (error) throw createAppError(ERROR_IDS.APPROVE_JOURNAL_FAILED, error);
 
   const approvedEntry = data?.[0];
-  if (!approvedEntry) throw new Error('Failed to approve journal entry.');
+  if (!approvedEntry) throw createAppError(ERROR_IDS.APPROVE_JOURNAL_FAILED);
 
   // Fetch the journal lines
   const { data: lines, error: linesError } = await supabase
@@ -103,9 +104,9 @@ export async function approveJournalEntry(entryId, approvedBy) {
     .select('accountID, debit, credit')
     .eq('journalEntryID', entryId);
 
-  if (linesError) throw linesError;
+  if (linesError) throw createAppError(ERROR_IDS.APPROVE_JOURNAL_FAILED, linesError);
 
-  if (!lines || lines.length === 0) throw new Error('No lines found for journal entry.');
+  if (!lines || lines.length === 0) throw createAppError(ERROR_IDS.NO_JOURNAL_LINES);
 
   // Post to ledger
   const ledgerRecords = lines.map((line) => ({
@@ -121,7 +122,7 @@ export async function approveJournalEntry(entryId, approvedBy) {
     .from('Ledger')
     .insert(ledgerRecords);
 
-  if (ledgerError) throw ledgerError;
+  if (ledgerError) throw createAppError(ERROR_IDS.LEDGER_POST_FAILED, ledgerError);
 
   return approvedEntry;
 }
@@ -131,7 +132,7 @@ export async function approveJournalEntry(entryId, approvedBy) {
 
 export async function rejectJournalEntry(entryId, rejectReason) {
   if (!rejectReason || !rejectReason.trim()) {
-    throw new Error('A comment is required when rejecting a journal entry.');
+    throw createAppError(ERROR_IDS.REJECT_REASON_REQUIRED);
   }
 
   const { data, error } = await supabase
@@ -143,7 +144,7 @@ export async function rejectJournalEntry(entryId, rejectReason) {
     .eq('journalEntryID', entryId)
     .select();
 
-  if (error) throw error;
+  if (error) throw createAppError(ERROR_IDS.REJECT_JOURNAL_FAILED, error);
   return data?.[0];
 }
 
@@ -155,7 +156,7 @@ export async function uploadJournalAttachment(entryId, file) {
 
   const { data, error } = await uploadFile('attachments', path, file);
 
-  if (error) throw error;
+  if (error) throw createAppError(ERROR_IDS.ATTACHMENT_UPLOAD_FAILED, error);
 
   const { error: refError } = await insertRecord('journalAttachment', {
     journalEntryID: entryId,
@@ -165,7 +166,8 @@ export async function uploadJournalAttachment(entryId, file) {
   });
 
   if (refError) {
-    console.error('Failed to save attachment reference:', refError);
+    void logErrorWithCode(ERROR_IDS.ATTACHMENT_REF_FAILED, refError);
+    throw createAppError(ERROR_IDS.ATTACHMENT_REF_FAILED, refError);
   }
 
   return { path };
@@ -199,7 +201,7 @@ export async function getEnrichedJournalEntries(status) {
     .in('journalEntryID', entryIds);
 
   if (linesError) {
-    console.error('Failed to fetch journal lines:', linesError);
+    void logErrorWithCode(ERROR_IDS.LOAD_JOURNAL_ENTRIES_FAILED, linesError);
     return entries;
   }
 

@@ -9,6 +9,7 @@ import {
   filterByDateRange,
 } from '../services/journalService';
 import { HelpTooltip } from '../components/HelpTooltip';
+import { getErrorMessage, resolveThrownErrorMessage, logErrorWithCode, ERROR_IDS } from '../services/errorMessages';
 import '../global.css';
 
 function JournalEntries() {
@@ -41,8 +42,8 @@ function JournalEntries() {
       const data = await getEnrichedJournalEntries(statusFilter);
       setEntries(data);
     } catch (err) {
-      console.error('Failed to load entries:', err);
-      setErrors([`Failed to load journal entries: ${err.message}`]);
+      await logErrorWithCode(ERROR_IDS.LOAD_JOURNAL_ENTRIES_FAILED, err);
+      setErrors([await resolveThrownErrorMessage(err, ERROR_IDS.LOAD_JOURNAL_ENTRIES_FAILED)]);
     } finally {
       setLoading(false);
     }
@@ -54,13 +55,14 @@ function JournalEntries() {
       alert('Journal entry approved.');
       loadEntries();
     } catch (err) {
-      alert(`Error approving: ${err.message}`);
+      await logErrorWithCode(err?.errorID ?? ERROR_IDS.APPROVE_JOURNAL_FAILED, err);
+      alert(await resolveThrownErrorMessage(err, ERROR_IDS.APPROVE_JOURNAL_FAILED));
     }
   };
 
   const handleReject = async (entryId) => {
     if (!rejectReason.trim()) {
-      alert('You must enter a reason for rejection.');
+      alert(await getErrorMessage(ERROR_IDS.REJECT_REASON_REQUIRED));
       return;
     }
     try {
@@ -70,7 +72,8 @@ function JournalEntries() {
       setRejectReason('');
       loadEntries();
     } catch (err) {
-      alert(`Error rejecting: ${err.message}`);
+      await logErrorWithCode(err?.errorID ?? ERROR_IDS.REJECT_JOURNAL_FAILED, err);
+      alert(await resolveThrownErrorMessage(err, ERROR_IDS.REJECT_JOURNAL_FAILED));
     }
   };
 
