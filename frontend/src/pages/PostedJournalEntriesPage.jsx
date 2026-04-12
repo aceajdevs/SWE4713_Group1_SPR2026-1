@@ -1,0 +1,242 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../AuthContext';
+import {
+  getPostedJournalEntriesReport,
+  searchJournalEntries,
+  filterByDateRange,
+} from '../services/journalService';
+import {
+  validateDebitsEqualCredits,
+  validateDebitBeforeCredit,
+  validateHasDebitAndCredit,
+  validateLineAmounts,
+} from '../utils/journalValidation';
+import { HelpTooltip } from '../components/HelpTooltip';
+import '../global.css';
+
+function summarizeAccountingRules(lines) {
+  if (!lines?.length) {
+    return { compliant: false, labels: ['No lines'] };
+  }
+  const checks = [
+    { name: 'Debits & credits present', ...validateHasDebitAndCredit(lines) },
+    { name: 'Line amounts valid', ...validateLineAmounts(lines) },
+    { name: 'Debit-before-credit order', ...validateDebitBeforeCredit(lines) },
+    { name: 'Debits equal credits', ...validateDebitsEqualCredits(lines) },
+  ];
+  const failed = checks.filter((c) => !c.valid).map((c) => c.name);
+  return {
+    compliant: failed.length === 0,
+    labels: failed.length === 0 ? ['Double-entry rules satisfied'] : failed,
+  };
+}
+
+function PostedJournalEntriesPage() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const [entries, setEntries] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+
+  const canView =
+    user?.role === 'manager' ||
+    user?.role === 'accountant' ||
+    user?.role === 'administrator';
+
+  const ledgerBasePath = '/admin/ledger';
+
+  useEffect(() => {
+    if (!canView) return;
+
+    let cancelled = false;
+
+    const load = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await getPostedJournalEntriesReport();
+        if (!cancelled) setEntries(data);
+      } catch (err) {
+        console.error(err);
+        if (!cancelled) setError(err.message || 'Failed to load posted journal entries.');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [canView]);
+
+  const displayed = useMemo(() => {
+    let list = entries;
+    if (searchQuery.trim()) list = searchJournalEntries(list, searchQuery);
+    if (startDate || endDate) list = filterByDateRange(list, startDate, endDate);
+    return list;
+  }, [entries, searchQuery, startDate, endDate]);
+
+  const formatDate = (value) => {
+    if (!value) return '—';
+    return new Date(value).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: '2-digit',
+    });
+  };
+
+  const formatMoney = (n) =>
+    `$${(Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+  if (!canView) {
+    return (
+      <p style={{ color: 'var(--bff-error)', padding: '1rem' }}>
+        You do not have permission to view posted journal entries.
+      </p>
+    );
+  }
+
+  return (
+    <div className="container" style={{ maxWidth: 1200, margin: '0 auto', padding: '1rem 1.25rem' }}>
+      <div className="header-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
+        <h1 style={{ fontSize: '1.35rem' }}>Posted journal entries</h1>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <HelpTooltip text="Open the full journal workflow (pending, approve, reject).">
+            <button type="button" className="button-secondary" onClick={() => navigate('/journal-entries')}>
+              All journal entries
+            </button>
+          </HelpTooltip>
+        </div>
+      </div>
+
+      <p style={{ marginBottom: 16, color: 'var(--bff-dark-text)', maxWidth: 720 }}>
+        These entries were approved by a manager and written to the general ledger. Data is loaded from
+        Supabase using your local{' '}
+        <code style={{ fontSize: 13 }}>.env.local</code> values (<code style={{ fontSize: 13 }}>VITE_SUPABASE_URL</code>,{' '}
+        <code style={{ fontSize: 13 }}>VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY</code>). The rule summary reflects the same
+        double-entry checks used when entries are created.
+      </p>
+
+      {error && (
+        <p style={{ color: 'var(--bff-error)', marginBottom: 12 }} role="alert">
+          {error}
+        </p>
+      )}
+
+      <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+        <div>
+          <label style={{ display: 'block', fontSize: 12 }}>From</label>
+          <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="input-field" />
+        </div>
+        <div>
+          <label style={{ display: 'block', fontSize: 12 }}>To</label>
+          <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="input-field" />
+        </div>
+        <div style={{ flex: '1 1 200px', minWidth: 180 }}>
+          <label style={{ display: 'block', fontSize: 12 }}>Search</label>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Account, amount, or date"
+            className="input-field"
+            style={{ width: '100%' }}
+          />
+        </div>
+      </div>
+
+      {loading ? (
+        <p>Loading posted entries…</p>
+      ) : displayed.length === 0 ? (
+        <p>No posted journal entries match your filters.</p>
+      ) : (
+        <table className="user-report-table">
+          <thead>
+            <tr>
+              <th>PR</th>
+              <th>Created</th>
+              <th>Posted</th>
+              <th>Type</th>
+              <th>Accounts</th>
+              <th>Amount</th>
+              <th>Rules</th>
+              <th>Ledger</th>
+            </tr>
+          </thead>
+          <tbody>
+            {displayed.map((entry) => {
+              const totalDebit = (entry.lines || []).reduce((s, l) => s + (Number(l.debit) || 0), 0);
+              const rules = summarizeAccountingRules(entry.lines || []);
+              return (
+                <tr key={entry.journalEntryID}>
+                  <td>
+                    <button
+                      type="button"
+                      className="link"
+                      style={{ background: 'none', border: 'none', padding: 0, font: 'inherit' }}
+                      onClick={() => navigate(`/journal-entry/${entry.journalEntryID}`)}
+                    >
+                      {entry.journalEntryID}
+                    </button>
+                  </td>
+                  <td>{formatDate(entry.createdAt)}</td>
+                  <td>{formatDate(entry.postedAt)}</td>
+                  <td>{entry.entryType ?? '—'}</td>
+                  <td>
+                    {(entry.lines || []).length > 0 ? (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                        {(entry.lines || [])
+                          .filter((l) => l.accountID && l.accountName && l.accountNumber)
+                          .filter((line, index, all) => all.findIndex((x) => x.accountID === line.accountID) === index)
+                          .map((line) => (
+                            <button
+                              key={`${entry.journalEntryID}-${line.accountID}`}
+                              type="button"
+                              className="link"
+                              style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+                              onClick={() => navigate(`${ledgerBasePath}/${line.accountNumber}`)}
+                              title="Open account ledger"
+                            >
+                              {line.accountNumber} — {line.accountName}
+                            </button>
+                          ))}
+                      </div>
+                    ) : (
+                      '—'
+                    )}
+                  </td>
+                  <td>{formatMoney(totalDebit)}</td>
+                  <td>
+                    <span style={{ color: rules.compliant ? 'green' : 'var(--bff-error)', fontWeight: 600 }}>
+                      {rules.compliant ? 'OK' : 'Review'}
+                    </span>
+                    <span style={{ display: 'block', fontSize: 12, fontWeight: 400, marginTop: 4 }}>
+                      {rules.labels.join(' · ')}
+                    </span>
+                  </td>
+                  <td>
+                    <button
+                      type="button"
+                      className="button-primary"
+                      onClick={() => navigate(`/admin/journal-entry/${entry.journalEntryID}`)}
+                    >
+                      GL view
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
+}
+
+export default PostedJournalEntriesPage;

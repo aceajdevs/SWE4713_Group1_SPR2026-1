@@ -270,3 +270,36 @@ export function filterByDateRange(entries, startDate, endDate) {
     return true;
   });
 }
+
+/**
+ * Approved (posted) journal entries with lines, merged with earliest ledger post date per entry.
+ * Uses the Supabase client configured from VITE_* env (e.g. .env.local).
+ */
+export async function getPostedJournalEntriesReport() {
+  const entries = await getEnrichedJournalEntries('approved');
+  if (!entries.length) return [];
+
+  const ids = entries.map((e) => e.journalEntryID);
+  const { data: ledgerRows, error } = await supabase
+    .from('Ledger')
+    .select('journalEntryID, entryDate')
+    .in('journalEntryID', ids)
+    .order('entryDate', { ascending: true });
+
+  if (error) {
+    console.error('Ledger fetch for posted journal report:', error);
+    return entries.map((e) => ({ ...e, postedAt: e.approvedAt ?? null }));
+  }
+
+  const firstDateByJe = {};
+  for (const row of ledgerRows || []) {
+    if (firstDateByJe[row.journalEntryID] == null) {
+      firstDateByJe[row.journalEntryID] = row.entryDate;
+    }
+  }
+
+  return entries.map((e) => ({
+    ...e,
+    postedAt: firstDateByJe[e.journalEntryID] ?? e.approvedAt ?? null,
+  }));
+}
