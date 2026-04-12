@@ -4,6 +4,7 @@ import { useAuth } from '../AuthContext';
 import { getJournalEntryWithLines, getJournalAttachments } from '../services/journalService';
 import { fetchFromTable } from '../supabaseUtils';
 import { HelpTooltip } from '../components/HelpTooltip';
+import { getJournalEntryTypeLabel } from '../utils/journalEntryTypes';
 import '../global.css';
 
 function JournalEntryDetail() {
@@ -81,11 +82,6 @@ function JournalEntryDetail() {
     return '#c58b00';
   };
 
-  const entryTypeLabel = (val) => {
-    const map = { 1: 'Regular', 2: 'Adjusting', 3: 'Closing' };
-    return map[val] || val || 'N/A';
-  };
-
   if (loading) return <p>Loading journal entry...</p>;
   if (error) return <p style={{ color: 'red' }}>{error}</p>;
   if (!entry) return <p>Entry not found.</p>;
@@ -105,7 +101,7 @@ function JournalEntryDetail() {
       </div>
 
       <div style={{ marginBottom: '24px', lineHeight: '1.8' }}>
-        <p><strong>Entry Type:</strong> {entryTypeLabel(entry.entryType)}</p>
+        <p><strong>Entry Type:</strong> {getJournalEntryTypeLabel(entry.entryType, { emptyLabel: 'N/A' })}</p>
         <p><strong>Created:</strong> {formatDate(entry.createdAt)}</p>
         <p><strong>Created By:</strong> User {entry.createdBy}</p>
         <p>

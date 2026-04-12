@@ -49,7 +49,7 @@
 .nav-menu {
   display: flex;
   list-style: none;
-  gap: 1vw;
+  gap: clamp(12px, 2vw, 28px);
   margin: 0, 1vw;
   padding: 0;
   align-items: center;
@@ -62,7 +62,7 @@
 .nav-link {
   color: white;
   text-decoration: none;
-  padding: 18px 1px;
+  padding: 18px clamp(10px, 1.2vw, 22px);
   display: block;
   font-size: 16px;
   font-weight: 500;

@@ -130,7 +130,7 @@ function Navbar() {
                 className="nav-link"
                 onClick={() => handleNavigation('/posted-journal-entries')}
               >
-                Posted journals
+                Posted Journals
               </a>
             </li>
           )}

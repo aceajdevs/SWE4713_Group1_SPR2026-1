@@ -6,31 +6,10 @@ import {
   searchJournalEntries,
   filterByDateRange,
 } from '../services/journalService';
-import {
-  validateDebitsEqualCredits,
-  validateDebitBeforeCredit,
-  validateHasDebitAndCredit,
-  validateLineAmounts,
-} from '../utils/journalValidation';
 import { HelpTooltip } from '../components/HelpTooltip';
+import { JournalStackedAccountsCell } from '../components/JournalStackedAccountsCell';
+import { getJournalEntryTypeLabel } from '../utils/journalEntryTypes';
 import '../global.css';
-
-function summarizeAccountingRules(lines) {
-  if (!lines?.length) {
-    return { compliant: false, labels: ['No lines'] };
-  }
-  const checks = [
-    { name: 'Debits & credits present', ...validateHasDebitAndCredit(lines) },
-    { name: 'Line amounts valid', ...validateLineAmounts(lines) },
-    { name: 'Debit-before-credit order', ...validateDebitBeforeCredit(lines) },
-    { name: 'Debits equal credits', ...validateDebitsEqualCredits(lines) },
-  ];
-  const failed = checks.filter((c) => !c.valid).map((c) => c.name);
-  return {
-    compliant: failed.length === 0,
-    labels: failed.length === 0 ? ['Double-entry rules satisfied'] : failed,
-  };
-}
 
 function PostedJournalEntriesPage() {
   const navigate = useNavigate();
@@ -63,7 +42,10 @@ function PostedJournalEntriesPage() {
         if (!cancelled) setEntries(data);
       } catch (err) {
         console.error(err);
-        if (!cancelled) setError(err.message || 'Failed to load posted journal entries.');
+        if (!cancelled) {
+          const msg = typeof err?.message === 'string' ? err.message.trim() : '';
+          setError(msg || null);
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -95,11 +77,7 @@ function PostedJournalEntriesPage() {
     `$${(Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   if (!canView) {
-    return (
-      <p style={{ color: 'var(--bff-error)', padding: '1rem' }}>
-        You do not have permission to view posted journal entries.
-      </p>
-    );
+    return null;
   }
 
   return (
@@ -119,15 +97,14 @@ function PostedJournalEntriesPage() {
         These entries were approved by a manager and written to the general ledger. Data is loaded from
         Supabase using your local{' '}
         <code style={{ fontSize: 13 }}>.env.local</code> values (<code style={{ fontSize: 13 }}>VITE_SUPABASE_URL</code>,{' '}
-        <code style={{ fontSize: 13 }}>VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY</code>). The rule summary reflects the same
-        double-entry checks used when entries are created.
+        <code style={{ fontSize: 13 }}>VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY</code>).
       </p>
 
-      {error && (
+      {error ? (
         <p style={{ color: 'var(--bff-error)', marginBottom: 12 }} role="alert">
           {error}
         </p>
-      )}
+      ) : null}
 
       <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap', alignItems: 'flex-end' }}>
         <div>
@@ -152,11 +129,13 @@ function PostedJournalEntriesPage() {
       </div>
 
       {loading ? (
-        <p>Loading posted entries…</p>
+        <p aria-busy="true" aria-live="polite">
+          Loading…
+        </p>
       ) : displayed.length === 0 ? (
-        <p>No posted journal entries match your filters.</p>
+        <p role="status">No entries match the current filters.</p>
       ) : (
-        <table className="user-report-table">
+        <table className="user-report-table posted-journal-entries-table">
           <thead>
             <tr>
               <th>PR</th>
@@ -164,15 +143,13 @@ function PostedJournalEntriesPage() {
               <th>Posted</th>
               <th>Type</th>
               <th>Accounts</th>
-              <th>Amount</th>
-              <th>Rules</th>
+              <th style={{ textAlign: 'right' }}>Amount</th>
               <th>Ledger</th>
             </tr>
           </thead>
           <tbody>
             {displayed.map((entry) => {
               const totalDebit = (entry.lines || []).reduce((s, l) => s + (Number(l.debit) || 0), 0);
-              const rules = summarizeAccountingRules(entry.lines || []);
               return (
                 <tr key={entry.journalEntryID}>
                   <td>
@@ -187,39 +164,14 @@ function PostedJournalEntriesPage() {
                   </td>
                   <td>{formatDate(entry.createdAt)}</td>
                   <td>{formatDate(entry.postedAt)}</td>
-                  <td>{entry.entryType ?? '—'}</td>
-                  <td>
-                    {(entry.lines || []).length > 0 ? (
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                        {(entry.lines || [])
-                          .filter((l) => l.accountID && l.accountName && l.accountNumber)
-                          .filter((line, index, all) => all.findIndex((x) => x.accountID === line.accountID) === index)
-                          .map((line) => (
-                            <button
-                              key={`${entry.journalEntryID}-${line.accountID}`}
-                              type="button"
-                              className="link"
-                              style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
-                              onClick={() => navigate(`${ledgerBasePath}/${line.accountNumber}`)}
-                              title="Open account ledger"
-                            >
-                              {line.accountNumber} — {line.accountName}
-                            </button>
-                          ))}
-                      </div>
-                    ) : (
-                      '—'
-                    )}
-                  </td>
-                  <td>{formatMoney(totalDebit)}</td>
-                  <td>
-                    <span style={{ color: rules.compliant ? 'green' : 'var(--bff-error)', fontWeight: 600 }}>
-                      {rules.compliant ? 'OK' : 'Review'}
-                    </span>
-                    <span style={{ display: 'block', fontSize: 12, fontWeight: 400, marginTop: 4 }}>
-                      {rules.labels.join(' · ')}
-                    </span>
-                  </td>
+                  <td>{getJournalEntryTypeLabel(entry.entryType)}</td>
+                  <JournalStackedAccountsCell
+                    lines={entry.lines}
+                    journalEntryId={entry.journalEntryID}
+                    navigate={navigate}
+                    ledgerBasePath={ledgerBasePath}
+                  />
+                  <td style={{ textAlign: 'right' }}>{formatMoney(totalDebit)}</td>
                   <td>
                     <button
                       type="button"
