@@ -189,4 +189,10 @@ table button {
   border-radius: 6px;
   cursor: pointer;
   transition: background-color 0.3s ease;
-}   
+}
+
+/* Posted journal entries report: wider cell padding */
+table.posted-journal-entries-table th,
+table.posted-journal-entries-table td {
+  padding: 12px 20px;
+}

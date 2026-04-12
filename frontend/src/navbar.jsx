@@ -22,6 +22,8 @@ function Navbar() {
 
   const canAccessChartOfAccounts = ['administrator', 'manager', 'accountant'].includes(user?.role);
   const canAccessJournalEntries = user?.role === 'manager' || user?.role === 'accountant';
+  const canViewPostedJournalReport =
+    user?.role === 'manager' || user?.role === 'accountant' || user?.role === 'administrator';
   const isAdmin = user?.role === 'administrator';
 
   const handleDashboardNavigation = () => {
@@ -118,6 +120,17 @@ function Navbar() {
                 onClick={() => handleNavigation('/journal-entries')}
               >
                 Journal Entries
+              </a>
+            </li>
+          )}
+          {canViewPostedJournalReport && (
+            <li className="nav-item">
+              <a
+                href="#/posted-journal-entries"
+                className="nav-link"
+                onClick={() => handleNavigation('/posted-journal-entries')}
+              >
+                Posted Journals
               </a>
             </li>
           )}

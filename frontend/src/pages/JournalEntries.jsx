@@ -8,6 +8,8 @@ import {
   searchJournalEntries,
   filterByDateRange,
 } from '../services/journalService';
+import { getJournalEntryTypeLabel } from '../utils/journalEntryTypes';
+import { JournalStackedAccountsCell } from '../components/JournalStackedAccountsCell';
 import { HelpTooltip } from '../components/HelpTooltip';
 import { getErrorMessage, resolveThrownErrorMessage, logErrorWithCode, ERROR_IDS } from '../services/errorMessages';
 import '../global.css';
@@ -213,29 +215,14 @@ function JournalEntries() {
                     </button>
                   </td>
                   <td>{formatDate(entry.createdAt)}</td>
-                  <td>{entry.entryType || '-'}</td>
-                  <td>
-                    {(entry.lines || []).length > 0 ? (
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                        {(entry.lines || [])
-                          .filter((l) => l.accountID && l.accountName && l.accountNumber)
-                          .filter((line, index, all) => all.findIndex((x) => x.accountID === line.accountID) === index)
-                          .map((line) => (
-                            <button
-                              key={`${entry.journalEntryID}-${line.accountID}`}
-                              type="button"
-                              onClick={() => navigate(`${ledgerBasePath}/${line.accountNumber}`)}
-                              style={{ background: 'none', border: 'none', color: '#0066cc', cursor: 'pointer', textDecoration: 'underline', padding: 0 }}
-                              title="Open account ledger"
-                            >
-                              {line.accountNumber} - {line.accountName}
-                            </button>
-                          ))}
-                      </div>
-                    ) : (
-                      '-'
-                    )}
-                  </td>
+                  <td>{getJournalEntryTypeLabel(entry.entryType, { emptyLabel: '-' })}</td>
+                  <JournalStackedAccountsCell
+                    lines={entry.lines}
+                    journalEntryId={entry.journalEntryID}
+                    navigate={navigate}
+                    ledgerBasePath={ledgerBasePath}
+                    emptyLabel="-"
+                  />
                   <td>${totalDebit.toFixed(2)}</td>
                   <td style={{ color: statusColor(entry.status), fontWeight: 'bold' }}>
                     {entry.status}
