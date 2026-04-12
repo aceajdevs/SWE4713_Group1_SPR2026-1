@@ -511,7 +511,8 @@ function ChartOfAccounts() {
                   <td onClick={() => navigate(`/admin/ledger/${account.accountNumber}`)}>
                     <span style={{ color: '#007bff', textDecoration: 'underline' }}>{account.accountNumber}</span>
                   </td>
-                  <td onClick={() => navigate(`/admin/ledger/${account.accountNumber}`)}>{account.accountName}</td>
+                  <td onClick={() => navigate(`/admin/ledger/${account.accountNumber}`)}>
+                  <span style={{ color: '#007bff', textDecoration: 'underline' }}>{account.accountName}</span></td>
                   <td>{account.description || 'N/A'}</td>
                   <td>{account.subType}</td>
                   <td>{account.normalSide}</td>
