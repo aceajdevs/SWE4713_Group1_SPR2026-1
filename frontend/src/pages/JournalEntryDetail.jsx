@@ -131,8 +131,8 @@ function JournalEntryDetail() {
           <tr>
             <th>#</th>
             <th>Account</th>
-            <th>Debit</th>
-            <th>Credit</th>
+            <th className='money'>Debit</th>
+            <th className='money'>Credit</th>
           </tr>
         </thead>
         <tbody>
@@ -154,8 +154,8 @@ function JournalEntryDetail() {
                     `Account ID: ${line.accountID}`
                   )}
                 </td>
-                <td>{Number(line.debit) > 0 ? formatCurrency(line.debit) : '-'}</td>
-                <td>{Number(line.credit) > 0 ? formatCurrency(line.credit) : '-'}</td>
+                <td className='money'>{Number(line.debit) > 0 ? formatCurrency(line.debit) : '-'}</td>
+                <td className='money'>{Number(line.credit) > 0 ? formatCurrency(line.credit) : '-'}</td>
               </tr>
             );
           })}
@@ -163,8 +163,8 @@ function JournalEntryDetail() {
         <tfoot>
           <tr style={{ fontWeight: 'bold', borderTop: '2px solid #333' }}>
             <td colSpan={2}>Totals</td>
-            <td>{formatCurrency(totalDebits)}</td>
-            <td>{formatCurrency(totalCredits)}</td>
+            <td className='money'>{formatCurrency(totalDebits)}</td>
+            <td className='money'>{formatCurrency(totalCredits)}</td>
           </tr>
         </tfoot>
       </table>

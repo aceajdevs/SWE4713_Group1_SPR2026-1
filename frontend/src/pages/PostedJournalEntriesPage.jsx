@@ -96,7 +96,7 @@ function PostedJournalEntriesPage() {
 
   if (!canView) {
     return (
-      <p style={{ color: 'var(--bff-error)', padding: '1rem' }}>
+      <p style={{ color: 'var(--bff-red)', padding: '1rem' }}>
         You do not have permission to view posted journal entries.
       </p>
     );
@@ -105,11 +105,11 @@ function PostedJournalEntriesPage() {
   return (
     <div className="container" style={{ maxWidth: 1200, margin: '0 auto', padding: '1rem 1.25rem' }}>
       <div className="header-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
-        <h1 style={{ fontSize: '1.35rem' }}>Posted journal entries</h1>
+        <h1 style={{ fontSize: '1.35rem' }}>Posted Journal Entries</h1>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <HelpTooltip text="Open the full journal workflow (pending, approve, reject).">
-            <button type="button" className="button-secondary" onClick={() => navigate('/journal-entries')}>
-              All journal entries
+            <button type="button" className="button-primary" onClick={() => navigate('/journal-entries')}>
+              All Journal Entries
             </button>
           </HelpTooltip>
         </div>
@@ -124,30 +124,33 @@ function PostedJournalEntriesPage() {
       </p>
 
       {error && (
-        <p style={{ color: 'var(--bff-error)', marginBottom: 12 }} role="alert">
+        <p style={{ color: 'var(--bff-red)', marginBottom: 12 }} role="alert">
           {error}
         </p>
       )}
 
       <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap', alignItems: 'flex-end' }}>
         <div>
-          <label style={{ display: 'block', fontSize: 12 }}>From</label>
-          <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="input-field" />
+          <h5 className='h5'>From</h5>
+          <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="input" />
         </div>
         <div>
-          <label style={{ display: 'block', fontSize: 12 }}>To</label>
-          <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="input-field" />
+          <h5 className='h5'>To</h5>
+          <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="input" />
         </div>
-        <div style={{ flex: '1 1 200px', minWidth: 180 }}>
-          <label style={{ display: 'block', fontSize: 12 }}>Search</label>
+        <div style={{ flex: '1 1 200px', minWidth: 180}}>
+          <h5 className='h5'>Search</h5>
+          <div className="clear-input-container" role="group">
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Account, amount, or date"
-            className="input-field"
+            className="input"
             style={{ width: '100%' }}
           />
+          <button type="button" className="button-clear" onClick={() => setSearchQuery('')} aria-label="Clear search input">X</button>
+          </div>
         </div>
       </div>
 
@@ -164,7 +167,7 @@ function PostedJournalEntriesPage() {
               <th>Posted</th>
               <th>Type</th>
               <th>Accounts</th>
-              <th>Amount</th>
+              <th className='money'>Amount</th>
               <th>Rules</th>
               <th>Ledger</th>
             </tr>
@@ -211,9 +214,9 @@ function PostedJournalEntriesPage() {
                       '—'
                     )}
                   </td>
-                  <td>{formatMoney(totalDebit)}</td>
+                  <td className='money'>{formatMoney(totalDebit)}</td>
                   <td>
-                    <span style={{ color: rules.compliant ? 'green' : 'var(--bff-error)', fontWeight: 600 }}>
+                    <span style={{ color: rules.compliant ? 'var(--bff-green)' : 'var(--bff-red)', fontWeight: 600 }}>
                       {rules.compliant ? 'OK' : 'Review'}
                     </span>
                     <span style={{ display: 'block', fontSize: 12, fontWeight: 400, marginTop: 4 }}>

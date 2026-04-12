@@ -93,13 +93,13 @@ function JournalEntries() {
   };
 
   const statusColor = (status) => {
-    if (status === 'approved') return 'green';
-    if (status === 'rejected') return 'red';
-    return '#c58b00';
+    if (status === 'approved') return 'var(--bff-green)';
+    if (status === 'rejected') return 'var(--bff-red)';
+    return 'var(--bff-light-primary)';
   };
 
   if (!canView) {
-    return <p style={{ color: 'red' }}>You do not have permission to view journal entries.</p>;
+    return <p style={{ color: 'var(--bff-red)' }}>You do not have permission to view journal entries.</p>;
   }
 
   return (
@@ -109,12 +109,12 @@ function JournalEntries() {
       {errors.length > 0 && (
         <div style={{ marginBottom: '16px' }}>
           {errors.map((err, i) => (
-            <p key={i} style={{ color: 'red' }}>{err}</p>
+            <p key={i} style={{ color: 'var(--bff-red)' }}>{err}</p>
           ))}
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '16px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '16px', alignItems: 'flex-end' }}>
         {(isAccountant || isManager) && (
           <HelpTooltip text="Create a new journal entry with debits and credits.">
             <button onClick={() => navigate('/journal-entry/new')} className="button-primary">
@@ -122,14 +122,32 @@ function JournalEntries() {
             </button>
           </HelpTooltip>
         )}
+        <div>
+          <h5 className='h5'>Search:</h5>
+          <div className="clear-input-container" role="group">
+            <div>
+              <HelpTooltip text="Search by account name, amount, or date.">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Account name, amount, date..."
+                  className="input"
+                  style={{ width: '400px' }}
+                />
+              </HelpTooltip>
+            </div>
+          <button type="button" className="button-clear" onClick={() => setSearchQuery('')} aria-label="Clear search input">X</button>
+          </div>
+        </div>
 
         <div>
-          <label style={{ display: 'block', fontSize: '12px' }}>Status:</label>
+          <h5 className='h5'>Status:</h5>
           <HelpTooltip text="Filter entries by their approval status.">
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="input-field"
+              className="input"
             >
               <option value="">All</option>
               <option value="pending">Pending</option>
@@ -140,38 +158,25 @@ function JournalEntries() {
         </div>
 
         <div>
-          <label style={{ display: 'block', fontSize: '12px' }}>From:</label>
+          <h5 className='h5'>From:</h5>
           <HelpTooltip text="Show entries created on or after this date.">
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="input-field"
+              className="input"
             />
           </HelpTooltip>
         </div>
 
         <div>
-          <label style={{ display: 'block', fontSize: '12px' }}>To:</label>
+          <h5 className='h5'>To:</h5>
           <HelpTooltip text="Show entries created on or before this date.">
             <input
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="input-field"
-            />
-          </HelpTooltip>
-        </div>
-
-        <div>
-          <label style={{ display: 'block', fontSize: '12px' }}>Search:</label>
-          <HelpTooltip text="Search by account name, amount, or date.">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Account name, amount, or date"
-              className="input-field"
+              className="input"
             />
           </HelpTooltip>
         </div>
@@ -189,7 +194,7 @@ function JournalEntries() {
               <th>Date</th>
               <th>Entry Type</th>
               <th>Accounts</th>
-              <th>Total</th>
+              <th className='money'>Total</th>
               <th>Status</th>
               <th>Created By</th>
               {isManager && <th>Actions</th>}
@@ -233,7 +238,7 @@ function JournalEntries() {
                       '-'
                     )}
                   </td>
-                  <td>${totalDebit.toFixed(2)}</td>
+                  <td className="money">${totalDebit.toFixed(2)}</td>
                   <td style={{ color: statusColor(entry.status), fontWeight: 'bold' }}>
                     {entry.status}
                     {entry.status === 'rejected' && entry.rejectReason && (
@@ -249,8 +254,7 @@ function JournalEntries() {
                         <div style={{ display: 'flex', gap: '5px' }}>
                           <HelpTooltip text="Approve this journal entry and post it to the ledger.">
                             <button
-                            className="button-table"
-                              style={{ width: '30px', height: '30px', justifyContent: 'center', fontSize: '16px'}}
+                            className="button-table-action-approve"
                               onClick={() => handleApprove(entry.journalEntryID)}
                             >
                               ✓
@@ -263,7 +267,7 @@ function JournalEntries() {
                                 value={rejectReason}
                                 onChange={(e) => setRejectReason(e.target.value)}
                                 placeholder="Reason for rejection (required)"
-                                className="input-field"
+                                className="input"
                                 style={{ marginBottom: '4px' }}
                               />
                               <HelpTooltip text="Confirm the rejection with the reason provided.">
@@ -281,8 +285,7 @@ function JournalEntries() {
                           ) : (
                             <HelpTooltip text="Reject this entry. You must provide a reason.">
                               <button
-                                className="button-table"
-                                style={{ width: '30px', height: '30px', justifyContent: 'center', fontSize: '16px'}}
+                                className="button-table-action-reject"
                                 onClick={() => setRejectingId(entry.journalEntryID)}
                               >
                                 X

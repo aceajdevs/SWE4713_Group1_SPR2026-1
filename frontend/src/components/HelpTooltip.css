@@ -19,8 +19,8 @@
   padding: 8px 10px;
   font-size: 13px;
   line-height: 1.4;
-  color: #f9fafb;
-  background: #1f2937;
+  color: var(--bff-light-text);
+  background: var(--bff-accent);
   border-radius: 8px;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
   opacity: 0;
@@ -38,7 +38,7 @@
   left: 50%;
   margin-left: -6px;
   border: 6px solid transparent;
-  border-top-color: #1f2937;
+  border-top-color: var(--bff-accent);
 }
 
 .help-tooltip-wrap[data-visible="true"] .help-tooltip-bubble {

@@ -278,16 +278,20 @@ function CreateUserPage() {
             <main className="login-main">
                 <form className="login-form" onSubmit={handleSubmit}>
                     <h1>Create New User</h1>
-                    <p>Fill in the information below to create a new user account.</p>
-
+                    <p>Fields with asterix (*) are required.</p>
+                        <HelpTooltip text="Clear all fields in this form.">
+                          <button type="button" className="button-primary" onClick={handleClear} disabled={loading}>
+                            Clear Form
+                          </button>
+                        </HelpTooltip>
                     {error && (
-                        <div style={{ color: '#dc2626', fontSize: '14px', marginBottom: '12px', padding: '8px', background: '#fef2f2', borderRadius: '6px' }}>
+                        <div style={{ color: "var(--bff-red)", fontSize: '14px', marginBottom: '12px', padding: '8px', background: '#fef2f2', borderRadius: '6px' }}>
                             {error}
                         </div>
                     )}
 
                     {success && (
-                        <div style={{ color: '#059669', fontSize: '14px', marginBottom: '12px', padding: '8px', background: '#d1fae5', borderRadius: '6px' }}>
+                        <div style={{ color: "var(--bff-green)", fontSize: '14px', marginBottom: '12px', padding: '8px', background: '#d1fae5', borderRadius: '6px' }}>
                             {success}
                         </div>
                     )}
@@ -298,6 +302,7 @@ function CreateUserPage() {
                           text="Login email for the new user. It must not already be registered."
                           className="help-tooltip-block"
                         >
+                        <div className="clear-input-container" role="group">
                           <input
                             className={`input ${showEmailError && emailError ? 'input-error' : ''}`}
                             type="email"
@@ -308,6 +313,8 @@ function CreateUserPage() {
                             onChange={handleEmailChange}
                             required
                           />
+                          <button type="button" className="button-clear" onClick={() => setEmail('')} aria-label="Clear email input">X</button>
+                        </div>
                         </HelpTooltip>
                         {showEmailError && emailError && (
                             <div className="error-messages" role="alert">
@@ -319,6 +326,7 @@ function CreateUserPage() {
                     <div className="form-grid-2">
                         <div className="form-field">
                             <h5>First Name *</h5>
+                            <div className="clear-input-container" role="group">
                             <input
                                 className="input"
                                 type="text"
@@ -329,10 +337,13 @@ function CreateUserPage() {
                                 onChange={(e) => setFirstName(e.target.value)}
                                 required
                             />
+                            <button className="button-clear" type="button" onClick={() => setFirstName('')} aria-label="Clear first name input">X</button>
+                            </div>
                         </div>
 
                         <div className="form-field">
                             <h5>Last Name *</h5>
+                            <div className="clear-input-container" role="group">
                             <input
                                 className="input"
                                 type="text"
@@ -343,11 +354,14 @@ function CreateUserPage() {
                                 onChange={(e) => setLastName(e.target.value)}
                                 required
                             />
+                            <button className="button-clear" type="button" onClick={() => setLastName('')} aria-label="Clear last name input">X</button>
+                            </div>
                         </div>
                     </div>
 
                     <div className="form-field">
                         <h5>Address</h5>
+                        <div className="clear-input-container" role="group">
                         <input
                             className="input"
                             type="text"
@@ -357,6 +371,8 @@ function CreateUserPage() {
                             value={address}
                             onChange={(e) => setAddress(e.target.value)}
                         />
+                        <button className="button-clear" type="button" onClick={() => setAddress('')} aria-label="Clear address input">X</button>
+                        </div>
                     </div>
 
                     <div className="form-field">
@@ -380,6 +396,7 @@ function CreateUserPage() {
 
                     <div className="form-field">
                         <h5>Password *</h5>
+                        <div className="clear-input-container" role="group">
                         <input
                             className={`input ${showPasswordErrors && passwordErrors.length > 0 ? 'input-error' : ''}`}
                             type="password"
@@ -390,9 +407,11 @@ function CreateUserPage() {
                             onChange={handlePasswordChange}
                             required
                         />
+                        <button className="button-clear" type="button" onClick={() => setPassword('')} aria-label="Clear password input">X</button>
+                        </div>
                         {showPasswordErrors && passwordErrors.length > 0 && (
                             <div className="error-messages" role="alert">
-                                <ul style={{ margin: '4px 0', paddingLeft: '20px', color: '#dc2626', fontSize: '13px' }}>
+                                <ul className="error-messages-list">
                                     {passwordErrors.map((error, index) => (
                                         <li key={index}>{error}</li>
                                     ))}
@@ -424,8 +443,8 @@ function CreateUserPage() {
                     </div>
 
                     <div style={{ marginTop: '16px', marginBottom: '8px' }}>
-                        <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '8px' }}>Security Questions *</h3>
-                        <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '12px' }}>
+                        <h2 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '8px' }}>Security Questions *</h2>
+                        <p>
                             Select and answer 3 different security questions.
                         </p>
                     </div>
@@ -459,6 +478,7 @@ function CreateUserPage() {
                                 </option>
                             ))}
                         </select>
+                        <div className="clear-input-container" role="group">
                         <input
                             className="input"
                             type="text"
@@ -468,8 +488,9 @@ function CreateUserPage() {
                             value={securityAnswer1}
                             onChange={(e) => setSecurityAnswer1(e.target.value)}
                             required
-                            style={{ marginTop: '8px' }}
                         />
+                        <button type="button" className="button-clear" onClick={() => setSecurityAnswer1('')} aria-label="Clear security answer 1 input">X</button>
+                        </div>
                     </div>
 
                     <div className="form-field">
@@ -495,6 +516,7 @@ function CreateUserPage() {
                                 </option>
                             ))}
                         </select>
+                        <div className="clear-input-container" role="group">
                         <input
                             className="input"
                             type="text"
@@ -504,8 +526,9 @@ function CreateUserPage() {
                             value={securityAnswer2}
                             onChange={(e) => setSecurityAnswer2(e.target.value)}
                             required
-                            style={{ marginTop: '8px' }}
                         />
+                        <button type="button" className="button-clear" onClick={() => setSecurityAnswer2('')} aria-label="Clear security answer 2 input">X</button>
+                        </div>
                     </div>
 
                     <div className="form-field">
@@ -531,35 +554,31 @@ function CreateUserPage() {
                                 </option>
                             ))}
                         </select>
-                        <input
-                            className="input"
-                            type="text"
-                            name="securityAnswer3"
-                            placeholder="Answer"
-                            aria-label="security answer 3"
-                            value={securityAnswer3}
-                            onChange={(e) => setSecurityAnswer3(e.target.value)}
-                            required
-                            style={{ marginTop: '8px' }}
-                        />
+                        <div className="clear-input-container" role="group">
+                            <input
+                                className="input"
+                                type="text"
+                                name="securityAnswer3"
+                                placeholder="Answer"
+                                aria-label="security answer 3"
+                                value={securityAnswer3}
+                                onChange={(e) => setSecurityAnswer3(e.target.value)}
+                                required
+                            />
+                            <button type="button" className="button-clear" onClick={() => setSecurityAnswer3('')} aria-label="Clear security answer 3 input">X</button>
+                        </div>
                     </div>
-
                     <div className="button-row" role="group">
                         <HelpTooltip text="Creates a new user with the information filled in above.">
-                          <button type="submit" className="button-primary" disabled={loading}>
+                          <button type="submit" className="button-secondary" disabled={loading}>
                             {loading ? 'Creating...' : 'Create User'}
-                          </button>
-                        </HelpTooltip>
-                        <HelpTooltip text="Clear all fields in this form.">
-                          <button type="button" className="button-primary" onClick={handleClear} disabled={loading}>
-                            Clear Form
                           </button>
                         </HelpTooltip>
                         <div className="cancel-wrap">
                         <HelpTooltip text="Leave this form and return to the administrator dashboard.">
                           <button
                             type="button"
-                            className="button-secondary"
+                            className="button-primary"
                             onClick={() => navigate('/admin-dashboard')}
                             disabled={loading}
                           >

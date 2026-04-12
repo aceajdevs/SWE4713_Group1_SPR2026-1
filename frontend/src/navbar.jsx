@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import './navbar.css';
 import logo from '../assets/Images/resourceDirectory/logo.png';
+import calendarIcon from '../assets/Images/resourceDirectory/calendarIcon.png';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import { HelpTooltip } from './components/HelpTooltip';
@@ -43,108 +44,98 @@ function Navbar() {
 
   return (
     <nav className="navbar">
-      <div className="navbar-container" style={{ position: 'relative' }}>
-        <div
-          className="navbar-logo"
-          onClick={(e) => { e.preventDefault(); handleDashboardNavigation(); }}
-        >
-          <img src={logo} alt="App Logo" className="navbar-logo-img" />
-          <span className="navbar-brand">Dashboard</span>
-        </div>
-
-        <div style={{ position: 'relative' }}>
-          <a
-            ref={calendarAnchorRef}
-            href="#"
-            className="nav-link"
-            onClick={(e) => {
-              e.preventDefault();
-              setCalendarOpen(prev => !prev);
-            }}
+      <div className="navbar-container">
+        {/* Left Section */}
+        <div className="navbar-left">
+          <div
+            className="navbar-logo"
+            onClick={(e) => { e.preventDefault(); handleDashboardNavigation(); }}
           >
-            Calendar
-          </a>
-          {calendarOpen && (
-            <Calendar
-              anchorRef={calendarAnchorRef}
-              onClose={() => setCalendarOpen(false)}
-            />
-          )}
+            <img src={logo} alt="App Logo" className="navbar-logo-img" />
+            <span className="navbar-brand">Dashboard</span>
+          </div>
+
+          <div className="calendar-wrapper">
+            <a
+              ref={calendarAnchorRef}
+              href="#"
+              className="nav-link"
+              onClick={(e) => {
+                e.preventDefault();
+                setCalendarOpen(prev => !prev);
+              }}
+            >
+              <img src={calendarIcon} alt="Calendar" className="calendar-icon" />
+            </a>
+            {calendarOpen && (
+              <Calendar
+                anchorRef={calendarAnchorRef}
+                onClose={() => setCalendarOpen(false)}
+              />
+            )}
+          </div>
         </div>
 
-        <div className="hamburger" onClick={toggleMenu}>
-          <span className={isMenuOpen ? 'open' : ''}></span>
-          <span className={isMenuOpen ? 'open' : ''}></span>
-          <span className={isMenuOpen ? 'open' : ''}></span>
-        </div>
-
-        <ul className={`nav-menu ${isMenuOpen ? 'active' : ''}`}>
+        {/* Center Section */}
+        <div className={`navbar-center ${isMenuOpen ? 'active' : ''}`}>
           {isAdmin && (
             <>
-              <li className="nav-item">
-                <a
-                  href="#/admin/user-account-request"
-                  className="nav-link"
-                  onClick={() => handleNavigation('/admin/user-account-request')}
-                >
-                  User Account Requests
-                </a>
-              </li>
-              <li className="nav-item">
-                <a
-                  href="#/admin/create-user"
-                  className="nav-link"
-                  onClick={() => handleNavigation('/admin/create-user')}
-                >
-                  Create User
-                </a>
-              </li>
+              <a
+                href="#/admin/user-account-request"
+                className="nav-link center-link"
+                onClick={() => handleNavigation('/admin/user-account-request')}
+              >
+                User Account Requests
+              </a>
+              <a
+                href="#/admin/create-user"
+                className="nav-link center-link"
+                onClick={() => handleNavigation('/admin/create-user')}
+              >
+                Create User
+              </a>
             </>
           )}
           {canAccessChartOfAccounts && (
-            <li className="nav-item">
-              <a
-                href="#/admin/chart-of-accounts"
-                className="nav-link"
-                onClick={() => handleNavigation('/admin/chart-of-accounts')}
-              >
-                Chart of Accounts
-              </a>
-            </li>
+            <a
+              href="#/admin/chart-of-accounts"
+              className="nav-link center-link"
+              onClick={() => handleNavigation('/admin/chart-of-accounts')}
+            >
+              Chart of Accounts
+            </a>
           )}
           {canAccessJournalEntries && (
-            <li className="nav-item">
-              <a
-                href="#/journal-entries"
-                className="nav-link"
-                onClick={() => handleNavigation('/journal-entries')}
-              >
-                Journal Entries
-              </a>
-            </li>
+            <a
+              href="#/journal-entries"
+              className="nav-link center-link"
+              onClick={() => handleNavigation('/journal-entries')}
+            >
+              Journal Entries
+            </a>
           )}
           {canViewPostedJournalReport && (
-            <li className="nav-item">
-              <a
-                href="#/posted-journal-entries"
-                className="nav-link"
-                onClick={() => handleNavigation('/posted-journal-entries')}
-              >
-                Posted journals
-              </a>
-            </li>
-          )}
-          <li className="nav-item">
             <a
-              href="#/help"
-              className="nav-link"
-              onClick={(e) => { e.preventDefault(); handleNavigation('/help'); }}
+              href="#/posted-journal-entries"
+              className="nav-link center-link"
+              onClick={() => handleNavigation('/posted-journal-entries')}
             >
-              Help
+              Posted Journals
             </a>
-          </li>
+          )}
+        </div>
+
+        {/* Right Section */}
+        <div className="navbar-right">
+          <a
+            href="#/help"
+            className="nav-link"
+            onClick={(e) => { e.preventDefault(); handleNavigation('/help'); }}
+          >
+            Help
+          </a>
           {user && (
-            <li className="nav-item nav-user-section">
+            <div className="nav-user-section">
               <div className="nav-user-display">
                 <div className="nav-user-avatar">
                   {user.picture_path || user.picturePath ? (
@@ -173,14 +164,18 @@ function Navbar() {
                   <span className="nav-user-role">{user.role}</span>
                 </div>
               </div>
-            </li>
+            </div>
           )}
-          <li className="nav-item">
-            <HelpTooltip text="Sign out of the application and end your session.">
-              <button type="button" className="nav-logout-btn" onClick={handleLogout}>Logout</button>
-            </HelpTooltip>
-          </li>
-        </ul>
+          <HelpTooltip text="Sign out of the application and end your session.">
+            <button type="button" className="button-secondary" onClick={handleLogout}>Logout</button>
+          </HelpTooltip>
+        </div>
+
+        <div className="hamburger" onClick={toggleMenu}>
+          <span className={isMenuOpen ? 'open' : ''}></span>
+          <span className={isMenuOpen ? 'open' : ''}></span>
+          <span className={isMenuOpen ? 'open' : ''}></span>
+        </div>
       </div>
     </nav>
   );

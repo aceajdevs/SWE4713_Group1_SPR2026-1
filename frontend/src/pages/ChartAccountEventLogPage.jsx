@@ -103,7 +103,7 @@ function ChartAccountEventLogPage() {
           )}
         </div>
         <HelpTooltip text="Return to the chart of accounts list.">
-          <button type="button" className="button" onClick={() => navigate('/admin/chart-of-accounts')}>
+          <button type="button" className="button-primary" onClick={() => navigate('/admin/chart-of-accounts')}>
             Back to Chart of Accounts
           </button>
         </HelpTooltip>
@@ -111,7 +111,7 @@ function ChartAccountEventLogPage() {
 
       {loading && <p>Loading event log…</p>}
       {error && (
-        <p style={{ color: '#b91c1c' }} role="alert">
+        <p style={{ color: 'var(--bff-red)' }} role="alert">
           {error}
         </p>
       )}
