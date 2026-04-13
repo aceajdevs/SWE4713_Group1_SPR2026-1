@@ -12,6 +12,7 @@ import {
   validateHasDebitAndCredit,
   validateLineAmounts,
 } from '../utils/journalValidation';
+import { getJournalEntryTypeLabel } from '../utils/journalEntryTypes';
 import { HelpTooltip } from '../components/HelpTooltip';
 import '../global.css';
 
@@ -183,7 +184,7 @@ function PostedJournalEntriesPage() {
                   </td>
                   <td>{formatDate(entry.createdAt)}</td>
                   <td>{formatDate(entry.postedAt)}</td>
-                  <td>{entry.entryType ?? '—'}</td>
+                  <td>{getJournalEntryTypeLabel(entry.entryType, { emptyLabel: '—' })}</td>
                   <td>
                     {(entry.lines || []).length > 0 ? (
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
