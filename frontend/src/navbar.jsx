@@ -52,26 +52,6 @@ function Navbar() {
           <span className="navbar-brand">Dashboard</span>
         </div>
 
-        <div style={{ position: 'relative' }}>
-          <a
-            ref={calendarAnchorRef}
-            href="#"
-            className="nav-link"
-            onClick={(e) => {
-              e.preventDefault();
-              setCalendarOpen(prev => !prev);
-            }}
-          >
-            Calendar
-          </a>
-          {calendarOpen && (
-            <Calendar
-              anchorRef={calendarAnchorRef}
-              onClose={() => setCalendarOpen(false)}
-            />
-          )}
-        </div>
-
         <div className="hamburger" onClick={toggleMenu}>
           <span className={isMenuOpen ? 'open' : ''}></span>
           <span className={isMenuOpen ? 'open' : ''}></span>

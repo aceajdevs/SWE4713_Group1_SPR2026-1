@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useId } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import {
@@ -16,6 +16,7 @@ import '../global.css';
 function JournalEntries() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const formId = useId();
 
   const [entries, setEntries] = useState([]);
   const [statusFilter, setStatusFilter] = useState('');
@@ -29,7 +30,8 @@ function JournalEntries() {
 
   const isManager = user?.role === 'manager';
   const isAccountant = user?.role === 'accountant';
-  const canView = isManager || isAccountant || user?.role === 'administrator';
+  const isAdmin = user?.role === 'administrator';
+  const canView = isManager || isAccountant || isAdmin;
   const ledgerBasePath = '/admin/ledger';
 
   useEffect(() => {
@@ -76,7 +78,6 @@ function JournalEntries() {
     }
   };
 
-  // Apply client-side search and date filters
   let displayed = entries;
   if (searchQuery.trim()) {
     displayed = searchJournalEntries(displayed, searchQuery);
@@ -141,32 +142,61 @@ function JournalEntries() {
           </HelpTooltip>
         </div>
 
-        <div>
-          <label style={{ display: 'block', fontSize: '12px' }}>From:</label>
-          <HelpTooltip text="Show entries created on or after this date.">
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="input-field"
-            />
-          </HelpTooltip>
-        </div>
+        <fieldset
+          style={{
+            border: '1px solid var(--bff-border, #d1d5db)',
+            borderRadius: 8,
+            padding: '10px 12px',
+            margin: 0,
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '10px',
+            alignItems: 'flex-end',
+          }}
+        >
+          <legend style={{ fontSize: '12px', padding: '0 6px', color: '#374151' }}>Date range</legend>
+          <div>
+            <label style={{ display: 'block', fontSize: '12px' }} htmlFor={`${formId}-from`}>
+              From
+            </label>
+            <HelpTooltip text="Show entries created on or after this date.">
+              <input
+                id={`${formId}-from`}
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="input-field"
+              />
+            </HelpTooltip>
+          </div>
 
-        <div>
-          <label style={{ display: 'block', fontSize: '12px' }}>To:</label>
-          <HelpTooltip text="Show entries created on or before this date.">
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="input-field"
-            />
-          </HelpTooltip>
-        </div>
+          <div>
+            <label style={{ display: 'block', fontSize: '12px' }} htmlFor={`${formId}-to`}>
+              To
+            </label>
+            <HelpTooltip text="Show entries created on or before this date.">
+              <input
+                id={`${formId}-to`}
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="input-field"
+              />
+            </HelpTooltip>
+          </div>
+        </fieldset>
 
-        <div>
-          <label style={{ display: 'block', fontSize: '12px' }}>Search:</label>
+        <fieldset
+          style={{
+            border: '1px solid var(--bff-border, #d1d5db)',
+            borderRadius: 8,
+            padding: '10px 12px',
+            margin: 0,
+            minWidth: '200px',
+            flex: '1 1 220px',
+          }}
+        >
+          <legend style={{ fontSize: '12px', padding: '0 6px', color: '#374151' }}>Search</legend>
           <HelpTooltip text="Search by account name, amount, or date.">
             <input
               type="text"
@@ -174,9 +204,12 @@ function JournalEntries() {
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Account name, amount, or date"
               className="input-field"
+              style={{ width: '100%' }}
+              id={`${formId}-search`}
+              aria-label="Search journals by account name, amount, or date"
             />
           </HelpTooltip>
-        </div>
+        </fieldset>
       </div>
 
       {loading ? (

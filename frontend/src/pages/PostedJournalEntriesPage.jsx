@@ -93,13 +93,6 @@ function PostedJournalEntriesPage() {
         </div>
       </div>
 
-      <p style={{ marginBottom: 16, color: 'var(--bff-dark-text)', maxWidth: 720 }}>
-        These entries were approved by a manager and written to the general ledger. Data is loaded from
-        Supabase using your local{' '}
-        <code style={{ fontSize: 13 }}>.env.local</code> values (<code style={{ fontSize: 13 }}>VITE_SUPABASE_URL</code>,{' '}
-        <code style={{ fontSize: 13 }}>VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY</code>).
-      </p>
-
       {error ? (
         <p style={{ color: 'var(--bff-error)', marginBottom: 12 }} role="alert">
           {error}
@@ -107,16 +100,39 @@ function PostedJournalEntriesPage() {
       ) : null}
 
       <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap', alignItems: 'flex-end' }}>
-        <div>
-          <label style={{ display: 'block', fontSize: 12 }}>From</label>
-          <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="input-field" />
-        </div>
-        <div>
-          <label style={{ display: 'block', fontSize: 12 }}>To</label>
-          <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="input-field" />
-        </div>
-        <div style={{ flex: '1 1 200px', minWidth: 180 }}>
-          <label style={{ display: 'block', fontSize: 12 }}>Search</label>
+        <fieldset
+          style={{
+            border: '1px solid var(--bff-border, #d1d5db)',
+            borderRadius: 8,
+            padding: '10px 12px',
+            margin: 0,
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 10,
+            alignItems: 'flex-end',
+          }}
+        >
+          <legend style={{ fontSize: 12, padding: '0 6px', color: '#374151' }}>Date range</legend>
+          <div>
+            <label style={{ display: 'block', fontSize: 12 }}>From</label>
+            <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="input-field" />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 12 }}>To</label>
+            <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="input-field" />
+          </div>
+        </fieldset>
+        <fieldset
+          style={{
+            border: '1px solid var(--bff-border, #d1d5db)',
+            borderRadius: 8,
+            padding: '10px 12px',
+            margin: 0,
+            flex: '1 1 200px',
+            minWidth: 180,
+          }}
+        >
+          <legend style={{ fontSize: 12, padding: '0 6px', color: '#374151' }}>Search</legend>
           <input
             type="text"
             value={searchQuery}
@@ -124,8 +140,9 @@ function PostedJournalEntriesPage() {
             placeholder="Account, amount, or date"
             className="input-field"
             style={{ width: '100%' }}
+            aria-label="Search posted journals by account, amount, or date"
           />
-        </div>
+        </fieldset>
       </div>
 
       {loading ? (
