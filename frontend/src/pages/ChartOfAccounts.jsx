@@ -6,6 +6,9 @@ import { sendAdminEmail } from '../services/emailService';
 import { getEmailRecipientsByRoles } from '../services/adminService';
 import { setChartAccountActiveWithActor } from '../services/chartOfAccountsService';
 import { HelpTooltip } from '../components/HelpTooltip';
+import editIcon from '../../assets/Images/resourceDirectory/Edit.png';
+import deactivateIcon from '../../assets/Images/resourceDirectory/X.png';
+import activateIcon from '../../assets/Images/resourceDirectory/Check.png';
 import '../global.css';
 import './ChartOfAccounts.css';
 
@@ -272,9 +275,9 @@ function ChartOfAccounts() {
 
   return (
     <div className="page-chart-of-accounts">
-      <div classname="page-header">
+      <div className="page-header">
       <h1>Chart of Accounts</h1>
-
+      </div>
       <div className="header-row">
         <div className="button-group">
           {isAdmin && (
@@ -288,7 +291,7 @@ function ChartOfAccounts() {
               onClick={() => setStaffEmailModalOpen(true)}
               className="button-primary"
             >
-              Email manager/accountant/admin
+              Email User
             </button>
           </HelpTooltip>
           <HelpTooltip text="Show all accounts in a single table report.">
@@ -301,7 +304,6 @@ function ChartOfAccounts() {
             <button className="button-primary" onClick={() => navigate(dashboardPath)}>Back to Dashboard</button>
           </HelpTooltip>
         </div>
-      </div>
       {staffEmailModalOpen && (
               <div
                 className="coa-email-modal-backdrop"
@@ -326,19 +328,19 @@ function ChartOfAccounts() {
                       disabled={staffEmailSending}
                       onClick={() => setStaffEmailModalOpen(false)}
                     >
-                      ×
+                      X
                     </button>
                   </div>
                   <p className="coa-email-modal-lead">
                     Send a message about the chart of accounts using the same email integration as other admin notifications.
                   </p>
                   {staffLoadError && (
-                    <p style={{ color: '#b91c1c', fontSize: '0.9rem' }} role="alert">
+                    <p style={{ color: 'var(--bff-red)', fontSize: '0.9rem' }} role="alert">
                       Could not load recipients: {staffLoadError}
                     </p>
                   )}
                   {!staffLoadError && staffRecipients.length === 0 && (
-                    <p style={{ color: '#6b7280', fontSize: '0.9rem' }}>
+                    <p style={{ color: 'var(--bff-dark-text)', fontSize: '0.9rem' }}>
                   No active managers, accountants, or administrators with an email address were found.
                     </p>
                   )}
@@ -366,15 +368,18 @@ function ChartOfAccounts() {
                       <label htmlFor="coa-staff-subject" className="coa-email-staff-label">
                         Subject
                       </label>
-                      <input
-                        id="coa-staff-subject"
-                        type="text"
-                        className="input"
-                        value={staffEmailSubject}
-                        onChange={(e) => setStaffEmailSubject(e.target.value)}
-                        placeholder="e.g., Question about account 10000001"
-                        autoComplete="off"
-                      />
+                      <div className="clear-input-container" role="group">
+                        <input
+                          id="coa-staff-subject"
+                          type="text"
+                          className="input"
+                          value={staffEmailSubject}
+                          onChange={(e) => setStaffEmailSubject(e.target.value)}
+                          placeholder="e.g., Question about account 10000001"
+                          autoComplete="off"
+                        />
+                        <button type="button" className="button-clear" onClick={() => setStaffEmailSubject('')} aria-label="Clear subject input">X</button>
+                      </div>
                     </div>
                     <div className="coa-email-staff-row coa-email-staff-row-grow">
                       <label htmlFor="coa-staff-message" className="coa-email-staff-label">
@@ -382,7 +387,7 @@ function ChartOfAccounts() {
                       </label>
                       <textarea
                         id="coa-staff-message"
-                        className="input coa-email-staff-textarea"
+                        className="input coa-email-staff-text-area"
                         rows={4}
                         value={staffEmailMessage}
                         onChange={(e) => setStaffEmailMessage(e.target.value)}
@@ -390,18 +395,9 @@ function ChartOfAccounts() {
                       />
                     </div>
                     <div className="coa-email-staff-actions">
-                      <button
-                        type="button"
-                        className="button-primary"
-                        style={{ marginRight: '8px', marginBottom: '12px' }}
-                        disabled={staffEmailSending}
-                        onClick={() => setStaffEmailModalOpen(false)}
-                      >
-                        Cancel
-                      </button>
                       <HelpTooltip text="Send this message to the selected user’s email using the configured EmailJS admin template.">
-                        <button type="submit" className="button-primary" disabled={staffEmailSending || staffRecipients.length === 0}>
-                          {staffEmailSending ? 'Sending…' : 'Send email'}
+                        <button type="submit" className="button-secondary" disabled={staffEmailSending || staffRecipients.length === 0}>
+                          {staffEmailSending ? 'Sending…' : 'Send Email'}
                         </button>
                       </HelpTooltip>
                     </div>
@@ -418,7 +414,7 @@ function ChartOfAccounts() {
               <button type="button" className="button-clear" onClick={() => setSearchTerm('')} aria-label="Clear search input">X</button>
             </div>
             <HelpTooltip text="Apply the search box and current filters to narrow the account list.">
-              <button className="button-primary" style={{ height: '44px' }} onClick={handleSearch}>Search</button>
+              <button className="button-secondary" style={{ height: '44px' }} onClick={handleSearch}>Search</button>
             </HelpTooltip>
             <button className="button-primary" onClick={() => setFilterPopupVisible(!filterPopupVisible)}>Filters {filterPopupVisible ? '▲' : '▼'}</button>
           </div>
@@ -580,10 +576,10 @@ function ChartOfAccounts() {
               <th>Description</th>
               <th>Type</th>
               <th>Normal Side</th>
-              <th>Initial Balance</th>
-              <th>Debit</th>
-              <th>Credit</th>
-              <th>Current Balance</th>
+              <th className='money'>Initial Balance</th>
+              <th className='money'>Debit</th>
+              <th className='money'>Credit</th>
+              <th className='money'>Current Balance</th>
               <th>Added At</th>
               <th>Last Modified</th>
               <th>Status</th>
@@ -596,7 +592,7 @@ function ChartOfAccounts() {
               <tr>
                 <td
                   colSpan={isAdmin ? 14 : 13}
-                  style={{ textAlign: 'center', padding: '20px', color: '#6c757d' }}
+                  style={{ textAlign: 'center', padding: '20px', color: 'var(--bff-dark-text)' }}
                 >
                   No accounts exist for the selected filters.
                 </td>
@@ -605,21 +601,21 @@ function ChartOfAccounts() {
               filteredAccounts.map((account) => (
                 <tr
                   key={account.accountID}
+                  onClick={() => navigate(`/admin/ledger/${account.accountNumber}`)}
                   style={{ cursor: 'pointer' }}
                   title="Open account ledger"
                 >
-                  <td onClick={() => navigate(`/admin/ledger/${account.accountNumber}`)}>
-                    <span style={{ color: '#007bff', textDecoration: 'underline' }}>{account.accountNumber}</span>
+                  <td>
+                    <span style={{ color: 'var(--bff-primary)', textDecoration: 'underline' }}>{account.accountNumber}</span>
                   </td>
-                  <td onClick={() => navigate(`/admin/ledger/${account.accountNumber}`)}>
-                  <span style={{ color: '#007bff', textDecoration: 'underline' }}>{account.accountName}</span></td>
+                  <td>{account.accountName}</td>
                   <td>{account.description || 'N/A'}</td>
                   <td>{account.subType}</td>
                   <td>{account.normalSide}</td>
-                  <td>${fmt(account.initBalance)}</td>
-                  <td>{account.normalSide === 'Debit' ? `$${fmt(account.initBalance)}` : '-'}</td>
-                  <td>{account.normalSide === 'Credit' ? `$${fmt(account.initBalance)}` : '-'}</td>
-                  <td>${fmt(account.initBalance)}</td>
+                  <td className="money">${fmt(account.initBalance)}</td>
+                  <td className="money">{account.normalSide === 'Debit' ? `$${fmt(account.initBalance)}` : '-'}</td>
+                  <td className="money">{account.normalSide === 'Credit' ? `$${fmt(account.initBalance)}` : '-'}</td>
+                  <td className="money">${fmt(account.initBalance)}</td>
                   <td>{account.createdAt ? new Date(account.createdAt).toLocaleString() : 'N/A'}</td>
                   <td>{account.updatedAt ? new Date(account.updatedAt).toLocaleString() : 'N/A'}</td>
                   <td>{account.active ? 'Active' : 'Inactive'}</td>
@@ -628,10 +624,10 @@ function ChartOfAccounts() {
                       <button
                         type="button"
                         className="button-primary"
-                        style={{ padding: '4px 10px', fontSize: '13px' }}
+                        style={{ padding: '4px 10px', fontSize: '13px', }}
                         onClick={() => navigate(`/admin/chart-of-accounts/account/${account.accountID}/events`)}
                       >
-                        Events
+                        View
                       </button>
                     </HelpTooltip>
                   </td>
@@ -645,9 +641,9 @@ function ChartOfAccounts() {
                             e.stopPropagation();
                             navigate(`/admin/edit-account/${account.accountID}`);
                           }}
-                          style={{ marginRight: '5px' }}
+                          style={{ marginRight: '5px', padding: '4px 8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                         >
-                          Edit
+                          <img src={editIcon} alt="Edit" style={{ height: '20px', width: 'auto' }} />
                         </button>
                       </HelpTooltip>
                       <HelpTooltip
@@ -663,8 +659,9 @@ function ChartOfAccounts() {
                             e.stopPropagation();
                             handleDeactivate(account.accountID, account.active);
                           }}
+                          style={{ marginRight: '5px', padding: '4px 8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                         >
-                          {account.active ? 'Deactivate' : 'Activate'}
+                          {account.active ? <img src={deactivateIcon} alt="Deactivate" className="icon-deactivate" style={{ height: '20px', width: 'auto' }} /> : <img src={activateIcon} alt="Activate" className="icon-activate" style={{ height: '20px', width: 'auto'}} />}
                         </button>
                       </HelpTooltip>
                     </td>
@@ -739,7 +736,6 @@ function ChartOfAccounts() {
                           background: 'transparent',
                           border: 'none',
                           padding: 0,
-                          color: 'var(--bff-primary)',
                           textDecoration: 'underline',
                           cursor: 'pointer',
                           font: 'inherit'
@@ -753,8 +749,8 @@ function ChartOfAccounts() {
                   <tr><th>Category</th><td>{selectedAccount.type || 'N/A'}</td></tr>
                   <tr><th>Subcategory</th><td>{selectedAccount.subType || 'N/A'}</td></tr>
                   <tr><th>Normal Side</th><td>{selectedAccount.normalSide || 'N/A'}</td></tr>
-                  <tr><th>Initial Balance</th><td>${fmt(selectedAccount.initBalance)}</td></tr>
-                  <tr><th>Current Balance</th><td>${fmt(selectedAccount.initBalance)}</td></tr>
+                  <tr><th className='money'>Initial Balance</th><td className="money">${fmt(selectedAccount.initBalance)}</td></tr>
+                  <tr><th className='money'>Current Balance</th><td className="money">${fmt(selectedAccount.initBalance)}</td></tr>
                   <tr><th>Statement Type</th><td>{selectedAccount.statementType || 'N/A'}</td></tr>
                   <tr><th>Status</th><td>{selectedAccount.active ? 'Active' : 'Inactive'}</td></tr>
                   <tr><th>Added At</th><td>{selectedAccount.createdAt ? new Date(selectedAccount.createdAt).toLocaleString() : 'N/A'}</td></tr>

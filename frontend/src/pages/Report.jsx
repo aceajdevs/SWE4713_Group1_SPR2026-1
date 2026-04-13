@@ -64,14 +64,14 @@ function Report() {
         <div
           style={{
             marginTop: '18px',
-            border: '1px dashed var(--bff-border)',
+            border: '2px dashed var(--bff-primary)',
             borderRadius: '8px',
             padding: '14px',
             background: 'var(--bff-light-text)',
           }}
         >
           <strong>Report output</strong>
-          <p style={{ margin: '8px 0 0', color: 'var(--bff-border)' }}>
+          <p style={{ margin: '8px 0 0', color: 'var(--bff-dark-text)' }}>
             Generated report content will display here.
           </p>
         </div>

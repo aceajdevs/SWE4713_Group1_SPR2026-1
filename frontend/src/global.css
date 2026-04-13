@@ -1,4 +1,40 @@
-/* Global CSS - Applied to the entire application */
+/* Colors are compliant with WCAG 2.1 AA standards with a minimum contrast of 4.5:1 */
+:root {
+  /* Primary color palette - Used for the navbar and other primary elements */
+  --bff-primary: #0342B2;
+  --bff-light-primary: #0052CC;
+  --bff-dark-primary: #0432A0;
+
+  /* colors for validation states - use bff-accent for "pending" */
+  --bff-green: #017B56;
+  --bff-red: #cb4444;
+
+  /* Secondary color palette - Used for table lines and accents */
+  --bff-secondary: #B0BCED;
+  --bff-light-secondary: #DAE0FC;
+  --bff-dark-secondary: #8698DF;
+
+  /* accent color for highlighting the most important/frequently used buttons and interactive elements */
+  --bff-accent: #DB8000;
+  --bff-light-accent: #EBB38E;
+  --bff-dark-accent: #AC4F01;
+  --bff-extra-light-accent: #F4CCB4;
+
+  /* Text and background colors */
+  --bff-background: #F5F7FB; /* slightly darker white to make certain fields pop */
+  --bff-light-text: #FFFFFF;
+  --bff-dark-text: #0F172A;
+
+  /* incorrect styling test - remove when all instances are found */
+  /* --bff-error: #ff00ea; */
+  --bff-error-accent: #ff00ea;
+  --bff-error-hover: #ff00ea;
+  --bff-table-even: #ff00ea;
+  --bff-table-hover: #ff00ea;
+  --bff-border: #ff00ea;
+}
+
+/* Old Color Scheme (pre-2026-04-12) - Kept for reference:
 :root {
   --bff-primary: #0052cc;
   --bff-button-hover: #2563EB;
@@ -14,6 +50,7 @@
   --bff-error-accent: #fef2f2;
   --bff-error-hover: #fca5a5;
 }
+*/
 * {
   margin: 0;
   padding: 0;
@@ -36,7 +73,7 @@ body {
   flex-direction: column;
 }
 
-/* All Button Types */
+/* Main Button Types */
 .button-primary {
   color: var(--bff-light-text);
   background-color: var(--bff-primary);
@@ -51,11 +88,11 @@ body {
   white-space: nowrap;
 }
 .button-primary:hover {
-  background-color: var(--bff-button-hover);
+  background-color: var(--bff-dark-primary);
 }
 .button-secondary {
   color: var(--bff-light-text);
-  background-color: var(--bff-secondary);
+  background-color: var(--bff-accent);
   font-family: inherit;
   padding: 8px 16px;
   font-size: 14px;
@@ -67,31 +104,51 @@ body {
   white-space: nowrap;
 }
 .button-secondary:hover {
-  background-color: var(--bff-button-hover);
+  background-color: var(--bff-dark-accent);
 }
+.button-table-action-approve {
+  width: '30px';
+  height: '30px';
+  justify-content: 'center';
+  font-size: 14px;
+  background-color: var(--bff-green);
+}
+.button-table-action-reject {
+  width: '30px';
+  height: '30px';
+  justify-content: 'center';
+  font-size: 16px;
+  background-color: var(--bff-red);
+}
+
+
+/* clear buttons and containers */
 .button-clear {
     position: absolute;
     right: 10px;
     top: 50%;
     background: transparent;
     border: none;
-    color: var(--bff-border);
-    transform: translateY(-50%); /* Vertically center the button */
+    color: var(--bff-secondary);
+    transform: translateY(-50%);
     cursor: pointer;
     font-size: 20px;
     padding: 0 4px;
     white-space: nowrap;
 }
 .button-clear:hover {
-  color: var(--bff-secondary);
+  color: var(--bff-dark-secondary);
 }
 .clear-input-container {
     position: relative;
     display: inline-block;
     width: 100%;
 }
+
+
+/* tables and table buttons */
 .button-small:hover {
-  background-color: var(--bff-button-hover);
+  background-color: var(--bff-dark-primary);
 }
 .table button {
   padding: 6px 12px;
@@ -104,40 +161,94 @@ body {
   white-space: nowrap;
 }
 .table button:hover {
-  background-color: var(--bff-button-hover);
+  background-color: var(--bff-dark-primary);
 }
 
 /* dropdown selectors*/
 .select {
   padding: 6px 10px;
   font-size: 14px;
-  border: 1px solid var(--bff-border);
+  border: 1px solid var(--bff-secondary);
   background-color: var(--bff-primary);
   border-radius: 6px;
 }
 
-
-
 /* inputs and text entry */
-input {
-  font-family: inherit;
+.input {
+  height: 44px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--bff-secondary);
+  background: var(--bff-background);
+  font-size: 14px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.input.compact {
+  max-width: 220px;
+  width: 100%;
+  justify-self: start;
+}
+.input:focus {
+  outline: 2px solid var(--bff-dark-secondary);
+  border-color: var(--bff-secondary);
+}
+.input-date {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--bff-secondary);
+  border-radius: 8px;
+  box-sizing: border-box;
 }
 
+/* Raw Text */
+.login-form h1 {
+  color: var(--bff-primary);
+}
+.login-form p {
+  font-size: 14px;
+  color: var(--bff-dark-text);
+}
+.login-form h5{
+  font-size: 17px;
+  color: var(--bff-primary);
+  margin-top: 4px;
+}
+
+/* errors */
 .input-error {
-  border-color: var(--bff-error);
-  background: var(--bff-error-accent);
+  border-color: var(--bff-red);
+  background: var(--bff-extra-light-accent);
+}
+.input-error:focus {
+  outline: 2px solid var(--bff-red);
+  border-color: var(--bff-red);
+}
+.error-messages {
+  color: var(--bff-red);
+  font-size: 13px;
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+.error-messages ul {
+  margin: 4px 0;
+  padding-left: 20px;
+  list-style-type: disc;
+}
+.error-messages li {
+  margin: 2px 0;
 }
 
-.input-error:focus {
-  outline: 2px solid var(--bff-error-hover);
-  border-color: var(--bff-error);
-}
 
 .link{
-  color: #0000ee;
+  color: var(--bff-primary);
   text-decoration: underline;
   cursor: pointer;
 }
+.link :visited {
+  color: var(--bff-dark-primary);
+}
+
 /* images */
 img {
   display: block;
@@ -164,19 +275,26 @@ table {
   border-style: solid;
   border-color: var(--bff-primary);
 }
-table .header-row {
+table th {
   background-color: var(--bff-primary);
-  color: white;
+  color: var(--bff-light-text);
 }
 table th, table td {
   padding: 4px 10px;
-  border: 1px solid var(--bff-border);
+  border: 1px solid var(--bff-secondary);
+  text-align: left;
 }
+
+/* Right-align monetary columns (those with dollar signs) */
+table th.money, table td.money {
+  text-align: right;
+}
+
 tbody tr:nth-child(even) {
-  background-color: var(--bff-table-even);
+  background-color: var(--bff-light-secondary);
 }
 tbody tr:hover {
-  background-color: var(--bff-accent);
+  background-color: var(--bff-extra-light-accent);
   color: var(--bff-dark-text);
 }
 table button {

@@ -355,10 +355,10 @@ function JournalEntryForm() {
         <tfoot>
           <tr style={{ fontWeight: 'bold' }}>
             <td colSpan={2}>Totals</td>
-            <td style={{ color: isBalanced ? 'inherit' : 'var(--color-error)' }}>
+            <td className='money' style={{ color: isBalanced ? 'inherit' : 'var(--color-error)' }}>
               ${totalDebits.toFixed(2)}
             </td>
-            <td style={{ color: isBalanced ? 'inherit' : 'var(--color-error)' }}>
+            <td className='money' style={{ color: isBalanced ? 'inherit' : 'var(--color-error)' }}>
               ${totalCredits.toFixed(2)}
             </td>
             <td></td>
@@ -408,7 +408,7 @@ function JournalEntryForm() {
       </div>
 
       {validationMessages.length > 0 && (
-        <div className="error-messages" style={{ color: 'var(--bff-error)', marginBottom: '12px' }}>
+        <div className="error-messages" style={{ color: 'var(--bff-red)', marginBottom: '12px' }}>
           <ul>
             {validationMessages.map((msg, i) => (
               <li key={i}>{msg}</li>
@@ -430,12 +430,12 @@ function JournalEntryForm() {
         </HelpTooltip>
         <HelpTooltip text="Clear all fields and start over. This will not delete a submitted entry.">
           <button type="button" onClick={handleReset} className="button-primary">
-            Reset / Cancel
+            Reset
           </button>
         </HelpTooltip>
         <HelpTooltip text="View all journal entries and their approval status.">
           <button type="button" onClick={() => navigate('/journal-entries')} className="button-primary">
-            View Journal Entries
+            Back to View Journal Entries
           </button>
         </HelpTooltip>
       </div>

@@ -8,10 +8,7 @@ import {
   searchJournalEntries,
   filterByDateRange,
 } from '../services/journalService';
-import { getJournalEntryTypeLabel } from '../utils/journalEntryTypes';
-import { JournalStackedAccountsCell } from '../components/JournalStackedAccountsCell';
 import { HelpTooltip } from '../components/HelpTooltip';
-import { getErrorMessage, resolveThrownErrorMessage, logErrorWithCode, ERROR_IDS } from '../services/errorMessages';
 import '../global.css';
 
 function JournalEntries() {
@@ -46,8 +43,8 @@ function JournalEntries() {
       const data = await getEnrichedJournalEntries(statusFilter);
       setEntries(data);
     } catch (err) {
-      await logErrorWithCode(ERROR_IDS.LOAD_JOURNAL_ENTRIES_FAILED, err);
-      setErrors([await resolveThrownErrorMessage(err, ERROR_IDS.LOAD_JOURNAL_ENTRIES_FAILED)]);
+      console.error('Failed to load entries:', err);
+      setErrors([`Failed to load journal entries: ${err.message}`]);
     } finally {
       setLoading(false);
     }
@@ -59,14 +56,13 @@ function JournalEntries() {
       alert('Journal entry approved.');
       loadEntries();
     } catch (err) {
-      await logErrorWithCode(err?.errorID ?? ERROR_IDS.APPROVE_JOURNAL_FAILED, err);
-      alert(await resolveThrownErrorMessage(err, ERROR_IDS.APPROVE_JOURNAL_FAILED));
+      alert(`Error approving: ${err.message}`);
     }
   };
 
   const handleReject = async (entryId) => {
     if (!rejectReason.trim()) {
-      alert(await getErrorMessage(ERROR_IDS.REJECT_REASON_REQUIRED));
+      alert('You must enter a reason for rejection.');
       return;
     }
     try {
@@ -76,8 +72,7 @@ function JournalEntries() {
       setRejectReason('');
       loadEntries();
     } catch (err) {
-      await logErrorWithCode(err?.errorID ?? ERROR_IDS.REJECT_JOURNAL_FAILED, err);
-      alert(await resolveThrownErrorMessage(err, ERROR_IDS.REJECT_JOURNAL_FAILED));
+      alert(`Error rejecting: ${err.message}`);
     }
   };
 
@@ -99,13 +94,13 @@ function JournalEntries() {
   };
 
   const statusColor = (status) => {
-    if (status === 'approved') return 'green';
-    if (status === 'rejected') return 'red';
-    return '#c58b00';
+    if (status === 'approved') return 'var(--bff-green)';
+    if (status === 'rejected') return 'var(--bff-red)';
+    return 'var(--bff-light-primary)';
   };
 
   if (!canView) {
-    return <p style={{ color: 'red' }}>You do not have permission to view journal entries.</p>;
+    return <p style={{ color: 'var(--bff-red)' }}>You do not have permission to view journal entries.</p>;
   }
 
   return (
@@ -115,12 +110,12 @@ function JournalEntries() {
       {errors.length > 0 && (
         <div style={{ marginBottom: '16px' }}>
           {errors.map((err, i) => (
-            <p key={i} style={{ color: 'red' }}>{err}</p>
+            <p key={i} style={{ color: 'var(--bff-red)' }}>{err}</p>
           ))}
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '16px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '16px', alignItems: 'flex-end' }}>
         {(isAccountant || isManager) && (
           <HelpTooltip text="Create a new journal entry with debits and credits.">
             <button onClick={() => navigate('/journal-entry/new')} className="button-primary">
@@ -128,14 +123,32 @@ function JournalEntries() {
             </button>
           </HelpTooltip>
         )}
+        <div>
+          <h5 className='h5'>Search:</h5>
+          <div className="clear-input-container" role="group">
+            <div>
+              <HelpTooltip text="Search by account name, amount, or date.">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Account name, amount, date..."
+                  className="input"
+                  style={{ width: '400px' }}
+                />
+              </HelpTooltip>
+            </div>
+          <button type="button" className="button-clear" onClick={() => setSearchQuery('')} aria-label="Clear search input">X</button>
+          </div>
+        </div>
 
         <div>
-          <label style={{ display: 'block', fontSize: '12px' }}>Status:</label>
+          <h5 className='h5'>Status:</h5>
           <HelpTooltip text="Filter entries by their approval status.">
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="input-field"
+              className="input"
             >
               <option value="">All</option>
               <option value="pending">Pending</option>
@@ -145,71 +158,26 @@ function JournalEntries() {
           </HelpTooltip>
         </div>
 
-        <fieldset
-          style={{
-            border: '1px solid var(--bff-border, #d1d5db)',
-            borderRadius: 8,
-            padding: '10px 12px',
-            margin: 0,
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: '10px',
-            alignItems: 'flex-end',
-          }}
-        >
-          <legend style={{ fontSize: '12px', padding: '0 6px', color: '#374151' }}>Date range</legend>
-          <div>
-            <label style={{ display: 'block', fontSize: '12px' }} htmlFor={`${formId}-from`}>
-              From
-            </label>
-            <HelpTooltip text="Show entries created on or after this date.">
-              <input
-                id={`${formId}-from`}
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="input-field"
-              />
-            </HelpTooltip>
-          </div>
-
-          <div>
-            <label style={{ display: 'block', fontSize: '12px' }} htmlFor={`${formId}-to`}>
-              To
-            </label>
-            <HelpTooltip text="Show entries created on or before this date.">
-              <input
-                id={`${formId}-to`}
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="input-field"
-              />
-            </HelpTooltip>
-          </div>
-        </fieldset>
-
-        <fieldset
-          style={{
-            border: '1px solid var(--bff-border, #d1d5db)',
-            borderRadius: 8,
-            padding: '10px 12px',
-            margin: 0,
-            minWidth: '200px',
-            flex: '1 1 220px',
-          }}
-        >
-          <legend style={{ fontSize: '12px', padding: '0 6px', color: '#374151' }}>Search</legend>
-          <HelpTooltip text="Search by account name, amount, or date.">
+        <div>
+          <h5 className='h5'>From:</h5>
+          <HelpTooltip text="Show entries created on or after this date.">
             <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Account name, amount, or date"
-              className="input-field"
-              style={{ width: '100%' }}
-              id={`${formId}-search`}
-              aria-label="Search journals by account name, amount, or date"
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="input"
+            />
+          </HelpTooltip>
+        </div>
+
+        <div>
+          <h5 className='h5'>To:</h5>
+          <HelpTooltip text="Show entries created on or before this date.">
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="input"
             />
           </HelpTooltip>
         </fieldset>
@@ -227,7 +195,7 @@ function JournalEntries() {
               <th>Date</th>
               <th>Entry Type</th>
               <th>Accounts</th>
-              <th>Total</th>
+              <th className='money'>Total</th>
               <th>Status</th>
               <th>Created By</th>
               {isManager && <th>Actions</th>}
@@ -248,15 +216,30 @@ function JournalEntries() {
                     </button>
                   </td>
                   <td>{formatDate(entry.createdAt)}</td>
-                  <td>{getJournalEntryTypeLabel(entry.entryType, { emptyLabel: '-' })}</td>
-                  <JournalStackedAccountsCell
-                    lines={entry.lines}
-                    journalEntryId={entry.journalEntryID}
-                    navigate={navigate}
-                    ledgerBasePath={ledgerBasePath}
-                    emptyLabel="-"
-                  />
-                  <td>${totalDebit.toFixed(2)}</td>
+                  <td>{entry.entryType || '-'}</td>
+                  <td>
+                    {(entry.lines || []).length > 0 ? (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                        {(entry.lines || [])
+                          .filter((l) => l.accountID && l.accountName && l.accountNumber)
+                          .filter((line, index, all) => all.findIndex((x) => x.accountID === line.accountID) === index)
+                          .map((line) => (
+                            <button
+                              key={`${entry.journalEntryID}-${line.accountID}`}
+                              type="button"
+                              onClick={() => navigate(`${ledgerBasePath}/${line.accountNumber}`)}
+                              style={{ background: 'none', border: 'none', color: '#0066cc', cursor: 'pointer', textDecoration: 'underline', padding: 0 }}
+                              title="Open account ledger"
+                            >
+                              {line.accountNumber} - {line.accountName}
+                            </button>
+                          ))}
+                      </div>
+                    ) : (
+                      '-'
+                    )}
+                  </td>
+                  <td className="money">${totalDebit.toFixed(2)}</td>
                   <td style={{ color: statusColor(entry.status), fontWeight: 'bold' }}>
                     {entry.status}
                     {entry.status === 'rejected' && entry.rejectReason && (
@@ -272,8 +255,7 @@ function JournalEntries() {
                         <div style={{ display: 'flex', gap: '5px' }}>
                           <HelpTooltip text="Approve this journal entry and post it to the ledger.">
                             <button
-                            className="button-table"
-                              style={{ width: '30px', height: '30px', justifyContent: 'center', fontSize: '16px'}}
+                            className="button-table-action-approve"
                               onClick={() => handleApprove(entry.journalEntryID)}
                             >
                               ✓
@@ -286,7 +268,7 @@ function JournalEntries() {
                                 value={rejectReason}
                                 onChange={(e) => setRejectReason(e.target.value)}
                                 placeholder="Reason for rejection (required)"
-                                className="input-field"
+                                className="input"
                                 style={{ marginBottom: '4px' }}
                               />
                               <HelpTooltip text="Confirm the rejection with the reason provided.">
@@ -304,8 +286,7 @@ function JournalEntries() {
                           ) : (
                             <HelpTooltip text="Reject this entry. You must provide a reason.">
                               <button
-                                className="button-table"
-                                style={{ width: '30px', height: '30px', justifyContent: 'center', fontSize: '16px'}}
+                                className="button-table-action-reject"
                                 onClick={() => setRejectingId(entry.journalEntryID)}
                               >
                                 X

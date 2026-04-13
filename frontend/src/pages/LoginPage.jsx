@@ -178,7 +178,7 @@ function LoginPage() {
             text="Your account name provided by your administrator (or assigned when your account was created)."
             className="help-tooltip-block"
           >
-            <div class="clear-input-wrapper" role="group">
+            <div className="clear-input-wrapper" role="group">
             <input className="input" type="text" name="username" placeholder="Username" aria-label="username" value={username} onChange={(e) => setUsername(e.target.value)} />
             <button type="button" className="button-clear" onClick={() => setUsername('')} aria-label="Clear username input">X</button>
             </div>
@@ -189,7 +189,7 @@ function LoginPage() {
             text="Enter the password for your account. Too many failed attempts can temporarily lock sign-in."
             className="help-tooltip-block"
           >
-            <div class="clear-input-container" role="group">
+            <div className="clear-input-container" role="group">
             <input className="input"type="password" name="password" placeholder="Password" aria-label="password" value={password} onChange={(e) => setPassword(e.target.value)} />
             <button type="button" id="clearButton" className="button-clear" onClick={() => setPassword('')} aria-label="Clear password input">X</button>
             </div>

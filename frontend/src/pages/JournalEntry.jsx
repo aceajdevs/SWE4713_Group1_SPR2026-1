@@ -1,8 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
-import { getLedgerByAccountId, sortLedgerEntriesChronological } from '../services/ledgerService';
-import { supabase } from '../supabaseClient';
+import {
+  getLedgerByAccountId,
+  sortLedgerEntriesChronological,
+  fetchLedgerEntriesByJournalEntryId,
+} from '../services/ledgerService';
 import { getErrorMessage, logErrorWithCode, ERROR_IDS } from '../services/errorMessages';
 import '../global.css';
 
@@ -22,7 +25,6 @@ function JournalEntry() {
     return journalEntryID;
   }, [journalEntryID]);
 
-// Load journal entry details and related account info on component mount or when PR changes
   useEffect(() => {
     const loadJournalEntry = async () => {
       setLoading(true);
@@ -42,10 +44,7 @@ function JournalEntry() {
         return;
       }
 
-      const { data: ledgerData, error: ledgerError } = await supabase
-        .from('Ledger')
-        .select('ledgerID, journalEntryID, accountID, entryDate, description, debit, credit')
-        .eq('journalEntryID', prNum);
+      const { data: ledgerData, error: ledgerError } = await fetchLedgerEntriesByJournalEntryId(prNum);
 
       if (ledgerError) {
         await logErrorWithCode(ERROR_IDS.LOAD_JOURNAL_ENTRY_FAILED, ledgerError);
@@ -142,9 +141,9 @@ function JournalEntry() {
             <tr>
               <th>Account</th>
               <th>Description</th>
-              <th>Debit</th>
-              <th>Credit</th>
-              <th>Balance</th>
+              <th className='money'>Debit</th>
+              <th className='money'>Credit</th>
+              <th className='money'>Balance</th>
             </tr>
           </thead>
           <tbody>
@@ -165,9 +164,9 @@ function JournalEntry() {
                 <tr key={entry.ledgerID} style={hiddenInactive ? { display: 'none' } : undefined}>
                   <td>{accountLabel}</td>
                   <td>{entry.description?.trim() ? entry.description : ''}</td>
-                  <td>{formatDebitCreditCell(entry.debit)}</td>
-                  <td>{formatDebitCreditCell(entry.credit)}</td>
-                  <td>{rowBalance !== undefined && rowBalance !== null ? formatCurrency(rowBalance) : '-'}</td>
+                  <td className='money'>{formatDebitCreditCell(entry.debit)}</td>
+                  <td className='money'>{formatDebitCreditCell(entry.credit)}</td>
+                  <td className='money'>{rowBalance !== undefined && rowBalance !== null ? formatCurrency(rowBalance) : '-'}</td>
                 </tr>
               );
             })}
