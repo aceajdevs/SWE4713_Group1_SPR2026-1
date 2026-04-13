@@ -277,7 +277,7 @@ function ChartOfAccounts() {
     <div className="page-chart-of-accounts">
       <div className="page-header">
       <h1>Chart of Accounts</h1>
-
+      </div>
       <div className="header-row">
         <div className="button-group">
           {isAdmin && (
@@ -304,7 +304,6 @@ function ChartOfAccounts() {
             <button className="button-primary" onClick={() => navigate(dashboardPath)}>Back to Dashboard</button>
           </HelpTooltip>
         </div>
-      </div>
       {staffEmailModalOpen && (
               <div
                 className="coa-email-modal-backdrop"
