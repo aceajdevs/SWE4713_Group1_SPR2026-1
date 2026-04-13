@@ -1,21 +1,19 @@
 .page-chart-of-accounts {
   padding: 20px;
   margin: 0 auto;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   display: flex;
   flex-direction: column;
 }
 .page-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
+  margin-bottom: 10px;
   width: 100%;
-  margin-bottom: 20px;
 }
 .page-chart-of-accounts h1 {
   font-size: 32px;
   font-weight: 700;
-  margin-bottom: 20px;
   text-align: center;
   box-sizing: border-box;
 }
@@ -45,7 +43,8 @@
   margin: 0;
   justify-content: center;
   align-items: center;
-  background-color: var(--bff-accent);
+  background-color: var(--bff-extra-light-accent);
+  border: 1px solid var(--bff-accent);
   border-radius: 6px;
   padding: 0.5% 1%;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
@@ -61,16 +60,24 @@
   font-weight: 500;
   color: var(--bff-dark-text);
 }
+.filter-item input {
+  border: 1px solid var(--bff-light-accent);
+}
+.filter-item input:focus {
+  outline: none;
+  border-color: var(--bff-accent);
+  box-shadow: 0 0 0 2px var(--bff-light-accent);
+}
 .filter-item select {
   padding: 6px 10px;
   font-size: 14px;
-  border: 1px solid var(--bff-border);
+  border: 1px solid var(--bff-light-accent);
   border-radius: 6px;
 }
 .filter-popup select:focus {
   outline: none;
-  border-color: var(--bff-button-hover);
-  box-shadow: 0 0 0 2px white;
+  border-color: var(--bff-accent);
+  box-shadow: 0 0 0 2px var(--bff-light-accent);
 }
 .filter-item + .filter-item {
   margin-left: 10px;
@@ -102,33 +109,7 @@ table {
   width: fit-content;
   margin: 0 auto;
 }
-table .header-row {
-  background-color: #0052cc;
-  color: white;
 }
-table th, table td {
-  padding: 4px 10px;
-  border: 1px solid #D1D5DB;
-}
-tbody tr:nth-child(even) {
-  background-color: #CCE8FF;
-}
-tbody tr:hover {
-  background-color: #E3D081;
-  color: black;
-}
-table button {
-  padding: 4px 8px;
-  font-size: 12px;
-  font-weight: 500;
-  color: white;
-  background-color: #0052cc;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
 .coa-email-modal-backdrop {
   position: fixed;
   inset: 0;
@@ -145,7 +126,7 @@ table button {
   max-width: 520px;
   max-height: min(90vh, 640px);
   overflow: auto;
-  padding: 18px 20px 20px;
+  padding: 20px;
   border-radius: 12px;
   background: #fff;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
@@ -164,24 +145,22 @@ table button {
   font-size: 1.15rem;
   font-weight: 600;
   margin: 0;
-  color: #111827;
+  color: var(--bff-dark-text);
 }
 
 .coa-email-modal-close {
   flex-shrink: 0;
-  width: 36px;
-  height: 36px;
   border: none;
   border-radius: 8px;
-  background: #f3f4f6;
-  color: #374151;
+  background: white;
+  color: var(--bff-dark-text);
   font-size: 22px;
   line-height: 1;
   cursor: pointer;
 }
 
 .coa-email-modal-close:hover:not(:disabled) {
-  background: #e5e7eb;
+  background: var(--bff-light-secondary);
 }
 
 .coa-email-modal-close:disabled {
@@ -192,7 +171,7 @@ table button {
 .coa-email-modal-lead {
   margin: 0 0 14px;
   font-size: 0.9rem;
-  color: #4b5563;
+  color: var(--bff-dark-text);
 }
 
 .coa-email-staff-form {
@@ -225,7 +204,7 @@ table button {
 .coa-email-staff-label {
   font-size: 0.875rem;
   font-weight: 500;
-  color: #374151;
+  color: var(--bff-dark-text);
 }
 
 .coa-email-staff-select {
@@ -249,9 +228,21 @@ table button {
   font-size: 0.875rem;
   font-weight: 500;
   color: white;
-  background-color: #0052cc;
+  background-color: var(--bff-primary);
   border: none;
   border-radius: 6px;
   cursor: pointer;
   transition: background-color 0.3s ease;
+}
+
+/* Icon tinting using CSS filters tied to color variables */
+/* These filters will dynamically reflect changes to --bff-red and --bff-green in global.css */
+.icon-deactivate {
+  filter: brightness(0.9) saturate(0.8) hue-rotate(-10deg) drop-shadow(0 0 2px var(--bff-red));
+  opacity: 0.9;
+}
+
+.icon-activate {
+  filter: brightness(0.9) saturate(0.8) hue-rotate(80deg) drop-shadow(0 0 2px var(--bff-green));
+  opacity: 0.9;
 }

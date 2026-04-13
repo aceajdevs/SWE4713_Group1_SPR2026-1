@@ -1,9 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
-import { supabase } from '../supabaseClient';
 import { fetchFromTable } from '../supabaseUtils';
 import { createJournalEntry, uploadJournalAttachment } from '../services/journalService';
+import {
+  getErrorMessagesByIds,
+  getErrorMessage,
+  resolveThrownErrorMessage,
+  logErrorWithCode,
+  ERROR_IDS,
+  ERROR_FALLBACK,
+} from '../services/errorMessages';
 import {
   validateJournalEntry,
   validateAttachmentType,
@@ -13,6 +20,14 @@ import { HelpTooltip } from '../components/HelpTooltip';
 import '../global.css';
 
 const emptyLine = () => ({ accountID: '', debit: '', credit: '' });
+
+function PermissionDeniedMessage() {
+  const [text, setText] = useState(() => ERROR_FALLBACK[ERROR_IDS.NO_PERMISSION_CREATE_JOURNAL]);
+  useEffect(() => {
+    getErrorMessage(ERROR_IDS.NO_PERMISSION_CREATE_JOURNAL).then(setText);
+  }, []);
+  return <p style={{ color: 'red' }}>{text}</p>;
+}
 
 function JournalEntryForm() {
   const navigate = useNavigate();
@@ -25,9 +40,9 @@ function JournalEntryForm() {
   const [errors, setErrors] = useState([]);
   const [validationMessages, setValidationMessages] = useState([]);
   const [fieldErrors, setFieldErrors] = useState({});
+  const [isDirty, setIsDirty] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
-
   const canCreate = user?.role === 'accountant' || user?.role === 'manager';
 
   useEffect(() => {
@@ -45,21 +60,6 @@ function JournalEntryForm() {
     setLoading(false);
   };
 
-  const loadErrorMessagesByCode = async (errorIDs) => {
-    if (!errorIDs?.length) return {};
-    const { data, error } = await supabase
-      .from('Error')
-      .select('errorID, message')
-      .in('errorID', errorIDs);
-
-    if (error || !data) {
-      console.error('Error lookup failed:', error);
-      return {};
-    }
-
-    return Object.fromEntries(data.map((row) => [String(row.errorID), row.message]));
-  };
-
   const runValidation = async () => {
     const validation = validateJournalEntry(lines, accounts);
     const fieldMap = {};
@@ -69,7 +69,6 @@ function JournalEntryForm() {
       validation.errors.push({
         errorID: '1009',
         code: '1009',
-        message: 'Entry type must be selected.',
         field: 'entryType',
       });
       fieldMap.entryType = true;
@@ -93,17 +92,26 @@ function JournalEntryForm() {
 
     if (!validation.valid) {
       const errorIDs = [...new Set(validation.errors.map((e) => (e.errorID || e.code)).filter(Boolean))];
-      const dbMessages = await loadErrorMessagesByCode(errorIDs);
+      const dbMessages = await getErrorMessagesByIds(errorIDs);
 
-      const formattedMessages = validation.errors.map((err) => {
-        const code = err.code || err.errorID || 'UNKNOWN';
-        const lineNumber = err.lineIndex !== undefined && err.lineIndex !== null
-          ? err.lineIndex
-          : (err.field?.match(/^line-(\d+)-/) || [])[1];
-        const linePart = lineNumber ? `Line ${lineNumber} - ` : '';
-        const baseMessage = dbMessages[String(err.errorID || err.code)] || err.message || 'Validation error';
-        return `Code: ${code}: ${linePart}${baseMessage}`;
-      });
+      const formattedMessages = await Promise.all(
+        validation.errors.map(async (err) => {
+          const code = err.code || err.errorID || 'UNKNOWN';
+          const lineNumber =
+            err.lineIndex !== undefined && err.lineIndex !== null
+              ? err.lineIndex
+              : (err.field?.match(/^line-(\d+)-/) || [])[1];
+          const linePart = lineNumber ? `Line ${lineNumber} - ` : '';
+          const key = String(err.errorID || err.code);
+          let baseMessage =
+            dbMessages[key] || ERROR_FALLBACK[Number(key)] || (await getErrorMessage(ERROR_IDS.UNEXPECTED));
+          if ((key === '1005' || Number(key) === 1005) && err.detail) {
+            const d = err.detail;
+            baseMessage += ` Debits: ($${d.totalDebits.toFixed(2)}) Credits: ($${d.totalCredits.toFixed(2)}). Difference: $${d.diffDollars.toFixed(2)}.`;
+          }
+          return `${code}: ${linePart}${baseMessage}`;
+        })
+      );
 
       setValidationMessages(formattedMessages);
       return false;
@@ -114,8 +122,15 @@ function JournalEntryForm() {
   };
 
   useEffect(() => {
+    if (!isDirty) return;
     runValidation();
-  }, [lines, entryType, accounts]);
+  }, [lines, entryType, accounts, isDirty]);
+
+  const formatAmountValue = (value) => {
+    if (value === '' || value === null || value === undefined) return '';
+    const num = parseFloat(value);
+    return Number.isFinite(num) ? num.toFixed(2) : value;
+  };
 
   const updateLine = (index, field, value) => {
     setLines((prev) => {
@@ -129,6 +144,25 @@ function JournalEntryForm() {
       }
       return updated;
     });
+    setIsDirty(true);
+    if (errors.length > 0) setErrors([]);
+  };
+
+  const adjustLineAmount = (index, field, delta) => {
+    setLines((prev) => {
+      const updated = [...prev];
+      const current = parseFloat(updated[index][field]) || 0;
+      const nextValue = Math.max(0, current + delta);
+      updated[index] = { ...updated[index], [field]: nextValue.toFixed(2) };
+      if (field === 'debit' && nextValue > 0) {
+        updated[index].credit = '';
+      }
+      if (field === 'credit' && nextValue > 0) {
+        updated[index].debit = '';
+      }
+      return updated;
+    });
+    setIsDirty(true);
     if (errors.length > 0) setErrors([]);
   };
 
@@ -141,7 +175,7 @@ function JournalEntryForm() {
     setLines((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleAddAttachment = (e) => {
+  const handleAddAttachment = async (e) => {
     const files = Array.from(e.target.files);
     const newErrors = [];
 
@@ -155,7 +189,16 @@ function JournalEntryForm() {
     });
 
     if (newErrors.length > 0) {
-      setErrors((prev) => [...prev, ...newErrors]);
+      const lines = await Promise.all(
+        newErrors.map(async (e) => {
+          const base = await getErrorMessage(ERROR_IDS.ATTACHMENT_TYPE_INVALID);
+          if (e.fileName) {
+            return `${base} (${e.fileName}). Allowed: ${e.allowedHint}.`;
+          }
+          return base;
+        })
+      );
+      setErrors((prev) => [...prev, ...lines]);
     }
 
     e.target.value = '';
@@ -172,12 +215,13 @@ function JournalEntryForm() {
     setErrors([]);
     setValidationMessages([]);
     setFieldErrors({});
+    setIsDirty(false);
   };
 
   const handleSubmit = async () => {
     if (!entryType) {
       setFieldErrors((prev) => ({ ...prev, entryType: true }));
-      setValidationMessages(['Please select an entry type.']);
+      setValidationMessages([await getErrorMessage(ERROR_IDS.ENTRY_TYPE_REQUIRED)]);
       return;
     }
 
@@ -207,8 +251,9 @@ function JournalEntryForm() {
       alert('Journal entry submitted successfully!');
       navigate('/journal-entries');
     } catch (err) {
-      console.error('Submit error:', err);
-      setErrors([`Failed to submit: ${err.message}`]);
+      const id = err?.errorID ?? ERROR_IDS.SUBMIT_JOURNAL_FAILED;
+      await logErrorWithCode(id, err);
+      setErrors([await resolveThrownErrorMessage(err, ERROR_IDS.SUBMIT_JOURNAL_FAILED)]);
     } finally {
       setSubmitting(false);
     }
@@ -219,7 +264,7 @@ function JournalEntryForm() {
   const isBalanced = Math.abs(totalDebits - totalCredits) < 0.005;
 
   if (!canCreate) {
-    return <p style={{ color: 'red' }}>You do not have permission to create journal entries.</p>;
+    return <PermissionDeniedMessage />;
   }
 
   if (loading) return <p>Loading accounts...</p>;
@@ -231,7 +276,7 @@ function JournalEntryForm() {
       {errors.length > 0 && (
         <div style={{ marginBottom: '16px' }}>
           {errors.map((err, i) => (
-            <p key={i} style={{ color: 'red', margin: '4px 0' }}>{err}</p>
+            <p key={i} style={{ color: 'var(--bff-red)', margin: '4px 0' }}>{err}</p>
           ))}
         </div>
       )}
@@ -240,7 +285,10 @@ function JournalEntryForm() {
         <HelpTooltip text="Classify this entry (e.g. Regular, Adjusting, Closing).">
           <select
             value={entryType}
-            onChange={(e) => setEntryType(e.target.value)}
+            onChange={(e) => {
+              setEntryType(e.target.value);
+              setIsDirty(true);
+            }}
             className={`input ${fieldErrors.entryType ? 'input-error' : ''}`}
             style={{ width: '100%' }}
           >
@@ -257,8 +305,8 @@ function JournalEntryForm() {
           <tr>
             <th>#</th>
             <th>Account</th>
-            <th>Debit</th>
-            <th>Credit</th>
+            <th className='money'>Debit</th>
+            <th className='money'>Credit</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -293,30 +341,72 @@ function JournalEntryForm() {
               </td>
               <td>
                 <HelpTooltip text="Enter the debit amount. Cannot have both debit and credit on the same line.">
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={line.debit}
-                    onChange={(e) => updateLine(index, 'debit', e.target.value)}
-                    placeholder="0.00"
-                    className={`input ${fieldErrors[`line-${index}-debit`] && !(parseFloat(line.credit) > 0) ? 'input-error' : ''}`}
-                    disabled={parseFloat(line.credit) > 0}
-                  />
+                  <div className="amount-input-wrapper">
+                    <input
+                      type="number"
+                      min="0.00"
+                      step="0.01"
+                      value={line.debit}
+                      onChange={(e) => updateLine(index, 'debit', e.target.value)}
+                      onBlur={(e) => updateLine(index, 'debit', formatAmountValue(e.target.value))}
+                      placeholder="0.00"
+                      className={`input input-right ${fieldErrors['line-' + index + '-debit'] && !(parseFloat(line.credit) > 0) ? 'input-error' : ''}`}
+                      disabled={parseFloat(line.credit) > 0}
+                    />
+                    <div className="spinner-controls">
+                      <button
+                        type="button"
+                        className="spinner-button"
+                        onClick={() => adjustLineAmount(index, 'debit', 0.01)}
+                        disabled={parseFloat(line.credit) > 0}
+                      >
+                        ▲
+                      </button>
+                      <button
+                        type="button"
+                        className="spinner-button"
+                        onClick={() => adjustLineAmount(index, 'debit', -0.01)}
+                        disabled={parseFloat(line.credit) > 0}
+                      >
+                        ▼
+                      </button>
+                    </div>
+                  </div>
                 </HelpTooltip>
               </td>
               <td>
                 <HelpTooltip text="Enter the credit amount. Cannot have both debit and credit on the same line.">
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={line.credit}
-                    onChange={(e) => updateLine(index, 'credit', e.target.value)}
-                    placeholder="0.00"
-                    className={`input ${fieldErrors[`line-${index}-credit`] && !(parseFloat(line.debit) > 0) ? 'input-error' : ''}`}
-                    disabled={parseFloat(line.debit) > 0}
-                  />
+                  <div className="amount-input-wrapper">
+                    <input
+                      type="number"
+                      min="0.00"
+                      step="0.01"
+                      value={line.credit}
+                      onChange={(e) => updateLine(index, 'credit', e.target.value)}
+                      onBlur={(e) => updateLine(index, 'credit', formatAmountValue(e.target.value))}
+                      placeholder="0.00"
+                      className={`input input-right ${fieldErrors['line-' + index + '-credit'] && !(parseFloat(line.debit) > 0) ? 'input-error' : ''}`}
+                      disabled={parseFloat(line.debit) > 0}
+                    />
+                    <div className="spinner-controls">
+                      <button
+                        type="button"
+                        className="spinner-button"
+                        onClick={() => adjustLineAmount(index, 'credit', 0.01)}
+                        disabled={parseFloat(line.debit) > 0}
+                      >
+                        ▲
+                      </button>
+                      <button
+                        type="button"
+                        className="spinner-button"
+                        onClick={() => adjustLineAmount(index, 'credit', -0.01)}
+                        disabled={parseFloat(line.debit) > 0}
+                      >
+                        ▼
+                      </button>
+                    </div>
+                  </div>
                 </HelpTooltip>
               </td>
               <td>
@@ -337,10 +427,10 @@ function JournalEntryForm() {
         <tfoot>
           <tr style={{ fontWeight: 'bold' }}>
             <td colSpan={2}>Totals</td>
-            <td style={{ color: isBalanced ? 'inherit' : 'var(--color-error)' }}>
+            <td className='money' style={{ color: isBalanced ? 'inherit' : 'var(--color-error)' }}>
               ${totalDebits.toFixed(2)}
             </td>
-            <td style={{ color: isBalanced ? 'inherit' : 'var(--color-error)' }}>
+            <td className='money' style={{ color: isBalanced ? 'inherit' : 'var(--color-error)' }}>
               ${totalCredits.toFixed(2)}
             </td>
             <td></td>
@@ -390,7 +480,7 @@ function JournalEntryForm() {
       </div>
 
       {validationMessages.length > 0 && (
-        <div className="error-messages" style={{ color: 'var(--bff-error)', marginBottom: '12px' }}>
+        <div className="error-messages" style={{ color: 'var(--bff-red)', marginBottom: '12px' }}>
           <ul>
             {validationMessages.map((msg, i) => (
               <li key={i}>{msg}</li>
@@ -412,12 +502,12 @@ function JournalEntryForm() {
         </HelpTooltip>
         <HelpTooltip text="Clear all fields and start over. This will not delete a submitted entry.">
           <button type="button" onClick={handleReset} className="button-primary">
-            Reset / Cancel
+            Reset
           </button>
         </HelpTooltip>
         <HelpTooltip text="View all journal entries and their approval status.">
           <button type="button" onClick={() => navigate('/journal-entries')} className="button-primary">
-            View Journal Entries
+            Back to View Journal Entries
           </button>
         </HelpTooltip>
       </div>

@@ -22,7 +22,9 @@ import { checkPasswordsAboutToExpire } from './services/passwordExpiryService';
 import { useEffect } from 'react';
 import JournalEntryForm from './pages/JournalEntryForm'
 import JournalEntries from './pages/JournalEntries'
+import PostedJournalEntriesPage from './pages/PostedJournalEntriesPage'
 import JournalEntryDetail from './pages/JournalEntryDetail'
+import Report from './pages/Report'
 
 function AppLayout() {
   const location = useLocation();
@@ -73,8 +75,10 @@ function AppLayout() {
         <Route path="/manager-dashboard" element={<ManagerDashboard/>} />
         <Route path="/help" element={<UserManualPage />} />
         <Route path="/journal-entries" element={<JournalEntries />} />
+        <Route path="/posted-journal-entries" element={<PostedJournalEntriesPage />} />
         <Route path="/journal-entry/new" element={<JournalEntryForm />} />
-        <Route path="/journal-entry/:id" element={<JournalEntryDetail />} />      
+        <Route path="/journal-entry/:id" element={<JournalEntryDetail />} />
+        <Route path="/report" element={<Report />} />
       </Routes>
     </>
   );

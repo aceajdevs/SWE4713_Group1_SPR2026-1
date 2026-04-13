@@ -4,6 +4,8 @@ import { useAuth } from '../AuthContext';
 import { getJournalEntryWithLines, getJournalAttachments } from '../services/journalService';
 import { fetchFromTable } from '../supabaseUtils';
 import { HelpTooltip } from '../components/HelpTooltip';
+import { getJournalEntryTypeLabel } from '../utils/journalEntryTypes';
+import { getErrorMessage, logErrorWithCode, ERROR_IDS } from '../services/errorMessages';
 import '../global.css';
 
 function JournalEntryDetail() {
@@ -49,11 +51,11 @@ function JournalEntryDetail() {
         const attachData = await getJournalAttachments(parseInt(id, 10));
         setAttachments(attachData);
       } catch (attErr) {
-        console.error('Failed to load attachments:', attErr);
+        await logErrorWithCode(ERROR_IDS.LOAD_JOURNAL_ENTRY_FAILED, attErr);
       }
     } catch (err) {
-      console.error('Failed to load journal entry:', err);
-      setError('Journal entry not found.');
+      await logErrorWithCode(err?.errorID ?? ERROR_IDS.JOURNAL_NOT_FOUND, err);
+      setError(await getErrorMessage(err?.errorID ?? ERROR_IDS.JOURNAL_NOT_FOUND));
     } finally {
       setLoading(false);
     }
@@ -81,11 +83,6 @@ function JournalEntryDetail() {
     return '#c58b00';
   };
 
-  const entryTypeLabel = (val) => {
-    const map = { 1: 'Regular', 2: 'Adjusting', 3: 'Closing' };
-    return map[val] || val || 'N/A';
-  };
-
   if (loading) return <p>Loading journal entry...</p>;
   if (error) return <p style={{ color: 'red' }}>{error}</p>;
   if (!entry) return <p>Entry not found.</p>;
@@ -105,7 +102,7 @@ function JournalEntryDetail() {
       </div>
 
       <div style={{ marginBottom: '24px', lineHeight: '1.8' }}>
-        <p><strong>Entry Type:</strong> {entryTypeLabel(entry.entryType)}</p>
+        <p><strong>Entry Type:</strong> {getJournalEntryTypeLabel(entry.entryType, { emptyLabel: 'N/A' })}</p>
         <p><strong>Created:</strong> {formatDate(entry.createdAt)}</p>
         <p><strong>Created By:</strong> User {entry.createdBy}</p>
         <p>
@@ -131,8 +128,8 @@ function JournalEntryDetail() {
           <tr>
             <th>#</th>
             <th>Account</th>
-            <th>Debit</th>
-            <th>Credit</th>
+            <th className='money'>Debit</th>
+            <th className='money'>Credit</th>
           </tr>
         </thead>
         <tbody>
@@ -154,8 +151,8 @@ function JournalEntryDetail() {
                     `Account ID: ${line.accountID}`
                   )}
                 </td>
-                <td>{Number(line.debit) > 0 ? formatCurrency(line.debit) : '-'}</td>
-                <td>{Number(line.credit) > 0 ? formatCurrency(line.credit) : '-'}</td>
+                <td className='money'>{Number(line.debit) > 0 ? formatCurrency(line.debit) : '-'}</td>
+                <td className='money'>{Number(line.credit) > 0 ? formatCurrency(line.credit) : '-'}</td>
               </tr>
             );
           })}
@@ -163,8 +160,8 @@ function JournalEntryDetail() {
         <tfoot>
           <tr style={{ fontWeight: 'bold', borderTop: '2px solid #333' }}>
             <td colSpan={2}>Totals</td>
-            <td>{formatCurrency(totalDebits)}</td>
-            <td>{formatCurrency(totalCredits)}</td>
+            <td className='money'>{formatCurrency(totalDebits)}</td>
+            <td className='money'>{formatCurrency(totalCredits)}</td>
           </tr>
         </tfoot>
       </table>

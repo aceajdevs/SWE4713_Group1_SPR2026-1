@@ -47,14 +47,14 @@ function SuspendUser() {
       <h2>Suspend User</h2>
       <div className="suspend-group-column">
         <div className="suspend-group-left">
-          <h5>Suspension Start Date</h5>
-          <input
+          <h5>Start Date</h5>
+          <input className="input-date"
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
           />
         <div className="clear-input-container">
-        <input
+        <input 
           type="text"
           placeholder="User ID"
           className="input"
@@ -65,8 +65,8 @@ function SuspendUser() {
       </div>
         </div>
         <div className="suspend-group-right">
-          <h5>Suspension End Date</h5>
-          <input
+          <h5>End Date</h5>
+          <input className="input-date"
             type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}

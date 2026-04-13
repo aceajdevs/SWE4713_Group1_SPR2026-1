@@ -32,6 +32,26 @@ export async function sendAdminEmail(recipientEmail, recipientName, subject, mes
     }
 }
 
+
+export async function sendJournalPendingApprovalToManager({
+    managerEmail,
+    managerDisplayName,
+    journalEntryId,
+    submitterDisplayName,
+}) {
+    const email = String(managerEmail || '').trim();
+    if (!email) return false;
+
+    const subject = `Journal entry #${journalEntryId} submitted for approval`;
+    const message =
+        `A journal entry has been submitted and is pending your approval.\n\n` +
+        `Entry ID: ${journalEntryId}\n` +
+        `Submitted by: ${submitterDisplayName}\n\n` +
+        `Please sign in and open Journal Entries to review and approve or reject it.`;
+
+    return sendAdminEmail(email, managerDisplayName || 'Manager', subject, message);
+}
+
 // import nodemailer from 'nodemailer';
 
 // //https://nodemailer.com/usage/using-gmail

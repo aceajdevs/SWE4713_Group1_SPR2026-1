@@ -1,11 +1,45 @@
 import { supabase } from '../supabaseClient';
 import { fetchFromTable, insertRecord, uploadFile } from '../supabaseUtils';
+import { createAppError, ERROR_IDS, logErrorWithCode } from './errorMessages';
+import { getManagerWithLargestUserId } from './adminService';
+import { sendJournalPendingApprovalToManager } from './emailService';
 
-/**
- * Create a new journal entry with its lines.
- * @param {{ entryType: string, createdBy: number, lines: Array }} entry
- * @returns {Promise<object>} the created journal entry
- */
+async function notifyManagerJournalSubmittedForApproval(journalEntryID, createdBy) {
+  try {
+    const manager = await getManagerWithLargestUserId();
+    if (!manager?.email || !String(manager.email).trim()) {
+      console.warn('Journal submitted: no active manager with an email address to notify.');
+      return;
+    }
+
+    const { data: submitter } = await supabase
+      .from('user')
+      .select('fName, lName, username')
+      .eq('userID', createdBy)
+      .maybeSingle();
+
+    const submitterDisplayName =
+      [submitter?.fName, submitter?.lName].filter(Boolean).join(' ').trim() ||
+      submitter?.username?.trim() ||
+      `User ${createdBy}`;
+
+    const managerDisplayName =
+      [manager.fName, manager.lName].filter(Boolean).join(' ').trim() ||
+      manager.username?.trim() ||
+      'Manager';
+
+    await sendJournalPendingApprovalToManager({
+      managerEmail: manager.email,
+      managerDisplayName,
+      journalEntryId: journalEntryID,
+      submitterDisplayName,
+    });
+  } catch (err) {
+    console.error('Failed to send journal approval notification to manager:', err);
+  }
+}
+
+
 export async function createJournalEntry({ entryType, createdBy, lines }) {
   const { data: header, error: headerError } = await insertRecord('journalEntry', {
 entryType: parseInt(entryType, 10) || null,
@@ -15,7 +49,7 @@ entryType: parseInt(entryType, 10) || null,
   });
 
   if (headerError || !header) {
-    throw headerError || new Error('Failed to create journal entry.');
+    throw createAppError(ERROR_IDS.JOURNAL_HEADER_FAILED, headerError);
   }
 
   const entryId = header.journalEntryID;
@@ -32,14 +66,15 @@ entryType: parseInt(entryType, 10) || null,
     .insert(lineRecords);
 
   if (linesError) {
-    throw linesError;
+    throw createAppError(ERROR_IDS.JOURNAL_LINES_INSERT_FAILED, linesError);
   }
+
+  void notifyManagerJournalSubmittedForApproval(entryId, createdBy);
 
   return header;
 }
 
 
-// Fetch journal entries with optional status filter.
 
 export async function getJournalEntries(status) {
   const options = {
@@ -57,7 +92,6 @@ export async function getJournalEntries(status) {
 }
 
 
- // Fetch a single journal entry with its lines.
 
 export async function getJournalEntryWithLines(entryId) {
   const { data: entry, error: entryError } = await fetchFromTable('journalEntry', {
@@ -65,7 +99,7 @@ export async function getJournalEntryWithLines(entryId) {
     single: true,
   });
 
-  if (entryError || !entry) throw entryError || new Error('Journal entry not found.');
+  if (entryError || !entry) throw createAppError(ERROR_IDS.JOURNAL_NOT_FOUND, entryError);
 
   const { data: lines, error: linesError } = await fetchFromTable('journalLine', {
     filters: { journalEntryID: entryId },
@@ -77,7 +111,6 @@ export async function getJournalEntryWithLines(entryId) {
 }
 
 
-// Approve a journal entry (manager only).
 
 export async function approveJournalEntry(entryId, approvedBy) {
   const approvedAt = new Date().toISOString();
@@ -90,48 +123,27 @@ export async function approveJournalEntry(entryId, approvedBy) {
       approvedAt,
     })
     .eq('journalEntryID', entryId)
+    .eq('status', 'pending')
     .select();
 
-  if (error) throw error;
+  if (error) throw createAppError(ERROR_IDS.APPROVE_JOURNAL_FAILED, error);
 
   const approvedEntry = data?.[0];
-  if (!approvedEntry) throw new Error('Failed to approve journal entry.');
+  if (!approvedEntry) {
+    throw createAppError(ERROR_IDS.APPROVE_JOURNAL_FAILED, {
+      message: 'Entry is not pending approval, or it was already processed.',
+    });
+  }
 
-  // Fetch the journal lines
-  const { data: lines, error: linesError } = await supabase
-    .from('journalLine')
-    .select('accountID, debit, credit')
-    .eq('journalEntryID', entryId);
-
-  if (linesError) throw linesError;
-
-  if (!lines || lines.length === 0) throw new Error('No lines found for journal entry.');
-
-  // Post to ledger
-  const ledgerRecords = lines.map((line) => ({
-    journalEntryID: entryId,
-    accountID: line.accountID,
-    entryDate: approvedAt,
-    description: `Journal Entry ${entryId}`,
-    debit: line.debit,
-    credit: line.credit,
-  }));
-
-  const { error: ledgerError } = await supabase
-    .from('Ledger')
-    .insert(ledgerRecords);
-
-  if (ledgerError) throw ledgerError;
 
   return approvedEntry;
 }
 
 
- // Reject a journal entry with a reason (manager only).
 
 export async function rejectJournalEntry(entryId, rejectReason) {
   if (!rejectReason || !rejectReason.trim()) {
-    throw new Error('A comment is required when rejecting a journal entry.');
+    throw createAppError(ERROR_IDS.REJECT_REASON_REQUIRED);
   }
 
   const { data, error } = await supabase
@@ -141,13 +153,19 @@ export async function rejectJournalEntry(entryId, rejectReason) {
       rejectReason: rejectReason.trim(),
     })
     .eq('journalEntryID', entryId)
+    .eq('status', 'pending')
     .select();
 
-  if (error) throw error;
-  return data?.[0];
+  if (error) throw createAppError(ERROR_IDS.REJECT_JOURNAL_FAILED, error);
+  const rejected = data?.[0];
+  if (!rejected) {
+    throw createAppError(ERROR_IDS.REJECT_JOURNAL_FAILED, {
+      message: 'Entry is not pending, or it was already approved or rejected.',
+    });
+  }
+  return rejected;
 }
 
-// Upload an attachment for a journal entry.
 export async function uploadJournalAttachment(entryId, file) {
   const timestamp = Date.now();
   const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
@@ -155,7 +173,7 @@ export async function uploadJournalAttachment(entryId, file) {
 
   const { data, error } = await uploadFile('attachments', path, file);
 
-  if (error) throw error;
+  if (error) throw createAppError(ERROR_IDS.ATTACHMENT_UPLOAD_FAILED, error);
 
   const { error: refError } = await insertRecord('journalAttachment', {
     journalEntryID: entryId,
@@ -165,13 +183,13 @@ export async function uploadJournalAttachment(entryId, file) {
   });
 
   if (refError) {
-    console.error('Failed to save attachment reference:', refError);
+    void logErrorWithCode(ERROR_IDS.ATTACHMENT_REF_FAILED, refError);
+    throw createAppError(ERROR_IDS.ATTACHMENT_REF_FAILED, refError);
   }
 
   return { path };
 }
 
-// Fetch attachments for a journal entry.
 export async function getJournalAttachments(entryId) {
   const { data, error } = await fetchFromTable('journalAttachment', {
     filters: { journalEntryID: entryId },
@@ -182,16 +200,10 @@ export async function getJournalAttachments(entryId) {
   return data || [];
 }
 
-/**
- * Fetch journal entries enriched with their lines and account names.
- * @param {string} [status] - optional status filter
- * @returns {Promise<Array>}
- */
 export async function getEnrichedJournalEntries(status) {
   const entries = await getJournalEntries(status);
   if (entries.length === 0) return entries;
 
-  // Fetch all lines for these entries
   const entryIds = entries.map((e) => e.journalEntryID);
   const { data: allLines, error: linesError } = await supabase
     .from('journalLine')
@@ -199,11 +211,10 @@ export async function getEnrichedJournalEntries(status) {
     .in('journalEntryID', entryIds);
 
   if (linesError) {
-    console.error('Failed to fetch journal lines:', linesError);
+    void logErrorWithCode(ERROR_IDS.LOAD_JOURNAL_ENTRIES_FAILED, linesError);
     return entries;
   }
 
-  // Fetch account names for all referenced accounts
   const accountIds = [...new Set((allLines || []).map((l) => l.accountID))];
   let accountMap = {};
 
@@ -220,7 +231,6 @@ export async function getEnrichedJournalEntries(status) {
     }
   }
 
-  // Attach lines with account names to each entry
   return entries.map((entry) => ({
     ...entry,
     lines: (allLines || [])
@@ -234,23 +244,18 @@ export async function getEnrichedJournalEntries(status) {
 }
 
 
-// Search journal entries by account name, amount, date, entryType, or ID.
 export function searchJournalEntries(entries, query) {
   if (!query || !query.trim()) return entries;
 
   const q = query.trim().toLowerCase();
 
   return entries.filter((entry) => {
-    // Match on date
     if (entry.createdAt?.includes(q)) return true;
 
-    // Match on account name in lines
     if (entry.lines?.some((l) => l.accountName?.toLowerCase().includes(q))) return true;
 
-    // Match on account number in lines
     if (entry.lines?.some((l) => String(l.accountNumber).includes(q))) return true;
 
-    // Match on total amount (sum of debits)
     if (entry.lines) {
       const total = entry.lines.reduce((sum, l) => sum + (Number(l.debit) || 0), 0);
       if (total.toFixed(2).startsWith(q)) return true;
@@ -260,7 +265,6 @@ export function searchJournalEntries(entries, query) {
   });
 }
 
-// Filter journal entries by date range.
 export function filterByDateRange(entries, startDate, endDate) {
   return entries.filter((entry) => {
     if (!entry.createdAt) return false;
@@ -269,4 +273,33 @@ export function filterByDateRange(entries, startDate, endDate) {
     if (endDate && date > endDate) return false;
     return true;
   });
+}
+
+export async function getPostedJournalEntriesReport() {
+  const entries = await getEnrichedJournalEntries('approved');
+  if (!entries.length) return [];
+
+  const ids = entries.map((e) => e.journalEntryID);
+  const { data: ledgerRows, error } = await supabase
+    .from('Ledger')
+    .select('journalEntryID, entryDate')
+    .in('journalEntryID', ids)
+    .order('entryDate', { ascending: true });
+
+  if (error) {
+    console.error('Ledger fetch for posted journal report:', error);
+    return entries.map((e) => ({ ...e, postedAt: e.approvedAt ?? null }));
+  }
+
+  const firstDateByJe = {};
+  for (const row of ledgerRows || []) {
+    if (firstDateByJe[row.journalEntryID] == null) {
+      firstDateByJe[row.journalEntryID] = row.entryDate;
+    }
+  }
+
+  return entries.map((e) => ({
+    ...e,
+    postedAt: firstDateByJe[e.journalEntryID] ?? e.approvedAt ?? null,
+  }));
 }
