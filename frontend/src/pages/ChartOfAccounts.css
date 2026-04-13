@@ -44,7 +44,8 @@
   margin: 0;
   justify-content: center;
   align-items: center;
-  background-color: var(--bff-accent);
+  background-color: var(--bff-extra-light-accent);
+  border: 1px solid var(--bff-accent);
   border-radius: 6px;
   padding: 0.5% 1%;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
@@ -60,16 +61,24 @@
   font-weight: 500;
   color: var(--bff-dark-text);
 }
+.filter-item input {
+  border: 1px solid var(--bff-light-accent);
+}
+.filter-item input:focus {
+  outline: none;
+  border-color: var(--bff-accent);
+  box-shadow: 0 0 0 2px var(--bff-light-accent);
+}
 .filter-item select {
   padding: 6px 10px;
   font-size: 14px;
-  border: 1px solid var(--bff-border);
+  border: 1px solid var(--bff-light-accent);
   border-radius: 6px;
 }
 .filter-popup select:focus {
   outline: none;
-  border-color: var(--bff-button-hover);
-  box-shadow: 0 0 0 2px white;
+  border-color: var(--bff-accent);
+  box-shadow: 0 0 0 2px var(--bff-light-accent);
 }
 .filter-item + .filter-item {
   margin-left: 10px;

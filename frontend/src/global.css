@@ -218,7 +218,7 @@ body {
 /* errors */
 .input-error {
   border-color: var(--bff-red);
-  background: var(--bff-red);
+  background: var(--bff-extra-light-accent);
 }
 .input-error:focus {
   outline: 2px solid var(--bff-red);

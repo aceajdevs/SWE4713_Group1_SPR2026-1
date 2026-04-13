@@ -1,3 +1,4 @@
+import { fetchErrorMessage } from '../supabaseUtils.js';
 const ALLOWED_ATTACHMENT_TYPES = [
   'application/pdf',
   'application/msword',
@@ -22,17 +23,19 @@ export function validateAccountsExist(lines, accounts) {
   const activeIds = new Set(accounts.filter((a) => a.active).map((a) => a.accountID));
 
 /* "No account selected" and "Account is inactive or does not exist" errors. */
-  lines.forEach((line, i) => {
+  lines.forEach(async (line, i) => {
     if (!line.accountID) {
       errors.push({
+        msg: await fetchErrorMessage(1001),
         errorID: '1001',
         code: '1001',
         field: `line-${i}-accountID`,
         lineIndex: i + 1,
-        message: 'No account selected.',
+        message: msg,
       });
     } else if (!activeIds.has(Number(line.accountID))) {
       errors.push({
+        msg: await fetchErrorMessage(1002),
         errorID: '1002',
         code: '1002',
         field: `line-${i}-accountID`,
@@ -53,6 +56,7 @@ export function validateHasDebitAndCredit(lines) {
   /* "Journal entry must have at least one debit line" and "Journal entry must have at least one credit line" errors. */
   if (!hasDebit) {
     errors.push({
+      msg: fetchErrorMessage(1003),
       errorID: '1003',
       code: '1003',
       field: 'line',

@@ -275,7 +275,7 @@ function ChartOfAccounts() {
 
   return (
     <div className="page-chart-of-accounts">
-      <div classname="page-header">
+      <div className="page-header">
       <h1>Chart of Accounts</h1>
 
       <div className="header-row">
