@@ -529,8 +529,6 @@ function ChartOfAccounts() {
                     <span
                       key={token.key}
                       style={{
-                        backgroundColor: 'var(--bff-accent)',
-                        border: '1px solid var(--bff-border)',
                         color: 'var(--bff-dark-text)',
                         borderRadius: '12px',
                         padding: '2px 10px',

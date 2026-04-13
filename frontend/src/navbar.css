@@ -321,7 +321,7 @@
 
   .center-link:hover {
     background-color: rgba(255, 255, 255, 0.15);
-    border-bottom-color: var(--bff-table-hover);
+    border-bottom-color: var(--bff-extra-light-accent);
   }
 
   .navbar-right {

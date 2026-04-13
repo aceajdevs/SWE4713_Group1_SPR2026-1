@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 function AccountantDashboard() {
   const navigate = useNavigate();
-  
+
   return (
     <main className="dashboard-main">
       <div className="dashboard-card">
@@ -11,7 +11,7 @@ function AccountantDashboard() {
           <h1>Accountant Dashboard</h1>
           <p className="muted">Welcome! Select a service below.</p>
         </div>
-        <div style={{ display: 'flex', gap: '10px', marginTop: '16px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '10px', marginTop: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
           <button className="button-primary" onClick={() => navigate('/journal-entry/new')}>
             New Journal Entry
           </button>
@@ -23,7 +23,7 @@ function AccountantDashboard() {
           </button>
         </div>
       </div>
-  </main>
+    </main>
   );
 }
 

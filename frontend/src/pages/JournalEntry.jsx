@@ -118,7 +118,7 @@ function JournalEntry() {
   const canViewInactiveAccounts = user?.role === 'administrator';
 
   if (loading) return <p>Loading journal entry...</p>;
-  if (error) return <p style={{ color: 'red' }}>{error}</p>;
+  if (error) return <p style={{ color: 'var(--bff-red)' }}>{error}</p>;
 
   return (
     <div className="container">

@@ -25,13 +25,6 @@
   --bff-light-text: #FFFFFF;
   --bff-dark-text: #0F172A;
 
-  /* incorrect styling test - remove when all instances are found */
-  /* --bff-error: #ff00ea; */
-  --bff-error-accent: #ff00ea;
-  --bff-error-hover: #ff00ea;
-  --bff-table-even: #ff00ea;
-  --bff-table-hover: #ff00ea;
-  --bff-border: #ff00ea;
 }
 
 /* Old Color Scheme (pre-2026-04-12) - Kept for reference:
@@ -183,6 +176,48 @@ body {
   font-size: 14px;
   width: 100%;
   box-sizing: border-box;
+}
+.input-right {
+  text-align: right;
+}
+.input-right::-webkit-outer-spin-button,
+.input-right::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.input-right[type=number] {
+  -moz-appearance: textfield;
+}
+.amount-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.spinner-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.spinner-button {
+  color: var(--bff-light-text);
+  background-color: var(--bff-primary);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  width: 30px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s ease;
+}
+.spinner-button:hover {
+  background-color: var(--bff-dark-primary);
+}
+.spinner-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 .input.compact {
   max-width: 220px;

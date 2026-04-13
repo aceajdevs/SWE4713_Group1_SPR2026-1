@@ -115,14 +115,6 @@ function PostedJournalEntriesPage() {
         </div>
       </div>
 
-      <p style={{ marginBottom: 16, color: 'var(--bff-dark-text)', maxWidth: 720 }}>
-        These entries were approved by a manager and written to the general ledger. Data is loaded from
-        Supabase using your local{' '}
-        <code style={{ fontSize: 13 }}>.env.local</code> values (<code style={{ fontSize: 13 }}>VITE_SUPABASE_URL</code>,{' '}
-        <code style={{ fontSize: 13 }}>VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY</code>). The rule summary reflects the same
-        double-entry checks used when entries are created.
-      </p>
-
       {error && (
         <p style={{ color: 'var(--bff-red)', marginBottom: 12 }} role="alert">
           {error}
@@ -148,6 +140,7 @@ function PostedJournalEntriesPage() {
             placeholder="Account, amount, or date"
             className="input"
             style={{ width: '100%' }}
+            aria-label="Search posted journals by account, amount, or date"
           />
           <button type="button" className="button-clear" onClick={() => setSearchQuery('')} aria-label="Clear search input">X</button>
           </div>

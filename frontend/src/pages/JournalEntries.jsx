@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useId } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import {
@@ -14,6 +14,7 @@ import '../global.css';
 function JournalEntries() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const formId = useId();
 
   const [entries, setEntries] = useState([]);
   const [statusFilter, setStatusFilter] = useState('');
@@ -27,7 +28,8 @@ function JournalEntries() {
 
   const isManager = user?.role === 'manager';
   const isAccountant = user?.role === 'accountant';
-  const canView = isManager || isAccountant || user?.role === 'administrator';
+  const isAdmin = user?.role === 'administrator';
+  const canView = isManager || isAccountant || isAdmin;
   const ledgerBasePath = '/admin/ledger';
 
   useEffect(() => {
@@ -74,7 +76,6 @@ function JournalEntries() {
     }
   };
 
-  // Apply client-side search and date filters
   let displayed = entries;
   if (searchQuery.trim()) {
     displayed = searchJournalEntries(displayed, searchQuery);
