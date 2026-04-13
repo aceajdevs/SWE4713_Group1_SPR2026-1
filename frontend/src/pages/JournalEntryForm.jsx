@@ -40,9 +40,9 @@ function JournalEntryForm() {
   const [errors, setErrors] = useState([]);
   const [validationMessages, setValidationMessages] = useState([]);
   const [fieldErrors, setFieldErrors] = useState({});
+  const [isDirty, setIsDirty] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
-
   const canCreate = user?.role === 'accountant' || user?.role === 'manager';
 
   useEffect(() => {
@@ -122,8 +122,15 @@ function JournalEntryForm() {
   };
 
   useEffect(() => {
+    if (!isDirty) return;
     runValidation();
-  }, [lines, entryType, accounts]);
+  }, [lines, entryType, accounts, isDirty]);
+
+  const formatAmountValue = (value) => {
+    if (value === '' || value === null || value === undefined) return '';
+    const num = parseFloat(value);
+    return Number.isFinite(num) ? num.toFixed(2) : value;
+  };
 
   const updateLine = (index, field, value) => {
     setLines((prev) => {
@@ -137,6 +144,25 @@ function JournalEntryForm() {
       }
       return updated;
     });
+    setIsDirty(true);
+    if (errors.length > 0) setErrors([]);
+  };
+
+  const adjustLineAmount = (index, field, delta) => {
+    setLines((prev) => {
+      const updated = [...prev];
+      const current = parseFloat(updated[index][field]) || 0;
+      const nextValue = Math.max(0, current + delta);
+      updated[index] = { ...updated[index], [field]: nextValue.toFixed(2) };
+      if (field === 'debit' && nextValue > 0) {
+        updated[index].credit = '';
+      }
+      if (field === 'credit' && nextValue > 0) {
+        updated[index].debit = '';
+      }
+      return updated;
+    });
+    setIsDirty(true);
     if (errors.length > 0) setErrors([]);
   };
 
@@ -189,6 +215,7 @@ function JournalEntryForm() {
     setErrors([]);
     setValidationMessages([]);
     setFieldErrors({});
+    setIsDirty(false);
   };
 
   const handleSubmit = async () => {
@@ -249,7 +276,7 @@ function JournalEntryForm() {
       {errors.length > 0 && (
         <div style={{ marginBottom: '16px' }}>
           {errors.map((err, i) => (
-            <p key={i} style={{ color: 'red', margin: '4px 0' }}>{err}</p>
+            <p key={i} style={{ color: 'var(--bff-red)', margin: '4px 0' }}>{err}</p>
           ))}
         </div>
       )}
@@ -258,7 +285,10 @@ function JournalEntryForm() {
         <HelpTooltip text="Classify this entry (e.g. Regular, Adjusting, Closing).">
           <select
             value={entryType}
-            onChange={(e) => setEntryType(e.target.value)}
+            onChange={(e) => {
+              setEntryType(e.target.value);
+              setIsDirty(true);
+            }}
             className={`input ${fieldErrors.entryType ? 'input-error' : ''}`}
             style={{ width: '100%' }}
           >
@@ -275,8 +305,8 @@ function JournalEntryForm() {
           <tr>
             <th>#</th>
             <th>Account</th>
-            <th>Debit</th>
-            <th>Credit</th>
+            <th className='money'>Debit</th>
+            <th className='money'>Credit</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -311,30 +341,72 @@ function JournalEntryForm() {
               </td>
               <td>
                 <HelpTooltip text="Enter the debit amount. Cannot have both debit and credit on the same line.">
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={line.debit}
-                    onChange={(e) => updateLine(index, 'debit', e.target.value)}
-                    placeholder="0.00"
-                    className={`input ${fieldErrors[`line-${index}-debit`] && !(parseFloat(line.credit) > 0) ? 'input-error' : ''}`}
-                    disabled={parseFloat(line.credit) > 0}
-                  />
+                  <div className="amount-input-wrapper">
+                    <input
+                      type="number"
+                      min="0.00"
+                      step="0.01"
+                      value={line.debit}
+                      onChange={(e) => updateLine(index, 'debit', e.target.value)}
+                      onBlur={(e) => updateLine(index, 'debit', formatAmountValue(e.target.value))}
+                      placeholder="0.00"
+                      className={`input input-right ${fieldErrors['line-' + index + '-debit'] && !(parseFloat(line.credit) > 0) ? 'input-error' : ''}`}
+                      disabled={parseFloat(line.credit) > 0}
+                    />
+                    <div className="spinner-controls">
+                      <button
+                        type="button"
+                        className="spinner-button"
+                        onClick={() => adjustLineAmount(index, 'debit', 0.01)}
+                        disabled={parseFloat(line.credit) > 0}
+                      >
+                        ▲
+                      </button>
+                      <button
+                        type="button"
+                        className="spinner-button"
+                        onClick={() => adjustLineAmount(index, 'debit', -0.01)}
+                        disabled={parseFloat(line.credit) > 0}
+                      >
+                        ▼
+                      </button>
+                    </div>
+                  </div>
                 </HelpTooltip>
               </td>
               <td>
                 <HelpTooltip text="Enter the credit amount. Cannot have both debit and credit on the same line.">
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={line.credit}
-                    onChange={(e) => updateLine(index, 'credit', e.target.value)}
-                    placeholder="0.00"
-                    className={`input ${fieldErrors[`line-${index}-credit`] && !(parseFloat(line.debit) > 0) ? 'input-error' : ''}`}
-                    disabled={parseFloat(line.debit) > 0}
-                  />
+                  <div className="amount-input-wrapper">
+                    <input
+                      type="number"
+                      min="0.00"
+                      step="0.01"
+                      value={line.credit}
+                      onChange={(e) => updateLine(index, 'credit', e.target.value)}
+                      onBlur={(e) => updateLine(index, 'credit', formatAmountValue(e.target.value))}
+                      placeholder="0.00"
+                      className={`input input-right ${fieldErrors['line-' + index + '-credit'] && !(parseFloat(line.debit) > 0) ? 'input-error' : ''}`}
+                      disabled={parseFloat(line.debit) > 0}
+                    />
+                    <div className="spinner-controls">
+                      <button
+                        type="button"
+                        className="spinner-button"
+                        onClick={() => adjustLineAmount(index, 'credit', 0.01)}
+                        disabled={parseFloat(line.debit) > 0}
+                      >
+                        ▲
+                      </button>
+                      <button
+                        type="button"
+                        className="spinner-button"
+                        onClick={() => adjustLineAmount(index, 'credit', -0.01)}
+                        disabled={parseFloat(line.debit) > 0}
+                      >
+                        ▼
+                      </button>
+                    </div>
+                  </div>
                 </HelpTooltip>
               </td>
               <td>

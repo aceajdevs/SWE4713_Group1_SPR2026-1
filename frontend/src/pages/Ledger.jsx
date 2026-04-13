@@ -243,7 +243,6 @@ function Ledger() {
               listStyle: 'none',
               margin: '8px 0 0',
               padding: 0,
-              border: `1px solid var(--bff-border)`,
               borderRadius: '6px',
               maxWidth: '400px',
               maxHeight: '180px',
@@ -263,7 +262,7 @@ function Ledger() {
                     textAlign: 'left',
                     padding: '8px 10px',
                     border: 'none',
-                    borderBottom: `1px solid var(--bff-border)`,
+                    borderBottom: `1px solid var(--bff-primary)`,
                     background: 'var(--bff-light-text)',
                     cursor: 'pointer',
                     fontSize: 'inherit',
@@ -271,7 +270,7 @@ function Ledger() {
                     color: 'var(--bff-dark-text)',
                     transition: 'background-color 0.2s ease'
                   }}
-                  onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--bff-table-hover)'}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--bff-extra-light-accent)'}
                   onMouseLeave={(e) => e.target.style.backgroundColor = 'var(--bff-light-text)'}
                 >
                   {row.accountNumber} — {row.accountName}
@@ -308,7 +307,7 @@ function Ledger() {
           </tr>
           {filteredEntries.length === 0 && entries.length > 0 ? (
             <tr>
-              <td colSpan={6} style={{ textAlign: 'center', padding: '16px', color: 'var(--bff-border)' }}>
+              <td colSpan={6} style={{ textAlign: 'center', padding: '16px' }}>
                 No rows match the current filters. Adjust date range or amount.
               </td>
             </tr>
