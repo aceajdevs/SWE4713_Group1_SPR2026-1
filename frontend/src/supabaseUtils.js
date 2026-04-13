@@ -156,3 +156,15 @@ export function subscribeToTable(tableName, callback) {
   };
 }
 
+export async function fetchErrorMessage(errorID) {
+  try {
+    const { data, error } = await supabase.functions.invoke('get-error-message', {
+      body: { name: 'Functions' },
+    });
+    if (error) throw error;
+    return data?.message || 'An unknown error occurred.';
+  } catch (error) {
+    console.error(`Error fetching error message for ID ${errorID}:`, error);
+    return 'An unknown error occurred.';
+  }
+}

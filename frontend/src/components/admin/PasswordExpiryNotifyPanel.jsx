@@ -49,19 +49,14 @@ export default function PasswordExpiryNotifyPanel() {
 
   return (
     <div className="password-expiry-notify-panel">
-      <h2>Password expiry emails</h2>
-      <p style={{ marginBottom: '0.75rem', fontSize: '0.95rem', color: '#374151' }}>
-        Sends a reminder to users whose password expires within 3 days (based on{' '}
-        <code>user.passwordExpires</code>), using the admin email template. Users already marked with{' '}
-        <code>user.passwordExpiryWarningSentAt</code> are skipped. After each successful send, that timestamp is updated.
-      </p>
-      <HelpTooltip text="Send reminder emails now for accounts in the 3-day expiry window that do not yet have passwordExpiryWarningSentAt set.">
-        <button type="button" disabled={loading} onClick={handleSend}>
-          {loading ? 'Sending…' : 'Send password expiry emails'}
+      <h2>Expired Password Emails</h2>
+      <HelpTooltip text="Send reminder emails for accounts in the 3-day expiry window that do not yet have passwordExpiryWarningSentAt set.">
+        <button type="button" className="button-primary" disabled={loading} onClick={handleSend}>
+          {loading ? 'Sending…' : 'Send Reminder Emails'}
         </button>
       </HelpTooltip>
       {error && (
-        <p style={{ color: '#b91c1c', marginTop: '0.75rem' }} role="alert">
+        <p className="error-messages" role="alert">
           {error}
         </p>
       )}

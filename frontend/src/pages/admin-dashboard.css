@@ -57,19 +57,10 @@
   font-size: 14px;
   color: var(--bff-primary);
 }
-.suspend-group-column input[type="date"] {
-  width: 100%;
-  padding: 8px 10px;
-  border: 1px solid var(--bff-border);
-  border-radius: 8px;
-  box-sizing: border-box;
-}
 .admin-dashboard .input {
   height: 36px;
   padding: 8px 12px;
   border-radius: 8px;
-  border: 1px solid var(--bff-border);
-  background: var(--bff-background);
   font-size: 14px;
   width: 100%;
   box-sizing: border-box;

@@ -141,9 +141,9 @@ function JournalEntry() {
             <tr>
               <th>Account</th>
               <th>Description</th>
-              <th>Debit</th>
-              <th>Credit</th>
-              <th>Balance</th>
+              <th className='money'>Debit</th>
+              <th className='money'>Credit</th>
+              <th className='money'>Balance</th>
             </tr>
           </thead>
           <tbody>
@@ -164,9 +164,9 @@ function JournalEntry() {
                 <tr key={entry.ledgerID} style={hiddenInactive ? { display: 'none' } : undefined}>
                   <td>{accountLabel}</td>
                   <td>{entry.description?.trim() ? entry.description : ''}</td>
-                  <td>{formatDebitCreditCell(entry.debit)}</td>
-                  <td>{formatDebitCreditCell(entry.credit)}</td>
-                  <td>{rowBalance !== undefined && rowBalance !== null ? formatCurrency(rowBalance) : '-'}</td>
+                  <td className='money'>{formatDebitCreditCell(entry.debit)}</td>
+                  <td className='money'>{formatDebitCreditCell(entry.credit)}</td>
+                  <td className='money'>{rowBalance !== undefined && rowBalance !== null ? formatCurrency(rowBalance) : '-'}</td>
                 </tr>
               );
             })}
