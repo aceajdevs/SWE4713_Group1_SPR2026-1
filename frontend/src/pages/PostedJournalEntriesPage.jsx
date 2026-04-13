@@ -153,7 +153,6 @@ function PostedJournalEntriesPage() {
           <button type="button" className="button-clear" onClick={() => setSearchQuery('')} aria-label="Clear search input">X</button>
           </div>
         </div>
-        </fieldset>
       </div>
 
       {loading ? (

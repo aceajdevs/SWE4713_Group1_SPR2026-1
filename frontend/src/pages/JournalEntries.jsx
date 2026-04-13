@@ -180,7 +180,7 @@ function JournalEntries() {
               className="input"
             />
           </HelpTooltip>
-        </fieldset>
+        </div>
       </div>
 
       {loading ? (
