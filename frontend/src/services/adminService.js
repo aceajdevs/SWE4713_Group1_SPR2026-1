@@ -29,6 +29,24 @@ export const getEmailRecipientsByRoles = async (roles = ['manager', 'accountant'
   return (data || []).filter((u) => u.email && String(u.email).trim().length > 0)
 }
 
+export const getManagerWithLargestUserId = async () => {
+  const { data, error } = await supabase
+    .from('user')
+    .select('userID, email, fName, lName, username, role')
+    .eq('role', 'manager')
+    .eq('status', true)
+    .order('userID', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (error) {
+    console.error(error)
+    return null
+  }
+
+  return data
+}
+
 export const getExpiredPasswords = async () => {
   const today = new Date().toISOString()
 

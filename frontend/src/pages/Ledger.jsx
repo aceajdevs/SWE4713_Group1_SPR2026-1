@@ -7,7 +7,7 @@ import { HelpTooltip } from '../components/HelpTooltip';
 import '../global.css';
 
 
-// Ledger component displays the general ledger entries for a specific account, with filtering and navigation options.
+
 function Ledger() {
   const { accountNumber } = useParams();
   const navigate = useNavigate();
@@ -41,18 +41,18 @@ function Ledger() {
     setLoading(false);
   }, [accountNumber, user?.role]);
 
-// Load ledger data on component mount and when accountNumber or user role changes
+
   useEffect(() => {
     loadLedger();
   }, [loadLedger]);
 
-// Subscribe to real-time updates for this account's ledger entries, and reload ledger when changes occur
+
   useEffect(() => {
     if (!account?.accountID) return undefined;
     return subscribeToAccountLedger(account.accountID, loadLedger);
   }, [account?.accountID, loadLedger]);
 
-// Load the list of accounts for the account search picklist, filtering out inactive accounts for non-admin users
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -71,11 +71,7 @@ function Ledger() {
     };
   }, [user?.role]);
 
-/*
-    Filter ledger entries based on date range and amount search.
-    Date filters compare entryDate to start/end of selected days.
-    Amount search matches either debit or credit within a small tolerance to handle formatting issues.
-*/
+
   const filteredEntries = useMemo(() => {
     return entries.filter((e) => {
       if (dateFrom) {
@@ -105,7 +101,7 @@ function Ledger() {
     });
   }, [entries, dateFrom, dateTo, amountSearch]);
 
-// Filter the account picklist based on the account name/number query, matching either field case-insensitively and allowing partial matches
+
   const accountMatches = useMemo(() => {
     const q = accountNameQuery.trim().toLowerCase();
     if (!q) return [];
@@ -116,13 +112,13 @@ function Ledger() {
     );
   }, [accountPickList, accountNameQuery]);
 
-// Format a number as US currency, showing '-' for empty/invalid values.
+
   const formatCurrency = (value) => {
     if (value === null || value === undefined || value === '') return '-';
     return `$${parseFloat(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
- // Format debit or credit cell, showing '-' for empty/invalid values and formatted currency for valid numbers.
+
   const formatDebitCreditCell = (value) => {
     if (value === null || value === undefined || value === '') return '-';
     const n = parseFloat(value);
@@ -130,7 +126,7 @@ function Ledger() {
     return formatCurrency(n);
   };
 
-  // Format a date string as 'MMM DD, YYYY', showing 'N/A' for empty/invalid values.
+
   const formatDate = (value) => {
     if (!value) return 'N/A';
     return new Date(value).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' });
@@ -141,7 +137,6 @@ function Ledger() {
 
   const openingNum = parseFloat(account?.initBalance) || 0;
 
-// Calculate the ending balance based on the filtered entries. If there are no filtered entries, use the opening balance as the ending balance.
   const endingBalance =
     filteredEntries.length > 0
       ? filteredEntries[filteredEntries.length - 1].displayBalance
@@ -149,6 +144,9 @@ function Ledger() {
 
   if (loading) return <p>Loading ledger...</p>;
   if (error) return <p style={{ color: 'red' }}>{error}</p>;
+  if (!account) {
+    return <p style={{ color: 'red' }}>Unable to load this account.</p>;
+  }
 
   return (
     <div className="container">
