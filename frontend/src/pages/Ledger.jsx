@@ -1,12 +1,148 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
-import { getLedgerByAccountNumber, subscribeToAccountLedger } from '../services/ledgerService';
+import {
+  sortLedgerEntriesChronological,
+  computeLedgerRunningBalances,
+  subscribeToAccountLedger,
+} from '../services/ledgerService';
 import { supabase } from '../supabaseClient';
 import { HelpTooltip } from '../components/HelpTooltip';
 import '../global.css';
 
+const LEDGER_SELECT =
+  'ledgerID, accountID, journalEntryID, entryDate, description, debit, credit, runningBalance';
 
+function shouldTryLowercaseLedgerTable(error) {
+  const errMsg = (error?.message || '').toLowerCase();
+  const isPermission =
+    error?.code === '42501' ||
+    errMsg.includes('permission denied') ||
+    errMsg.includes('row-level security');
+  return (
+    !isPermission &&
+    (error?.code === 'PGRST205' ||
+      errMsg.includes('schema cache') ||
+      errMsg.includes('does not exist') ||
+      (errMsg.includes('could not find') && errMsg.includes('table')))
+  );
+}
+
+/** Map DB/API row to the shape the table expects; supports camelCase or snake_case. */
+function normalizeLedgerRow(row) {
+  if (!row || typeof row !== 'object') return row;
+  return {
+    ...row,
+    ledgerID: row.ledgerID ?? row.ledger_id,
+    accountID: row.accountID ?? row.account_id,
+    journalEntryID: row.journalEntryID ?? row.journal_entry_id,
+    entryDate: row.entryDate ?? row.entry_date,
+    description: row.description,
+    debit: row.debit,
+    credit: row.credit,
+    runningBalance: row.runningBalance ?? row.running_balance,
+  };
+}
+
+function ledgerReadErrorMessage(ledgerError) {
+  if (!ledgerError) return 'Failed to load ledger entries.';
+  const msg = ledgerError.message || '';
+  const isRlsOrDenied =
+    ledgerError.code === '42501' || /permission denied|violates row-level security|rls/i.test(msg);
+  const rlsHint = isRlsOrDenied
+    ? 'Check Row Level Security (RLS) policies on the Ledger table for SELECT for authenticated users.'
+    : '';
+  const base = msg || ledgerError.details || String(ledgerError);
+  const extra = ledgerError.hint ? ` ${ledgerError.hint}` : '';
+  return rlsHint ? `${base}${extra} ${rlsHint}` : `${base}${extra}`;
+}
+
+async function fetchChartAccountByAccountNumber(accountNumber) {
+  const trimmed = String(accountNumber ?? '').trim();
+  if (!trimmed) {
+    return { accountData: null, error: new Error('Invalid account number.') };
+  }
+
+  const { data: byString, error: errString } = await supabase
+    .from('chartOfAccounts')
+    .select('accountID, accountNumber, accountName, normalSide, initBalance, active')
+    .eq('accountNumber', trimmed)
+    .maybeSingle();
+
+  if (errString) {
+    return { accountData: null, error: new Error(errString.message || 'Account lookup failed.') };
+  }
+  if (byString) {
+    return { accountData: byString, error: null };
+  }
+
+  if (/^\d+$/.test(trimmed)) {
+    const asNumber = Number(trimmed);
+    if (Number.isFinite(asNumber)) {
+      const { data: byNum, error: errNum } = await supabase
+        .from('chartOfAccounts')
+        .select('accountID, accountNumber, accountName, normalSide, initBalance, active')
+        .eq('accountNumber', asNumber)
+        .maybeSingle();
+
+      if (errNum) {
+        return { accountData: null, error: new Error(errNum.message || 'Account lookup failed.') };
+      }
+      if (byNum) {
+        return { accountData: byNum, error: null };
+      }
+    }
+  }
+
+  return { accountData: null, error: new Error('Account not found.') };
+}
+
+async function fetchLedgerRowsFromTable(accountId) {
+  const idFilter = Number.isFinite(Number(accountId)) ? Number(accountId) : accountId;
+  const primary = await supabase
+    .from('Ledger')
+    .select(LEDGER_SELECT)
+    .eq('accountID', idFilter)
+    .order('ledgerID', { ascending: true });
+
+  if (!primary.error) {
+    return { data: (primary.data || []).map(normalizeLedgerRow), error: null };
+  }
+  if (shouldTryLowercaseLedgerTable(primary.error)) {
+    const fallback = await supabase
+      .from('ledger')
+      .select(LEDGER_SELECT)
+      .eq('accountID', idFilter)
+      .order('ledgerID', { ascending: true });
+    if (!fallback.error) {
+      return { data: (fallback.data || []).map(normalizeLedgerRow), error: null };
+    }
+  }
+  return { data: null, error: primary.error };
+}
+
+function withDisplayBalances(account, sortedEntries) {
+  const rows = sortedEntries.map(normalizeLedgerRow);
+  const storedOk =
+    rows.length > 0 &&
+    rows.every(
+      (e) =>
+        e.runningBalance !== null &&
+        e.runningBalance !== undefined &&
+        e.runningBalance !== '' &&
+        Number.isFinite(Number(e.runningBalance))
+    );
+
+  if (storedOk) {
+    return rows.map((e) => ({
+      ...e,
+      displayBalance: Number(e.runningBalance),
+    }));
+  }
+
+  const forCompute = rows.map(({ runningBalance: _rb, ...rest }) => rest);
+  return computeLedgerRunningBalances(account, forCompute);
+}
 
 function Ledger() {
   const { accountNumber } = useParams();
@@ -25,18 +161,43 @@ function Ledger() {
   const loadLedger = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const { account: loadedAccount, entries: loadedEntries, error: loadError } = await getLedgerByAccountNumber(
-      accountNumber,
-      user?.role
-    );
+    try {
+      const { accountData, error: lookupError } = await fetchChartAccountByAccountNumber(accountNumber);
+      if (lookupError || !accountData) {
+        setError((lookupError || new Error('Account not found.')).message);
+        setAccount(null);
+        setEntries([]);
+        setLoading(false);
+        return;
+      }
 
-    if (loadError) {
-      setError(loadError.message);
+      if (!accountData.active && user?.role !== 'administrator') {
+        setError('You do not have permission to view this account.');
+        setAccount(null);
+        setEntries([]);
+        setLoading(false);
+        return;
+      }
+
+      const { data: ledgerRows, error: ledgerError } = await fetchLedgerRowsFromTable(accountData.accountID);
+      if (ledgerError) {
+        console.error('Ledger select failed:', ledgerError);
+        setError(ledgerReadErrorMessage(ledgerError));
+        setAccount(accountData);
+        setEntries([]);
+        setLoading(false);
+        return;
+      }
+
+      const sorted = sortLedgerEntriesChronological(ledgerRows || []);
+      const withBalances = withDisplayBalances(accountData, sorted);
+      setAccount(accountData);
+      setEntries(withBalances);
+    } catch (err) {
+      console.error('loadLedger error:', err);
+      setError(err?.message || 'Failed to load ledger entries.');
       setAccount(null);
       setEntries([]);
-    } else {
-      setAccount(loadedAccount);
-      setEntries(loadedEntries);
     }
     setLoading(false);
   }, [accountNumber, user?.role]);
