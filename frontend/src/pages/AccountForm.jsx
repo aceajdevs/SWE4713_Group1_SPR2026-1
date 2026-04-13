@@ -423,7 +423,7 @@ Normal Side: ${accountData.normalSide}`;
 
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
         <HelpTooltip text="Open a popup to email a manager or administrator about this account.">
-          <button type="button" className="button" onClick={() => setStaffEmailModalOpen(true)}>
+          <button type="button" className="button-primary" onClick={() => setStaffEmailModalOpen(true)}>
             Email manager/admin
           </button>
         </HelpTooltip>
@@ -444,7 +444,7 @@ Normal Side: ${accountData.normalSide}`;
           >
             <div className="account-email-modal-header">
               <h2 id="account-email-modal-title" className="account-email-modal-title">
-                Email manager or administrator
+                Email Manager or Administrator
               </h2>
               <button
                 type="button"
@@ -476,7 +476,7 @@ Normal Side: ${accountData.normalSide}`;
                 </label>
                 <select
                   id="account-email-recipient"
-                  className="input-field"
+                  className="input"
                   value={selectedStaffId}
                   onChange={(e) => setSelectedStaffId(e.target.value)}
                   disabled={staffRecipients.length === 0}
@@ -494,35 +494,45 @@ Normal Side: ${accountData.normalSide}`;
                 <label htmlFor="account-email-subject" className="account-email-label">
                   Subject
                 </label>
-                <input
-                  id="account-email-subject"
-                  type="text"
-                  className="input-field"
-                  value={staffEmailSubject}
-                  onChange={(e) => setStaffEmailSubject(e.target.value)}
-                  placeholder="Subject…"
-                  autoComplete="off"
-                />
+                <div className="clear-input-container" role="group">
+                  <input
+                    id="account-email-subject"
+                    type="text"
+                    className="input"
+                    value={staffEmailSubject}
+                    onChange={(e) => setStaffEmailSubject(e.target.value)}
+                    placeholder="Subject…"
+                    autoComplete="off"
+                  />
+                  <button className="button-clear" type="button" onClick={() => setStaffEmailSubject('')} aria-label="Clear subject">
+                    X
+                  </button>
+                </div>
               </div>
 
               <div className="account-email-row">
                 <label htmlFor="account-email-message" className="account-email-label">
                   Message
                 </label>
+                <div className="clear-input-container" role="group">
                 <textarea
                   id="account-email-message"
-                  className="input-field"
+                  className="input"
                   rows={4}
                   value={staffEmailMessage}
                   onChange={(e) => setStaffEmailMessage(e.target.value)}
                   placeholder="Your message…"
                 />
+                <button className="button" type="button" onClick={() => setStaffEmailMessage('')} aria-label="Clear message">
+                  X
+                </button>
+                </div>
               </div>
 
               <div className="account-email-actions">
                 <button
                   type="button"
-                  className="button"
+                  className="button-primary"
                   style={{ marginRight: '8px', background: '#6b7280' }}
                   disabled={staffEmailSending}
                   onClick={() => setStaffEmailModalOpen(false)}
@@ -530,7 +540,7 @@ Normal Side: ${accountData.normalSide}`;
                   Cancel
                 </button>
                 <HelpTooltip text="Send this message using the configured EmailJS admin template.">
-                  <button type="submit" className="button" disabled={staffEmailSending || staffRecipients.length === 0}>
+                  <button type="submit" className="button-primary" disabled={staffEmailSending || staffRecipients.length === 0}>
                     {staffEmailSending ? 'Sending…' : 'Send email'}
                   </button>
                 </HelpTooltip>
@@ -543,14 +553,17 @@ Normal Side: ${accountData.normalSide}`;
       <form onSubmit={handleSubmit} className="form-grid">
         <div>
           <label>Account Name:</label>
+          <div className="clear-input-container" role="group">
           <input
             type="text"
             name="accountName"
             value={formData.accountName}
             onChange={handleChange}
             required
-            className="input-field"
+            className="input"
           />
+          <button type="button" className="button-clear" onClick={() => setFormData(prev => ({ ...prev, accountName: '' }))} aria-label="Clear account name input">X</button>
+          </div>
         </div>
         <div>
           <label>Account Number:</label>
@@ -560,29 +573,32 @@ Normal Side: ${accountData.normalSide}`;
             value={formData.accountNumber}
             onChange={handleChange}
             required
-            className="input-field"
+            className="input"
             placeholder="Auto-generated"
           />
         </div>
         <div className="span-1">
           <label>Description:</label>
+          <div className="clear-input-container" role="group">
           <textarea
             name="description"
             value={formData.description}
             onChange={handleChange}
-            className="input-field"
+            className="input"
           />
+          <button type="button" className="button-clear" onClick={() => setFormData(prev => ({ ...prev, description: '' }))} aria-label="Clear description input">X</button>
+          </div>
         </div>
         <div>
           <label>Normal Side:</label>
-          <select name="normalSide" value={formData.normalSide} onChange={handleChange} className="input-field">
+          <select name="normalSide" value={formData.normalSide} onChange={handleChange} className="input">
             <option value="Debit">Debit</option>
             <option value="Credit">Credit</option>
           </select>
         </div>
         <div>
           <label>Category:</label>
-          <select name="type" value={formData.type} onChange={handleChange} required className="input-field">
+          <select name="type" value={formData.type} onChange={handleChange} required className="input">
             <option value="">Select a Category</option>
             <option value="Assets">Assets</option>
             <option value="Liabilities">Liabilities</option>
@@ -597,7 +613,7 @@ Normal Side: ${accountData.normalSide}`;
             name="subType"
             value={formData.subType}
             onChange={handleChange}
-            className="input-field"
+            className="input"
             disabled={!formData.type}
           >
             <option value="">Select a Subcategory</option>
@@ -613,18 +629,21 @@ Normal Side: ${accountData.normalSide}`;
             name="orderNumber"
             value={formData.orderNumber}
             onChange={handleChange}
-            className="input-field"
+            className="input"
           />
         </div>
         <div>
           <label>Initial Balance:</label>
+          <div className="clear-input-container" role="group">
           <input
             type="text"
             name="initBalance"
             value={formatCurrency(formData.initBalance)}
             onChange={handleChange}
-            className="input-field"
+            className="input"
           />
+          <button type="button" className="button-clear" onClick={() => setFormData(prev => ({ ...prev, initBalance: 0 }))} aria-label="Clear initial balance input">X</button>
+          </div>
         </div>
         <div className="span-2">
           <HelpTooltip
