@@ -26,6 +26,7 @@ function Navbar() {
   const canViewPostedJournalReport =
     user?.role === 'manager' || user?.role === 'accountant' || user?.role === 'administrator';
   const isAdmin = user?.role === 'administrator';
+  const isManager = user?.role === 'manager';
 
   const handleDashboardNavigation = () => {
     if (user && user.role) {
@@ -121,6 +122,15 @@ function Navbar() {
               onClick={() => handleNavigation('/posted-journal-entries')}
             >
               Posted Journals
+            </a>
+          )}
+          {isManager && (
+            <a
+              href="#/report"
+              className="nav-link center-link"
+              onClick={() => handleNavigation('/report')}
+            >
+              Reports
             </a>
           )}
         </div>

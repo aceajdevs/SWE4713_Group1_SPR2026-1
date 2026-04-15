@@ -25,7 +25,7 @@ import JournalEntries from './pages/JournalEntries'
 import PostedJournalEntriesPage from './pages/PostedJournalEntriesPage'
 import JournalEntryDetail from './pages/JournalEntryDetail'
 import Report from './pages/Report'
-//import SampleReport from './pages/sample-report'
+import SampleReport from './pages/sample-report'
 
 function AppLayout() {
   const location = useLocation();
@@ -44,13 +44,13 @@ function AppLayout() {
         console.log('[PasswordExpiryCheck] Passwords about to expire:', expiring);
       }
     };
-  
+
     // Run once immediately
     runCheck();
-  
+
     // Then every 30 minutes
     const intervalId = setInterval(runCheck, 30 * 60 * 1000);
-  
+
     return () => clearInterval(intervalId);
   }, []);
   return (
@@ -80,7 +80,7 @@ function AppLayout() {
         <Route path="/journal-entry/new" element={<JournalEntryForm />} />
         <Route path="/journal-entry/:id" element={<JournalEntryDetail />} />
         <Route path="/report" element={<Report />} />
-        {/* <Route path="/sample-report" element={<SampleReport />} /> */}
+        { <Route path="/sample-report" element={<SampleReport />} /> }
       </Routes>
     </>
   );
