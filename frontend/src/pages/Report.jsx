@@ -1,11 +1,10 @@
-import React, { useMemo, useState } from 'react';
-import React, { useCallback, useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { HelpTooltip } from '../components/HelpTooltip';
 import {
   REPORT_TYPES,
-  getSampleReportHtml,
+  generateReportHtml,
   downloadHtmlReport,
   reportFilenameBase,
 } from '../services/Report';
@@ -14,11 +13,11 @@ import '../global.css';
 function Report() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [activeReportKey, setActiveReportKey] = useState(null);
   const [generatedAt, setGeneratedAt] = useState('');
   const [reportTitle, setReportTitle] = useState('');
   const [reportHtml, setReportHtml] = useState('');
   const [activeType, setActiveType] = useState(null);
+  const [generating, setGenerating] = useState(false);
 
   const dashboardPath =
     user?.role === 'administrator'
@@ -29,72 +28,23 @@ function Report() {
           ? '/accountant-dashboard'
           : '/dashboard';
 
-  const reportDefinitions = useMemo(
-    () => ({
-      trialBalance: {
-        title: 'Trial Balance',
-        rows: [
-          { label: 'Cash', debit: 15850.0, credit: 0 },
-          { label: 'Accounts Receivable', debit: 8250.0, credit: 0 },
-          { label: 'Equipment', debit: 30000.0, credit: 0 },
-          { label: 'Accounts Payable', debit: 0, credit: 9650.0 },
-          { label: 'Owner Equity', debit: 0, credit: 36000.0 },
-          { label: 'Service Revenue', debit: 0, credit: 8450.0 },
-        ],
-      },
-      incomeStatement: {
-        title: 'Income Statement',
-        rows: [
-          { label: 'Service Revenue', amount: 8450.0 },
-          { label: 'Operating Expenses', amount: -3250.0 },
-          { label: 'Rent Expense', amount: -1200.0 },
-          { label: 'Utilities Expense', amount: -350.0 },
-        ],
-      },
-      balanceSheet: {
-        title: 'Balance Sheet',
-        assets: [
-          { label: 'Cash', amount: 15850.0 },
-          { label: 'Accounts Receivable', amount: 8250.0 },
-          { label: 'Equipment', amount: 30000.0 },
-        ],
-        liabilities: [{ label: 'Accounts Payable', amount: 9650.0 }],
-        equity: [{ label: 'Owner Equity', amount: 36000.0 }],
-      },
-      retainedEarnings: {
-        title: 'Retained Earnings Statement',
-        beginningBalance: 22000.0,
-        netIncome: 3650.0,
-        ownerDraws: 1200.0,
-      },
-    }),
-    [],
-  );
-
-  const currencyFormatter = useMemo(
-    () =>
-      new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-        minimumFractionDigits: 2,
-      }),
-    [],
-  );
-
-  const formatCurrency = (value) => currencyFormatter.format(value);
-
-  const handleGenerateReport = (reportKey) => {
-    setActiveReportKey(reportKey);
-    setGeneratedAt(new Date().toLocaleString());
-  };
-
-  const activeReport = activeReportKey ? reportDefinitions[activeReportKey] : null;
-
-  const generateReport = useCallback((typeKey) => {
-    const { title, html } = getSampleReportHtml(typeKey);
-    setReportTitle(title);
-    setReportHtml(html);
-    setActiveType(typeKey);
+  const generateReport = useCallback(async (typeKey) => {
+    setGenerating(true);
+    try {
+      const { title, html } = await generateReportHtml(typeKey);
+      setReportTitle(title);
+      setReportHtml(html);
+      setActiveType(typeKey);
+      setGeneratedAt(new Date().toLocaleString());
+    } catch (error) {
+      console.error('Failed to generate report:', error);
+      setReportTitle('Report');
+      setReportHtml('<p>Unable to generate this report right now.</p>');
+      setActiveType(typeKey);
+      setGeneratedAt(new Date().toLocaleString());
+    } finally {
+      setGenerating(false);
+    }
   }, []);
 
   const handleDownload = useCallback(() => {
@@ -126,43 +76,46 @@ function Report() {
 
       <div style={{ marginTop: '16px', maxWidth: '820px' }}>
         <p style={{ marginBottom: '12px' }}>
-          Generate a financial report (sample HTML below). When the API is connected, replace the sample
-          data with live figures for a selected date or range.
+          Generate a financial report and display it in the report output section.
         </p>
 
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
-          <HelpTooltip text="Generate a Trial Balance report (sample HTML until API is wired).">
+          <HelpTooltip text="Generate a Trial Balance report from current data.">
             <button
               type="button"
               className="button-primary"
               onClick={() => generateReport(REPORT_TYPES.TRIAL_BALANCE)}
+              disabled={generating}
             >
               Generate Trial Balance
             </button>
           </HelpTooltip>
-          <HelpTooltip text="Generate an Income Statement report (sample HTML until API is wired).">
+          <HelpTooltip text="Generate an Income Statement report from current data.">
             <button
               type="button"
               className="button-primary"
               onClick={() => generateReport(REPORT_TYPES.INCOME_STATEMENT)}
+              disabled={generating}
             >
               Generate Income Statement
             </button>
           </HelpTooltip>
-          <HelpTooltip text="Generate a Balance Sheet report (sample HTML until API is wired).">
+          <HelpTooltip text="Generate a Balance Sheet report from current data.">
             <button
               type="button"
               className="button-primary"
               onClick={() => generateReport(REPORT_TYPES.BALANCE_SHEET)}
+              disabled={generating}
             >
               Generate Balance Sheet
             </button>
           </HelpTooltip>
-          <HelpTooltip text="Generate a Retained Earnings Statement report (sample HTML until API is wired).">
+          <HelpTooltip text="Generate a Retained Earnings Statement report from current data.">
             <button
               type="button"
               className="button-primary"
               onClick={() => generateReport(REPORT_TYPES.RETAINED_EARNINGS)}
+              disabled={generating}
             >
               Generate Retained Earnings
             </button>
@@ -173,7 +126,7 @@ function Report() {
               type="button"
               className="button-secondary"
               onClick={handleDownload}
-              disabled={!hasReport}
+              disabled={!hasReport || generating}
             >
               Download Report
             </button>
@@ -190,114 +143,29 @@ function Report() {
           }}
         >
           <strong>Report output</strong>
-          {!activeReport ? (
+          {generating ? (
+            <p style={{ margin: '8px 0 0', color: 'var(--bff-dark-text)' }}>
+              Generating report content...
+            </p>
+          ) : !hasReport ? (
             <p style={{ margin: '8px 0 0', color: 'var(--bff-dark-text)' }}>
               Generated report content will display here.
             </p>
           ) : (
             <div style={{ marginTop: '10px', color: 'var(--bff-dark-text)' }}>
-              <h3 style={{ margin: '0 0 8px' }}>{activeReport.title}</h3>
+              <h3 style={{ margin: '0 0 8px' }}>{reportTitle || 'Report'}</h3>
               <p style={{ margin: '0 0 12px', fontSize: '0.9rem' }}>
                 Generated on: {generatedAt}
               </p>
-
-              {activeReportKey === 'trialBalance' && (
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr>
-                      <th style={{ textAlign: 'left', paddingBottom: '6px' }}>Account</th>
-                      <th style={{ textAlign: 'right', paddingBottom: '6px' }}>Debit</th>
-                      <th style={{ textAlign: 'right', paddingBottom: '6px' }}>Credit</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {activeReport.rows.map((row) => (
-                      <tr key={row.label}>
-                        <td style={{ padding: '4px 0' }}>{row.label}</td>
-                        <td style={{ textAlign: 'right', padding: '4px 0' }}>{formatCurrency(row.debit)}</td>
-                        <td style={{ textAlign: 'right', padding: '4px 0' }}>{formatCurrency(row.credit)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-
-              {activeReportKey === 'incomeStatement' && (
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr>
-                      <th style={{ textAlign: 'left', paddingBottom: '6px' }}>Category</th>
-                      <th style={{ textAlign: 'right', paddingBottom: '6px' }}>Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {activeReport.rows.map((row) => (
-                      <tr key={row.label}>
-                        <td style={{ padding: '4px 0' }}>{row.label}</td>
-                        <td style={{ textAlign: 'right', padding: '4px 0' }}>{formatCurrency(row.amount)}</td>
-                      </tr>
-                    ))}
-                    <tr>
-                      <td style={{ fontWeight: 700, paddingTop: '8px' }}>Net Income</td>
-                      <td style={{ textAlign: 'right', fontWeight: 700, paddingTop: '8px' }}>
-                        {formatCurrency(activeReport.rows.reduce((sum, row) => sum + row.amount, 0))}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              )}
-
-              {activeReportKey === 'balanceSheet' && (
-                <>
-                  <p style={{ margin: '0 0 6px', fontWeight: 700 }}>Assets</p>
-                  {activeReport.assets.map((item) => (
-                    <p key={item.label} style={{ margin: '2px 0' }}>
-                      {item.label}: {formatCurrency(item.amount)}
-                    </p>
-                  ))}
-
-                  <p style={{ margin: '10px 0 6px', fontWeight: 700 }}>Liabilities</p>
-                  {activeReport.liabilities.map((item) => (
-                    <p key={item.label} style={{ margin: '2px 0' }}>
-                      {item.label}: {formatCurrency(item.amount)}
-                    </p>
-                  ))}
-
-                  <p style={{ margin: '10px 0 6px', fontWeight: 700 }}>Equity</p>
-                  {activeReport.equity.map((item) => (
-                    <p key={item.label} style={{ margin: '2px 0' }}>
-                      {item.label}: {formatCurrency(item.amount)}
-                    </p>
-                  ))}
-                </>
-              )}
-
-              {activeReportKey === 'retainedEarnings' && (
-                <>
-                  <p style={{ margin: '2px 0' }}>
-                    Beginning Retained Earnings: {formatCurrency(activeReport.beginningBalance)}
-                  </p>
-                  <p style={{ margin: '2px 0' }}>Plus Net Income: {formatCurrency(activeReport.netIncome)}</p>
-                  <p style={{ margin: '2px 0' }}>Less Owner Draws: {formatCurrency(activeReport.ownerDraws)}</p>
-                  <p style={{ margin: '10px 0 0', fontWeight: 700 }}>
-                    Ending Retained Earnings:{' '}
-                    {formatCurrency(activeReport.beginningBalance + activeReport.netIncome - activeReport.ownerDraws)}
-                  </p>
-                </>
-              )}
             </div>
           )}
-          {hasReport ? (
+          {hasReport && !generating ? (
             <div
               className="report-html-output"
               style={{ marginTop: '12px' }}
               dangerouslySetInnerHTML={{ __html: reportHtml }}
             />
-          ) : (
-            <p style={{ margin: '8px 0 0', color: 'var(--bff-dark-text)' }}>
-              Generated report content will display here.
-            </p>
-          )}
+          ) : null}
         </div>
       </div>
     </div>
