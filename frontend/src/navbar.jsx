@@ -125,13 +125,22 @@ function Navbar() {
             </a>
           )}
           {isManager && (
-            <a
-              href="#/report"
-              className="nav-link center-link"
-              onClick={() => handleNavigation('/report')}
-            >
-              Reports
-            </a>
+            <>
+              <a
+                href="#/report"
+                className="nav-link center-link"
+                onClick={() => handleNavigation('/report')}
+              >
+                Reports
+              </a>
+              <a
+                href="#/ratios"
+                className="nav-link center-link"
+                onClick={() => handleNavigation('/ratios')}
+              >
+                Financial Ratios
+              </a>
+            </>
           )}
         </div>
 

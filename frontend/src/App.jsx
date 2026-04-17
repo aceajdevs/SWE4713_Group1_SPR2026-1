@@ -25,6 +25,7 @@ import JournalEntries from './pages/JournalEntries'
 import PostedJournalEntriesPage from './pages/PostedJournalEntriesPage'
 import JournalEntryDetail from './pages/JournalEntryDetail'
 import Report from './pages/Report'
+import Ratio from './pages/Ratio'
 
 function AppLayout() {
   const location = useLocation();
@@ -79,6 +80,7 @@ function AppLayout() {
         <Route path="/journal-entry/new" element={<JournalEntryForm />} />
         <Route path="/journal-entry/:id" element={<JournalEntryDetail />} />
         <Route path="/report" element={<Report />} />
+        <Route path="/ratios" element={<Ratio />} />
       </Routes>
     </>
   );
