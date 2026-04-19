@@ -32,8 +32,21 @@ function formatMoney(value) {
   }).format(n);
 }
 
-function absBalance(account) {
-  return Math.abs(Number(account.currentBalance) || 0);
+function signedBalance(account) {
+  return Number(account.currentBalance) || 0;
+}
+
+function splitBalanceBySide(account) {
+  const balance = signedBalance(account);
+  const isCreditNormal = String(account.normalSide || '').toLowerCase() === 'credit';
+  if (isCreditNormal) {
+    return balance >= 0
+      ? { debit: 0, credit: balance }
+      : { debit: Math.abs(balance), credit: 0 };
+  }
+  return balance >= 0
+    ? { debit: balance, credit: 0 }
+    : { debit: 0, credit: Math.abs(balance) };
 }
 
 function shouldTryLowercaseLedgerTable(error) {
@@ -102,11 +115,11 @@ function buildTrialBalance(accounts) {
   const rows = accounts
     .filter((a) => a.active !== false)
     .map((a) => {
-      const balance = Number(a.currentBalance) || 0;
+      const { debit, credit } = splitBalanceBySide(a);
       return {
         account: `${a.accountNumber} - ${a.accountName}`,
-        debit: balance >= 0 ? balance : 0,
-        credit: balance < 0 ? Math.abs(balance) : 0,
+        debit,
+        credit,
       };
     })
     .filter((r) => r.debit !== 0 || r.credit !== 0);
@@ -143,18 +156,18 @@ function buildTrialBalance(accounts) {
 function buildIncomeStatement(accounts) {
   const revenues = accounts.filter((a) => String(a.type || '').toLowerCase() === 'revenue');
   const expenses = accounts.filter((a) => String(a.type || '').toLowerCase() === 'expenses');
-  const revenueTotal = revenues.reduce((sum, a) => sum + absBalance(a), 0);
-  const expenseTotal = expenses.reduce((sum, a) => sum + absBalance(a), 0);
+  const revenueTotal = revenues.reduce((sum, a) => sum + signedBalance(a), 0);
+  const expenseTotal = expenses.reduce((sum, a) => sum + signedBalance(a), 0);
   const netIncome = revenueTotal - expenseTotal;
 
   const revenueRows = revenues
     .map(
-      (a) => `<tr><td>${escapeHtml(`${a.accountNumber} - ${a.accountName}`)}</td><td class="money">${formatMoney(absBalance(a))}</td></tr>`,
+      (a) => `<tr><td>${escapeHtml(`${a.accountNumber} - ${a.accountName}`)}</td><td class="money">${formatMoney(signedBalance(a))}</td></tr>`,
     )
     .join('');
   const expenseRows = expenses
     .map(
-      (a) => `<tr><td>${escapeHtml(`${a.accountNumber} - ${a.accountName}`)}</td><td class="money">${formatMoney(absBalance(a))}</td></tr>`,
+      (a) => `<tr><td>${escapeHtml(`${a.accountNumber} - ${a.accountName}`)}</td><td class="money">${formatMoney(signedBalance(a))}</td></tr>`,
     )
     .join('');
 
@@ -179,14 +192,14 @@ function buildBalanceSheet(accounts) {
       .map(
         (a) =>
           `<tr><td>${escapeHtml(`${a.accountNumber} - ${a.accountName}`)}</td><td class="money">${formatMoney(
-            absBalance(a),
+            signedBalance(a),
           )}</td></tr>`,
       )
       .join('');
 
-  const totalAssets = assets.reduce((sum, a) => sum + absBalance(a), 0);
-  const totalLiabilities = liabilities.reduce((sum, a) => sum + absBalance(a), 0);
-  const totalEquity = equity.reduce((sum, a) => sum + absBalance(a), 0);
+  const totalAssets = assets.reduce((sum, a) => sum + signedBalance(a), 0);
+  const totalLiabilities = liabilities.reduce((sum, a) => sum + signedBalance(a), 0);
+  const totalEquity = equity.reduce((sum, a) => sum + signedBalance(a), 0);
 
   return {
     title: 'Balance Sheet',
@@ -207,8 +220,8 @@ function buildRetainedEarnings(accounts) {
   const retained = accounts.filter((a) => String(a.subType || '').toLowerCase() === 'retained earnings');
 
   const beginningRetained = retained.reduce((sum, a) => sum + (Number(a.initBalance) || 0), 0);
-  const revenueTotal = revenues.reduce((sum, a) => sum + absBalance(a), 0);
-  const expenseTotal = expenses.reduce((sum, a) => sum + absBalance(a), 0);
+  const revenueTotal = revenues.reduce((sum, a) => sum + signedBalance(a), 0);
+  const expenseTotal = expenses.reduce((sum, a) => sum + signedBalance(a), 0);
   const netIncome = revenueTotal - expenseTotal;
   const endingRetained = beginningRetained + netIncome;
 

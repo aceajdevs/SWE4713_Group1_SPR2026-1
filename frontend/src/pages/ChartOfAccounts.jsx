@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { fetchFromTable } from '../supabaseUtils';
+import { supabase } from '../supabaseClient';
 import { sendAdminEmail } from '../services/emailService';
 import { getEmailRecipientsByRoles } from '../services/adminService';
 import { setChartAccountActiveWithActor } from '../services/chartOfAccountsService';
@@ -21,6 +22,33 @@ const defaultFilters = {
   amountValue: '',
   status: ''
 };
+
+function shouldTryLowercaseLedgerTable(error) {
+  const message = String(error?.message || '').toLowerCase();
+  const isPermission =
+    error?.code === '42501' ||
+    message.includes('permission denied') ||
+    message.includes('row-level security');
+  return (
+    !isPermission &&
+    (error?.code === 'PGRST205' ||
+      message.includes('schema cache') ||
+      message.includes('does not exist') ||
+      (message.includes('could not find') && message.includes('table')))
+  );
+}
+
+async function fetchLedgerMovementByAccount() {
+  const columns = 'accountID, debit, credit';
+  const primary = await supabase.from('Ledger').select(columns);
+  if (!primary.error) return primary.data || [];
+
+  if (shouldTryLowercaseLedgerTable(primary.error)) {
+    const fallback = await supabase.from('ledger').select(columns);
+    if (!fallback.error) return fallback.data || [];
+  }
+  throw primary.error;
+}
 
 function ChartOfAccounts() {
   const [accounts, setAccounts] = useState([]);
@@ -91,16 +119,56 @@ function ChartOfAccounts() {
   const loadAccounts = async () => {
     setLoading(true);
     setError(null);
-    const { data, error } = await fetchFromTable('chartOfAccounts', {
-      orderBy: { column: 'accountNumber', ascending: true }
-    });
-    if (error) {
-      setError('Failed to load accounts. You may not have permission.');
-      console.error('RLS or fetch error:', error);
-    } else {
-      setAccounts(data || []);
+    try {
+      const [{ data, error }, ledgerRows] = await Promise.all([
+        fetchFromTable('chartOfAccounts', {
+          orderBy: { column: 'accountNumber', ascending: true }
+        }),
+        fetchLedgerMovementByAccount(),
+      ]);
+
+      if (error) {
+        setError('Failed to load accounts. You may not have permission.');
+        console.error('RLS or fetch error:', error);
+        setAccounts([]);
+        return;
+      }
+
+      const movementByAccount = new Map();
+      for (const row of ledgerRows || []) {
+        const accountId = row.accountID;
+        const debit = Number(row.debit) || 0;
+        const credit = Number(row.credit) || 0;
+        const existing = movementByAccount.get(accountId) || { debit: 0, credit: 0 };
+        existing.debit += debit;
+        existing.credit += credit;
+        movementByAccount.set(accountId, existing);
+      }
+
+      const withBalances = (data || []).map((account) => {
+        const movement = movementByAccount.get(account.accountID) || { debit: 0, credit: 0 };
+        const opening = Number(account.initBalance) || 0;
+        const isCreditNormal = String(account.normalSide || '').toLowerCase() === 'credit';
+        const netMovement = isCreditNormal
+          ? movement.credit - movement.debit
+          : movement.debit - movement.credit;
+        const currentBalance = opening + netMovement;
+        return {
+          ...account,
+          ledgerDebitTotal: movement.debit,
+          ledgerCreditTotal: movement.credit,
+          currentBalance,
+        };
+      });
+
+      setAccounts(withBalances);
+    } catch (e) {
+      console.error('Failed to load accounts with balances:', e);
+      setError(e?.message || 'Failed to load current balances from the ledger.');
+      setAccounts([]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleDeactivate = async (id, currentStatus) => {
@@ -159,7 +227,7 @@ function ChartOfAccounts() {
     const typedName = filters.accountName.trim().toLowerCase();
     const typedNumber = filters.accountNumber.trim();
     const rawAmount = filters.amountValue === '' ? NaN : Number(filters.amountValue);
-    const balance = Number(account.initBalance || 0);
+    const balance = Number(account.currentBalance ?? account.initBalance ?? 0);
 
     const matchesSearch =
       search === '' ||
@@ -611,9 +679,9 @@ function ChartOfAccounts() {
                   <td>{account.subType}</td>
                   <td>{account.normalSide}</td>
                   <td className="money">${fmt(account.initBalance)}</td>
-                  <td className="money">{account.normalSide === 'Debit' ? `$${fmt(account.initBalance)}` : '-'}</td>
-                  <td className="money">{account.normalSide === 'Credit' ? `$${fmt(account.initBalance)}` : '-'}</td>
-                  <td className="money">${fmt(account.initBalance)}</td>
+                  <td className="money">${fmt(account.ledgerDebitTotal)}</td>
+                  <td className="money">${fmt(account.ledgerCreditTotal)}</td>
+                  <td className="money">${fmt(account.currentBalance ?? account.initBalance)}</td>
                   <td>{account.createdAt ? new Date(account.createdAt).toLocaleString() : 'N/A'}</td>
                   <td>{account.updatedAt ? new Date(account.updatedAt).toLocaleString() : 'N/A'}</td>
                   <td>{account.active ? 'Active' : 'Inactive'}</td>
@@ -748,7 +816,7 @@ function ChartOfAccounts() {
                   <tr><th>Subcategory</th><td>{selectedAccount.subType || 'N/A'}</td></tr>
                   <tr><th>Normal Side</th><td>{selectedAccount.normalSide || 'N/A'}</td></tr>
                   <tr><th className='money'>Initial Balance</th><td className="money">${fmt(selectedAccount.initBalance)}</td></tr>
-                  <tr><th className='money'>Current Balance</th><td className="money">${fmt(selectedAccount.initBalance)}</td></tr>
+                  <tr><th className='money'>Current Balance</th><td className="money">${fmt(selectedAccount.currentBalance ?? selectedAccount.initBalance)}</td></tr>
                   <tr><th>Statement Type</th><td>{selectedAccount.statementType || 'N/A'}</td></tr>
                   <tr><th>Status</th><td>{selectedAccount.active ? 'Active' : 'Inactive'}</td></tr>
                   <tr><th>Added At</th><td>{selectedAccount.createdAt ? new Date(selectedAccount.createdAt).toLocaleString() : 'N/A'}</td></tr>
