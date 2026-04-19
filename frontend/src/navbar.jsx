@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import './navbar.css';
 import logo from '../assets/Images/resourceDirectory/logo.png';
 import calendarIcon from '../assets/Images/resourceDirectory/calendarIcon.png';
@@ -12,9 +12,58 @@ function Navbar() {
   const { user, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [calculatorOpen, setCalculatorOpen] = useState(false);
+  const [calculatorDisplay, setCalculatorDisplay] = useState('0');
   const calendarAnchorRef = useRef(null);
+  const calculatorAnchorRef = useRef(null);
+  const calculatorPopupRef = useRef(null);
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+
+  useEffect(() => {
+    const onDocMouseDown = (event) => {
+      if (
+        calculatorOpen &&
+        calculatorPopupRef.current &&
+        !calculatorPopupRef.current.contains(event.target) &&
+        calculatorAnchorRef.current &&
+        !calculatorAnchorRef.current.contains(event.target)
+      ) {
+        setCalculatorOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onDocMouseDown);
+    return () => document.removeEventListener('mousedown', onDocMouseDown);
+  }, [calculatorOpen]);
+
+  const appendCalculatorToken = (token) => {
+    setCalculatorDisplay((prev) => {
+      const current = prev === '0' ? '' : prev;
+      const next = `${current}${token}`;
+      return next || '0';
+    });
+  };
+
+  const clearCalculator = () => setCalculatorDisplay('0');
+
+  const evaluateCalculator = () => {
+    try {
+      const sanitized = calculatorDisplay.replace(/[^0-9+\-*/.() ]/g, '');
+      if (!sanitized.trim()) {
+        setCalculatorDisplay('0');
+        return;
+      }
+      // eslint-disable-next-line no-new-func
+      const result = Function(`"use strict"; return (${sanitized});`)();
+      if (Number.isFinite(result)) {
+        setCalculatorDisplay(String(result));
+      } else {
+        setCalculatorDisplay('Error');
+      }
+    } catch {
+      setCalculatorDisplay('Error');
+    }
+  };
 
   const handleNavigation = (path) => {
     navigate(path);
@@ -73,6 +122,45 @@ function Navbar() {
                 anchorRef={calendarAnchorRef}
                 onClose={() => setCalendarOpen(false)}
               />
+            )}
+          </div>
+
+          <div className="calculator-wrapper">
+            <button
+              ref={calculatorAnchorRef}
+              type="button"
+              className="calculator-toggle"
+              onClick={() => setCalculatorOpen((prev) => !prev)}
+              aria-label="Open calculator"
+              title="Calculator"
+            >
+              <span className="calculator-icon" aria-hidden="true">+</span>
+            </button>
+            {calculatorOpen && (
+              <div ref={calculatorPopupRef} className="calculator-popover">
+                <div className="calculator-display">{calculatorDisplay}</div>
+                <div className="calculator-grid">
+                  <button type="button" onClick={clearCalculator}>C</button>
+                  <button type="button" onClick={() => appendCalculatorToken('(')}>(</button>
+                  <button type="button" onClick={() => appendCalculatorToken(')')}>)</button>
+                  <button type="button" onClick={() => appendCalculatorToken('/')}>/</button>
+                  <button type="button" onClick={() => appendCalculatorToken('7')}>7</button>
+                  <button type="button" onClick={() => appendCalculatorToken('8')}>8</button>
+                  <button type="button" onClick={() => appendCalculatorToken('9')}>9</button>
+                  <button type="button" onClick={() => appendCalculatorToken('*')}>*</button>
+                  <button type="button" onClick={() => appendCalculatorToken('4')}>4</button>
+                  <button type="button" onClick={() => appendCalculatorToken('5')}>5</button>
+                  <button type="button" onClick={() => appendCalculatorToken('6')}>6</button>
+                  <button type="button" onClick={() => appendCalculatorToken('-')}>-</button>
+                  <button type="button" onClick={() => appendCalculatorToken('1')}>1</button>
+                  <button type="button" onClick={() => appendCalculatorToken('2')}>2</button>
+                  <button type="button" onClick={() => appendCalculatorToken('3')}>3</button>
+                  <button type="button" onClick={() => appendCalculatorToken('+')}>+</button>
+                  <button type="button" onClick={() => appendCalculatorToken('0')}>0</button>
+                  <button type="button" onClick={() => appendCalculatorToken('.')}>.</button>
+                  <button type="button" className="calculator-equals" onClick={evaluateCalculator}>=</button>
+                </div>
+              </div>
             )}
           </div>
         </div>
