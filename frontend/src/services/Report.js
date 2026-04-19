@@ -184,22 +184,55 @@ function buildIncomeStatement(accounts) {
 
 function buildBalanceSheet(accounts) {
   const assets = accounts.filter((a) => String(a.type || '').toLowerCase() === 'assets');
-  const liabilities = accounts.filter((a) => String(a.type || '').toLowerCase() === 'liabilities');
+  const liabilities = accounts.filter((a) => {
+    const type = String(a.type || '').toLowerCase();
+    const subType = String(a.subType || '').toLowerCase();
+    const name = String(a.accountName || '').toLowerCase();
+    const isCurrentLiability = type === 'liabilities' && subType === 'current liabilities';
+    const isUnearnedRevenue = name.includes('unearned revenue');
+    return isCurrentLiability || isUnearnedRevenue;
+  });
   const equity = accounts.filter((a) => String(a.type || '').toLowerCase() === 'equity');
+  const revenues = accounts.filter((a) => String(a.type || '').toLowerCase() === 'revenue');
+  const expenses = accounts.filter((a) => String(a.type || '').toLowerCase() === 'expenses');
+  const retainedAccounts = accounts.filter(
+    (a) => String(a.subType || '').toLowerCase() === 'retained earnings',
+  );
 
-  const renderRows = (list) =>
+  const beginningRetained = retainedAccounts.reduce((sum, a) => sum + (Number(a.initBalance) || 0), 0);
+  const revenueTotal = revenues.reduce((sum, a) => sum + signedBalance(a), 0);
+  const expenseTotal = expenses.reduce((sum, a) => sum + signedBalance(a), 0);
+  const netIncome = revenueTotal - expenseTotal;
+  const endingRetained = beginningRetained + netIncome;
+
+  // Always build retained earnings inside the balance sheet logic so equity
+  // includes period earnings even if the retained earnings account is missing or stale.
+  const equityWithoutRetained = equity.filter(
+    (a) => String(a.subType || '').toLowerCase() !== 'retained earnings',
+  );
+  const equityForDisplay = [
+    ...equityWithoutRetained,
+    {
+      accountNumber: '',
+      accountName: 'Retained Earnings',
+      currentBalance: endingRetained,
+    },
+  ];
+
+  const renderRows = (list, amountGetter = signedBalance) =>
     list
       .map(
         (a) =>
-          `<tr><td>${escapeHtml(`${a.accountNumber} - ${a.accountName}`)}</td><td class="money">${formatMoney(
-            signedBalance(a),
+          `<tr><td>${escapeHtml(`${a.accountNumber ? `${a.accountNumber} - ` : ''}${a.accountName}`)}</td><td class="money">${formatMoney(
+            amountGetter(a),
           )}</td></tr>`,
       )
       .join('');
 
   const totalAssets = assets.reduce((sum, a) => sum + signedBalance(a), 0);
-  const totalLiabilities = liabilities.reduce((sum, a) => sum + signedBalance(a), 0);
-  const totalEquity = equity.reduce((sum, a) => sum + signedBalance(a), 0);
+  const liabilityAmount = (a) => Math.abs(signedBalance(a));
+  const totalLiabilities = liabilities.reduce((sum, a) => sum + liabilityAmount(a), 0);
+  const totalEquity = equityForDisplay.reduce((sum, a) => sum + signedBalance(a), 0);
 
   return {
     title: 'Balance Sheet',
@@ -207,9 +240,9 @@ function buildBalanceSheet(accounts) {
       <h2>Assets</h2>
       <table><tbody>${renderRows(assets)}<tr><th>Total Assets</th><th class="money">${formatMoney(totalAssets)}</th></tr></tbody></table>
       <h2>Liabilities</h2>
-      <table><tbody>${renderRows(liabilities)}<tr><th>Total Liabilities</th><th class="money">${formatMoney(totalLiabilities)}</th></tr></tbody></table>
+      <table><tbody>${renderRows(liabilities, liabilityAmount)}<tr><th>Total Liabilities</th><th class="money">${formatMoney(totalLiabilities)}</th></tr></tbody></table>
       <h2>Equity</h2>
-      <table><tbody>${renderRows(equity)}<tr><th>Total Equity</th><th class="money">${formatMoney(totalEquity)}</th></tr></tbody></table>
+      <table><tbody>${renderRows(equityForDisplay)}<tr><th>Total Equity</th><th class="money">${formatMoney(totalEquity)}</th></tr></tbody></table>
       <table><tbody><tr><th>Total Liabilities + Equity</th><th class="money">${formatMoney(totalLiabilities + totalEquity)}</th></tr></tbody></table>`,
   };
 }
