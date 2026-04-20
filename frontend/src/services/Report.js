@@ -7,6 +7,11 @@ export const REPORT_TYPES = {
   RETAINED_EARNINGS: "retained-earnings",
 };
 
+const DURATION_REPORT_TYPES = new Set([
+  REPORT_TYPES.INCOME_STATEMENT,
+  REPORT_TYPES.RETAINED_EARNINGS,
+]);
+
 function escapeHtml(text) {
   return String(text)
     .replace(/&/g, "&amp;")
@@ -14,6 +19,45 @@ function escapeHtml(text) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
+}
+
+function formatDisplayDate(rawDate) {
+  if (!rawDate) return '';
+  const date = new Date(`${rawDate}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return String(rawDate);
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+}
+
+function periodLabelForType(typeKey, options = {}) {
+  const todayRaw = new Date().toISOString().slice(0, 10);
+  const startRaw = options.startDate || '';
+  const endRaw = options.endDate || options.asOfDate || todayRaw;
+  const asOfRaw = options.asOfDate || options.endDate || todayRaw;
+
+  if (DURATION_REPORT_TYPES.has(typeKey)) {
+    const endText = formatDisplayDate(endRaw);
+    const startText = formatDisplayDate(startRaw);
+    if (startText) {
+      return `Period Ending on ${endText} (${startText} - ${endText})`;
+    }
+    return `Period Ending on ${endText}`;
+  }
+
+  return `As of ${formatDisplayDate(asOfRaw)}`;
+}
+
+function wrapReportWithHeader({ title, bodyHtml, periodLabel }) {
+  return {
+    title,
+    html: `<h1>${escapeHtml(title)}</h1>
+      <h2>Addams &amp; Family</h2>
+      <p><strong>${escapeHtml(periodLabel)}</strong></p>
+      ${bodyHtml}`,
+  };
 }
 
 
@@ -140,8 +184,7 @@ function buildTrialBalance(accounts) {
 
   return {
     title: 'Trial Balance',
-    html: `<h1>Trial Balance</h1>
-      <table>
+    html: `<table>
         <thead>
           <tr><th>Account</th><th class="money">Debit</th><th class="money">Credit</th></tr>
         </thead>
@@ -179,8 +222,7 @@ function buildIncomeStatement(accounts) {
 
   return {
     title: 'Income Statement',
-    html: `<h1>Income Statement</h1>
-      <h2>Revenue</h2>
+    html: `<h2>Revenue</h2>
       <table><tbody>${revenueRows}<tr><th>Total Revenue</th><th class="money">${formatMoney(revenueTotal)}</th></tr></tbody></table>
       <h2>Expenses</h2>
       <table><tbody>${expenseRows}<tr><th>Total Expenses</th><th class="money">${formatMoney(expenseTotal)}</th></tr></tbody></table>
@@ -242,8 +284,7 @@ function buildBalanceSheet(accounts) {
 
   return {
     title: 'Balance Sheet',
-    html: `<h1>Balance Sheet</h1>
-      <h2>Assets</h2>
+    html: `<h2>Assets</h2>
       <table><tbody>${renderRows(assets)}<tr><th>Total Assets</th><th class="money">${formatMoney(totalAssets)}</th></tr></tbody></table>
       <h2>Liabilities</h2>
       <table><tbody>${renderRows(liabilities, liabilityAmount)}<tr><th>Total Liabilities</th><th class="money">${formatMoney(totalLiabilities)}</th></tr></tbody></table>
@@ -266,8 +307,7 @@ function buildRetainedEarnings(accounts) {
 
   return {
     title: 'Statement of Retained Earnings',
-    html: `<h1>Statement of Retained Earnings</h1>
-      <table>
+    html: `<table>
         <tbody>
           <tr><td>Beginning Retained Earnings</td><td class="money">${formatMoney(beginningRetained)}</td></tr>
           <tr><td>Plus: Net Income</td><td class="money">${formatMoney(netIncome)}</td></tr>
@@ -277,13 +317,20 @@ function buildRetainedEarnings(accounts) {
   };
 }
 
-export async function generateReportHtml(typeKey) {
+export async function generateReportHtml(typeKey, options = {}) {
   const accounts = await fetchReportAccounts();
-  if (typeKey === REPORT_TYPES.TRIAL_BALANCE) return buildTrialBalance(accounts);
-  if (typeKey === REPORT_TYPES.INCOME_STATEMENT) return buildIncomeStatement(accounts);
-  if (typeKey === REPORT_TYPES.BALANCE_SHEET) return buildBalanceSheet(accounts);
-  if (typeKey === REPORT_TYPES.RETAINED_EARNINGS) return buildRetainedEarnings(accounts);
-  return { title: 'Report', html: '<p>No report type selected.</p>' };
+  let baseReport;
+  if (typeKey === REPORT_TYPES.TRIAL_BALANCE) baseReport = buildTrialBalance(accounts);
+  else if (typeKey === REPORT_TYPES.INCOME_STATEMENT) baseReport = buildIncomeStatement(accounts);
+  else if (typeKey === REPORT_TYPES.BALANCE_SHEET) baseReport = buildBalanceSheet(accounts);
+  else if (typeKey === REPORT_TYPES.RETAINED_EARNINGS) baseReport = buildRetainedEarnings(accounts);
+  else baseReport = { title: 'Report', html: '<p>No report type selected.</p>' };
+
+  return wrapReportWithHeader({
+    title: baseReport.title,
+    bodyHtml: baseReport.html,
+    periodLabel: periodLabelForType(typeKey, options),
+  });
 }
 
 

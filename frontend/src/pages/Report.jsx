@@ -8,6 +8,7 @@ import {
   downloadHtmlReport,
   reportFilenameBase,
 } from '../services/Report';
+import { sendReportEmail } from '../services/emailService';
 import '../global.css';
 
 function Report() {
@@ -18,6 +19,13 @@ function Report() {
   const [reportHtml, setReportHtml] = useState('');
   const [activeType, setActiveType] = useState(null);
   const [generating, setGenerating] = useState(false);
+  const [periodStartDate, setPeriodStartDate] = useState('');
+  const [periodEndDate, setPeriodEndDate] = useState('');
+  const [asOfDate, setAsOfDate] = useState('');
+  const [recipientEmail, setRecipientEmail] = useState('');
+  const [recipientName, setRecipientName] = useState('');
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [emailStatus, setEmailStatus] = useState('');
 
   const dashboardPath =
     user?.role === 'administrator'
@@ -31,7 +39,12 @@ function Report() {
   const generateReport = useCallback(async (typeKey) => {
     setGenerating(true);
     try {
-      const { title, html } = await generateReportHtml(typeKey);
+      const isDurationReport =
+        typeKey === REPORT_TYPES.INCOME_STATEMENT || typeKey === REPORT_TYPES.RETAINED_EARNINGS;
+      const options = isDurationReport
+        ? { startDate: periodStartDate, endDate: periodEndDate }
+        : { asOfDate: asOfDate || periodEndDate };
+      const { title, html } = await generateReportHtml(typeKey, options);
       setReportTitle(title);
       setReportHtml(html);
       setActiveType(typeKey);
@@ -45,7 +58,7 @@ function Report() {
     } finally {
       setGenerating(false);
     }
-  }, []);
+  }, [asOfDate, periodEndDate, periodStartDate]);
 
   const handleDownload = useCallback(() => {
     if (!reportHtml.trim()) return;
@@ -56,6 +69,34 @@ function Report() {
     });
   }, [reportHtml, reportTitle, activeType]);
 
+  const handleSendEmail = useCallback(async () => {
+    if (!reportHtml.trim()) return;
+
+    const trimmedEmail = recipientEmail.trim();
+    if (!trimmedEmail) {
+      setEmailStatus('Please enter a recipient email address.');
+      return;
+    }
+
+    setSendingEmail(true);
+    setEmailStatus('');
+    try {
+      await sendReportEmail({
+        recipientEmail: trimmedEmail,
+        recipientName: recipientName.trim(),
+        reportTitle: reportTitle || 'Report',
+        reportHtml,
+        generatedAt: generatedAt || new Date().toLocaleString(),
+      });
+      setEmailStatus(`Report emailed successfully to ${trimmedEmail}.`);
+    } catch (error) {
+      console.error('Failed to send report email:', error);
+      setEmailStatus('Unable to send report email right now. Please try again.');
+    } finally {
+      setSendingEmail(false);
+    }
+  }, [generatedAt, recipientEmail, recipientName, reportHtml, reportTitle]);
+
   const hasReport = Boolean(reportHtml.trim());
 
   return (
@@ -65,6 +106,29 @@ function Report() {
       </div>
 
       <div>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '12px' }}>
+          <input
+            type="date"
+            className="text-input"
+            value={periodStartDate}
+            onChange={(event) => setPeriodStartDate(event.target.value)}
+            title="Start date (duration reports)"
+          />
+          <input
+            type="date"
+            className="text-input"
+            value={periodEndDate}
+            onChange={(event) => setPeriodEndDate(event.target.value)}
+            title="End date (duration reports)"
+          />
+          <input
+            type="date"
+            className="text-input"
+            value={asOfDate}
+            onChange={(event) => setAsOfDate(event.target.value)}
+            title="As of date (point-in-time reports)"
+          />
+        </div>
 
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
           <HelpTooltip text="Generate a Trial Balance report from current data.">
@@ -119,6 +183,38 @@ function Report() {
             </button>
           </HelpTooltip>
         </div>
+
+        <div style={{ marginTop: '14px', display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <input
+            type="email"
+            className="text-input"
+            placeholder="Recipient email"
+            value={recipientEmail}
+            onChange={(event) => setRecipientEmail(event.target.value)}
+            style={{ minWidth: '260px' }}
+          />
+          <input
+            type="text"
+            className="text-input"
+            placeholder="Recipient name (optional)"
+            value={recipientName}
+            onChange={(event) => setRecipientName(event.target.value)}
+            style={{ minWidth: '220px' }}
+          />
+          <HelpTooltip text="Send the currently displayed report to the recipient by email.">
+            <button
+              type="button"
+              className="button-secondary"
+              onClick={handleSendEmail}
+              disabled={!hasReport || generating || sendingEmail}
+            >
+              {sendingEmail ? 'Sending Email...' : 'Email Report'}
+            </button>
+          </HelpTooltip>
+        </div>
+        {emailStatus ? (
+          <p style={{ marginTop: '8px', color: 'var(--bff-dark-text)' }}>{emailStatus}</p>
+        ) : null}
 
         <div
           style={{

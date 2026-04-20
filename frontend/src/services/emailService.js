@@ -52,6 +52,52 @@ export async function sendJournalPendingApprovalToManager({
     return sendAdminEmail(email, managerDisplayName || 'Manager', subject, message);
 }
 
+function htmlToPlainText(html) {
+    return String(html || '')
+        .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+        .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/<\/(p|div|h1|h2|h3|h4|h5|h6|tr)>/gi, '\n')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/&nbsp;/gi, ' ')
+        .replace(/&amp;/gi, '&')
+        .replace(/&lt;/gi, '<')
+        .replace(/&gt;/gi, '>')
+        .replace(/&quot;/gi, '"')
+        .replace(/&#39;/gi, "'")
+        .replace(/\n{3,}/g, '\n\n')
+        .replace(/[ \t]{2,}/g, ' ')
+        .trim();
+}
+
+export async function sendReportEmail({
+    recipientEmail,
+    recipientName,
+    reportTitle,
+    reportHtml,
+    generatedAt,
+}) {
+    const email = String(recipientEmail || '').trim();
+    if (!email) {
+        throw new Error('Recipient email is required.');
+    }
+
+    const title = String(reportTitle || 'Report').trim();
+    const when = String(generatedAt || new Date().toLocaleString()).trim();
+    const plainReport = htmlToPlainText(reportHtml);
+    const message =
+        `Please find the generated ${title} report details below.\n\n` +
+        `Generated on: ${when}\n\n` +
+        `${plainReport || 'No report content available.'}`;
+
+    return sendAdminEmail(
+        email,
+        String(recipientName || '').trim() || 'Recipient',
+        `${title} - Generated Report`,
+        message,
+    );
+}
+
 // import nodemailer from 'nodemailer';
 
 // //https://nodemailer.com/usage/using-gmail
