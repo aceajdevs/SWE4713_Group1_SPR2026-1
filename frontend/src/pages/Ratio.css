@@ -1,0 +1,27 @@
+/* Ratio page layout and card grid */
+.ratio-page-container {
+  width: 90vw;
+  max-width: 90vw;
+  margin: 0 auto;
+}
+.ratio-section {
+  margin-bottom: 36px;
+}
+.ratio-section-title {
+  font-size: 1.25rem;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--bff-light-secondary);
+  color: var(--bff-dark-primary);
+}
+.ratio-card-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+.ratio-card-row > * {
+  flex: 1 1 340px;
+  min-width: 300px;
+  max-width: 420px;
+  box-sizing: border-box;
+}

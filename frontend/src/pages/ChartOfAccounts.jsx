@@ -51,6 +51,17 @@ async function fetchLedgerMovementByAccount() {
 }
 
 function ChartOfAccounts() {
+    const [deactivateTooltip, setDeactivateTooltip] = useState({});
+
+    // Wrapper for deactivate button click
+    const tryDeactivateAccount = (account) => {
+      if (Number(account.currentBalance) !== 0) {
+        setDeactivateTooltip((prev) => ({ ...prev, [account.accountID]: true }));
+        setTimeout(() => setDeactivateTooltip((prev) => ({ ...prev, [account.accountID]: false })), 2500);
+        return;
+      }
+      handleDeactivate(account.accountID, account.active);
+    };
   const [accounts, setAccounts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -363,13 +374,10 @@ function ChartOfAccounts() {
             </button>
           </HelpTooltip>
           <HelpTooltip text="Show all accounts in a single table report.">
-            <button className="button-primary" onClick={() => setViewMode('report')}>All Accounts Report</button>
+            <button className="button-primary" onClick={() => setViewMode('report')}>All Accounts</button>
           </HelpTooltip>
           <HelpTooltip text="Pick one account from a list to view its details.">
             <button className="button-primary" onClick={() => setViewMode('individual')}>Individual Account</button>
-          </HelpTooltip>
-          <HelpTooltip text="Return to your role dashboard without leaving the app.">
-            <button className="button-primary" onClick={() => navigate(dashboardPath)}>Back to Dashboard</button>
           </HelpTooltip>
         </div>
       {staffEmailModalOpen && (
@@ -634,23 +642,25 @@ function ChartOfAccounts() {
         {error && <p style={{ color: 'red' }}>{error}</p>}
 
       {!loading && !error && viewMode === 'report' && (
-        <table className="user-report-table">
+        <table
+          className={`user-report-table COA-table${isAdmin ? '' : ' COA-no-actions'}`}
+        >
           <thead>
             <tr>
-              <th>Number</th>
-              <th>Account Name</th>
-              <th>Description</th>
-              <th>Type</th>
-              <th>Normal Side</th>
-              <th className='money'>Initial Balance</th>
-              <th className='money'>Debit</th>
-              <th className='money'>Credit</th>
-              <th className='money'>Current Balance</th>
-              <th>Added At</th>
-              <th>Last Modified</th>
-              <th>Status</th>
-              <th>Event log</th>
-              {isAdmin && <th>Actions</th>}
+              <th className="COA-number">Number</th>
+              <th className="COA-name">Account Name</th>
+              <th className="COA-description">Description</th>
+              <th className="COA-type">Type</th>
+              <th className="COA-normal">Normal Side</th>
+              <th className="COA-init money">Initial Balance</th>
+              <th className="COA-debit money">Debit</th>
+              <th className="COA-credit money">Credit</th>
+              <th className="COA-current money">Current Balance</th>
+              <th className="COA-added">Added At</th>
+              <th className="COA-modified">Last Modified</th>
+              <th className="COA-status">Status</th>
+              <th className="COA-event">Event Log</th>
+              {isAdmin && <th className="COA-actions">Actions</th>}
             </tr>
           </thead>
           <tbody>
@@ -671,21 +681,21 @@ function ChartOfAccounts() {
                   style={{ cursor: 'pointer' }}
                   title="Open account ledger"
                 >
-                  <td>
+                  <td className="COA-number">
                     <span style={{ color: 'var(--bff-primary)', textDecoration: 'underline' }}>{account.accountNumber}</span>
                   </td>
-                  <td>{account.accountName}</td>
-                  <td>{account.description || 'N/A'}</td>
-                  <td>{account.subType}</td>
-                  <td>{account.normalSide}</td>
-                  <td className="money">${fmt(account.initBalance)}</td>
-                  <td className="money">${fmt(account.ledgerDebitTotal)}</td>
-                  <td className="money">${fmt(account.ledgerCreditTotal)}</td>
-                  <td className="money">${fmt(account.currentBalance ?? account.initBalance)}</td>
-                  <td>{account.createdAt ? new Date(account.createdAt).toLocaleString() : 'N/A'}</td>
-                  <td>{account.updatedAt ? new Date(account.updatedAt).toLocaleString() : 'N/A'}</td>
-                  <td>{account.active ? 'Active' : 'Inactive'}</td>
-                  <td onClick={(e) => e.stopPropagation()}>
+                  <td className="COA-name">{account.accountName}</td>
+                  <td className="COA-description">{account.description || 'N/A'}</td>
+                  <td className="COA-type">{account.subType}</td>
+                  <td className="COA-normal">{account.normalSide}</td>
+                  <td className="COA-init money">${fmt(account.initBalance)}</td>
+                  <td className="COA-debit money">${fmt(account.ledgerDebitTotal)}</td>
+                  <td className="COA-credit money">${fmt(account.ledgerCreditTotal)}</td>
+                  <td className="COA-current money">${fmt(account.currentBalance ?? account.initBalance)}</td>
+                  <td className="COA-added">{account.createdAt ? new Date(account.createdAt).toLocaleString() : 'N/A'}</td>
+                  <td className="COA-modified">{account.updatedAt ? new Date(account.updatedAt).toLocaleString() : 'N/A'}</td>
+                  <td className="COA-status">{account.active ? 'Active' : 'Inactive'}</td>
+                  <td className="COA-event" onClick={(e) => e.stopPropagation()}>
                     <HelpTooltip text="View audit events for this account (before/after snapshots, who changed it, when).">
                       <button
                         type="button"
@@ -698,38 +708,42 @@ function ChartOfAccounts() {
                     </HelpTooltip>
                   </td>
                   {isAdmin && (
-                    <td>
-                      <HelpTooltip text="Open the form to change this account's details.">
-                        <button
-                          type="button"
-                          className="button-primary"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/admin/edit-account/${account.accountID}`);
-                          }}
-                          style={{ marginRight: '5px', padding: '4px 8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    <td className="COA-actions">
+                      <div className="COA-action-buttons">
+                        <HelpTooltip text="Open the form to change this account's details.">
+                          <button
+                            type="button"
+                            className="button-primary"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/admin/edit-account/${account.accountID}`);
+                            }}
+                            style={{ padding: '4px 8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                          >
+                            <img src={editIcon} alt="Edit" style={{ height: '20px', width: 'auto' }} />
+                          </button>
+                        </HelpTooltip>
+                        <HelpTooltip
+                          text={
+                            deactivateTooltip[account.accountID]
+                              ? 'Cannot deactivate an account with an active balance.'
+                              : account.active
+                                ? 'Mark this account inactive so it cannot be used for new entries.'
+                                : 'Mark this account active again for use in the system.'
+                          }
                         >
-                          <img src={editIcon} alt="Edit" style={{ height: '20px', width: 'auto' }} />
-                        </button>
-                      </HelpTooltip>
-                      <HelpTooltip
-                        text={
-                          account.active
-                            ? 'Mark this account inactive so it cannot be used for new entries.'
-                            : 'Mark this account active again for use in the system.'
-                        }
-                      >
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeactivate(account.accountID, account.active);
-                          }}
-                          style={{ marginRight: '5px', padding: '4px 8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                        >
-                          {account.active ? <img src={deactivateIcon} alt="Deactivate" className="icon-deactivate" style={{ height: '20px', width: 'auto' }} /> : <img src={activateIcon} alt="Activate" className="icon-activate" style={{ height: '20px', width: 'auto'}} />}
-                        </button>
-                      </HelpTooltip>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              tryDeactivateAccount(account);
+                            }}
+                            style={{ padding: '4px 8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                          >
+                            {account.active ? <img src={deactivateIcon} alt="Deactivate" className="icon-deactivate" style={{ height: '20px', width: 'auto' }} /> : <img src={activateIcon} alt="Activate" className="icon-activate" style={{ height: '20px', width: 'auto'}} />}
+                          </button>
+                        </HelpTooltip>
+                      </div>
                     </td>
                   )}
                 </tr>

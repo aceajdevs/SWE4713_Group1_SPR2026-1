@@ -1,0 +1,13 @@
+.UserReport-table {
+	width: 100%;
+	table-layout: fixed;
+	border-collapse: collapse;
+}
+.UR-ID { width: 3% }
+.UR-Username { width: 15% }
+.UR-FirstName { width: 12% }
+.UR-LastName { width: 12% }
+.UR-Email { width: 34% }
+.UR-Role { width: 10% }
+.UR-Status { width: 7% }
+.UR-Actions { width: 7% }

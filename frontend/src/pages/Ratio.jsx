@@ -15,6 +15,7 @@ import { HelpTooltip } from '../components/HelpTooltip';
 import { calendarQuarterLabels, fetchRatioPagePeriodContext } from '../services/ratioPeriodsService';
 import { fetchRatioSeriesFromLedger } from '../services/ratioLedgerService';
 import '../global.css';
+import './Ratio.css';
 
 function seriesFromValues(values, periods) {
   if (!periods?.length) return [];
@@ -82,25 +83,9 @@ function RatioLineCard({ title, data, valueFormatter, valueLabel = 'Ratio' }) {
 
 function Section({ title, children }) {
   return (
-    <section style={{ marginBottom: 36 }}>
-      <h2
-        style={{
-          fontSize: '1.25rem',
-          marginBottom: 16,
-          paddingBottom: 8,
-          borderBottom: '2px solid var(--bff-light-secondary)',
-          color: 'var(--bff-dark-primary)',
-        }}
-      >
-        {title}
-      </h2>
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
-          gap: 20,
-        }}
-      >
+    <section className="ratio-section">
+      <h2 className="ratio-section-title">{title}</h2>
+      <div className="ratio-card-row">
         {children}
       </div>
     </section>
@@ -191,17 +176,12 @@ export default function Ratio() {
   const s = ratioSeries;
 
   return (
-    <div className="container" style={{ paddingBottom: 48 }}>
+    <div className="ratio-page-container" style={{ paddingBottom: 48 }}>
       <div className="header-row" style={{ alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-        <h1>Key financial ratios</h1>
-        <HelpTooltip text="Return to your dashboard.">
-          <button type="button" onClick={() => navigate(dashboardPath)} className="button-primary">
-            Back to Dashboard
-          </button>
-        </HelpTooltip>
+        <h1>Key Financial Ratios</h1>
       </div>
 
-      <p style={{ marginTop: 14, maxWidth: 900, color: '#64748b', fontSize: '0.9rem' }}>
+      <p style={{ marginBottom: 10, maxWidth: '90vw', color: '#64748b', fontSize: '0.9rem', textAlign: 'center' }}>
         {periodsInfo.loading && 'Loading chart periods… '}
         {!periodsInfo.loading &&
           !periodsInfo.error &&
@@ -220,7 +200,7 @@ export default function Ratio() {
         {!periodsInfo.loading && <span>Periods: {periods.join(' · ')}.</span>}
       </p>
 
-      <Section title="Profitability ratios">
+      <Section title="Profitability Ratios">
         <RatioLineCard
           title="Gross profit margin"
           data={seriesFromValues(s.grossMargin, periods)}
@@ -259,7 +239,7 @@ export default function Ratio() {
         />
       </Section>
 
-      <Section title="Liquidity ratios">
+      <Section title="Liquidity Ratios">
         <RatioLineCard
           title="Current ratio"
           data={seriesFromValues(s.currentRatio, periods)}
@@ -280,7 +260,7 @@ export default function Ratio() {
         />
       </Section>
 
-      <Section title="Leverage ratios">
+      <Section title="Leverage Ratios">
         <RatioLineCard
           title="Debt-to-assets"
           data={seriesFromValues(s.debtToAssets, periods)}
@@ -313,7 +293,7 @@ export default function Ratio() {
         />
       </Section>
 
-      <Section title="Activity ratios">
+      <Section title="Activity Ratios">
         <RatioLineCard
           title="Inventory turnover"
           data={seriesFromValues(s.invTurnover, periods)}

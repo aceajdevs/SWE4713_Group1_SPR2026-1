@@ -1,0 +1,45 @@
+.user-report-table {
+  width: 90vw;
+  max-width: 90vw;
+  margin: 0 auto 2rem auto;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.user-report-table th, .user-report-table td {
+  padding: 8px 10px;
+  border: 1px solid #e0e6ef;
+  text-align: left;
+  overflow-wrap: break-word;
+  white-space: normal;
+}
+
+/* Adjusting Column Widths */
+.user-report-table th.PJE-pr,
+.user-report-table td.PJE-pr { width: 3%; }
+.user-report-table th.PJE-created,
+.user-report-table td.PJE-created { width: 8%; }
+.user-report-table th.PJE-posted,
+.user-report-table td.PJE-posted { width: 8%; }
+.user-report-table th.PJE-type,
+.user-report-table td.PJE-type { width: 8%; }
+.user-report-table th.PJE-debited,
+.user-report-table td.PJE-debited,
+.user-report-table th.PJE-credited,
+.user-report-table td.PJE-credited {
+  width: 20.5%;
+  min-width: 120px;
+}
+
+/* When there is no actions column, expand both debited and credited columns */
+.user-report-table.no-actions th.PJE-debited,
+.user-report-table.no-actions td.PJE-debited,
+.user-report-table.no-actions th.PJE-credited,
+.user-report-table.no-actions td.PJE-credited {
+  width: 28%;
+}
+.user-report-table th.PJE-amount,
+.user-report-table td.PJE-amount { width: 8%; }
+.user-report-table th.PJE-rules,
+.user-report-table td.PJE-rules { width: 15%; }
+.user-report-table th.PJE-ledger,
+.user-report-table td.PJE-ledger { width: 15%; }

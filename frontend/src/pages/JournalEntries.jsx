@@ -11,6 +11,7 @@ import {
 import { getJournalEntryTypeLabel } from '../utils/journalEntryTypes';
 import { HelpTooltip } from '../components/HelpTooltip';
 import '../global.css';
+import './JournalEntries.css';
 
 function JournalEntries() {
   const navigate = useNavigate();
@@ -189,17 +190,17 @@ function JournalEntries() {
       ) : displayed.length === 0 ? (
         <p>No journal entries found.</p>
       ) : (
-        <table className="user-report-table">
+        <table className={`user-report-table${isManager ? ' has-actions' : ''}`}> 
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Date</th>
-              <th>Entry Type</th>
-              <th>Accounts</th>
-              <th className='money'>Total</th>
-              <th>Status</th>
-              <th>Created By</th>
-              {isManager && <th>Actions</th>}
+              <th className="JE-id">ID</th>
+              <th className="JE-date">Date</th>
+              <th className="JE-type">Entry Type</th>
+              <th className="JE-accounts">Accounts</th>
+              <th className="JE-money">Total</th>
+              <th className="JE-status">Status</th>
+              <th className="JE-createdby">Created By</th>
+              {isManager && <th className="JE-actions">Actions</th>}
             </tr>
           </thead>
           <tbody>
@@ -207,7 +208,7 @@ function JournalEntries() {
               const totalDebit = (entry.lines || []).reduce((s, l) => s + (l.debit || 0), 0);
               return (
                 <tr key={entry.journalEntryID}>
-                  <td>
+                  <td className="JE-id">
                     <button
                       type="button-primary"
                       onClick={() => navigate(`/journal-entry/${entry.journalEntryID}`)}
@@ -216,9 +217,9 @@ function JournalEntries() {
                       {entry.journalEntryID}
                     </button>
                   </td>
-                  <td>{formatDate(entry.createdAt)}</td>
-                  <td>{getJournalEntryTypeLabel(entry.entryType, { emptyLabel: '-' })}</td>
-                  <td>
+                  <td className="JE-date">{formatDate(entry.createdAt)}</td>
+                  <td className="JE-type">{getJournalEntryTypeLabel(entry.entryType, { emptyLabel: '-' })}</td>
+                  <td className="JE-accounts">
                     {(entry.lines || []).length > 0 ? (
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                         {(entry.lines || [])
@@ -240,8 +241,8 @@ function JournalEntries() {
                       '-'
                     )}
                   </td>
-                  <td className="money">${totalDebit.toFixed(2)}</td>
-                  <td style={{ color: statusColor(entry.status), fontWeight: 'bold' }}>
+                  <td className="JE-money">${totalDebit.toFixed(2)}</td>
+                  <td className="JE-status" style={{ color: statusColor(entry.status), fontWeight: 'bold' }}>
                     {entry.status}
                     {entry.status === 'rejected' && entry.rejectReason && (
                       <span style={{ display: 'block', fontWeight: 'normal', fontSize: '12px' }}>
@@ -249,11 +250,11 @@ function JournalEntries() {
                       </span>
                     )}
                   </td>
-                  <td>{entry.createdBy}</td>
+                  <td className="JE-createdby">{entry.createdBy}</td>
                   {isManager && (
-                    <td>
+                    <td className="JE-actions">
                       {entry.status === 'pending' && (
-                        <div style={{ display: 'flex', gap: '5px' }}>
+                        <div>
                           <HelpTooltip text="Approve this journal entry and post it to the ledger.">
                             <button
                             className="button-table-action-approve"

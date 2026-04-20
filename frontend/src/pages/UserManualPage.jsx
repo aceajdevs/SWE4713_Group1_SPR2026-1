@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import Navbar from '../navbar';
 import './UserManualPage.css';
+import '../global.css';
 
 const TOPIC_IDS = new Set([
   'getting-started',
@@ -81,10 +83,11 @@ function UserManualPage() {
 
   return (
     <div className="user-manual-page">
+      <Navbar />
       <header className="user-manual-header">
         <div className="user-manual-header-inner">
           <h1>User manual</h1>
-          <button type="button" className="user-manual-back" onClick={goBack}>
+          <button type="button" className="button-primary" onClick={goBack}>
             Back
           </button>
         </div>

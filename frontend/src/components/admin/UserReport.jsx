@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { getAllUsers } from '../../services/adminService';
 import { sendAdminEmail } from '../../services/emailService';
+import './UserReport.css';
 
-function UserReport() {
+function UserReport({ hideHeader }) {
     const [selectedUser, setSelectedUser] = useState(null);
     const [emailSubject, setEmailSubject] = useState("");
     const [emailMessage, setEmailMessage] = useState("");
@@ -54,31 +55,31 @@ function UserReport() {
 
     return (
         <div>
-            <h2>All Users</h2>
-            <table>
+            {!hideHeader && <h2>All Users</h2>}
+            <table className="UserReport-table">
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Username</th>
-                        <th>First Name</th>
-                        <th>Last Name</th>
-                        <th>Email</th>
-                        <th>Role</th>
-                        <th>Status</th>
-                        <th>Actions</th>
+                        <th className="UR-ID">ID</th>
+                        <th className="UR-Username">Username</th>
+                        <th className="UR-FirstName">First Name</th>
+                        <th className="UR-LastName">Last Name</th>
+                        <th className="UR-Email">Email</th>
+                        <th className="UR-Role">Role</th>
+                        <th className="UR-Status">Status</th>
+                        <th className="UR-Actions">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {users.map(user => (
                         <tr key={user.userID}>
-                            <td>{user.userID}</td>
-                            <td>{user.username}</td>
-                            <td>{user.fName}</td>
-                            <td>{user.lName}</td>
-                            <td>{user.email}</td>
-                            <td>{user.role}</td>
-                            <td>{user.status ? "Active" : "Inactive"}</td>
-                            <td>
+                            <td className="UR-ID">{user.userID}</td>
+                            <td className="UR-Username">{user.username}</td>
+                            <td className="UR-FirstName">{user.fName}</td>
+                            <td className="UR-LastName">{user.lName}</td>
+                            <td className="UR-Email">{user.email}</td>
+                            <td className="UR-Role">{user.role}</td>
+                            <td className="UR-Status">{user.status ? "Active" : "Inactive"}</td>
+                            <td className="UR-Actions">
                                 <button onClick={() => setSelectedUser(user)}>
                                     Email
                                 </button>
@@ -89,7 +90,7 @@ function UserReport() {
             </table>
 
             {selectedUser && (
-                <div style={{ marginTop: "30px", padding: "20px", border: "1px solid #ccc" }}>
+                <div style={{ marginTop: "30px", padding: "20px", border: "1px solid var(--bff-primary)", borderRadius: "8px", backgroundColor: "#f9f9f9" }}>
                     <h3>Email {selectedUser.fName} ({selectedUser.email})</h3>
 
                     <input
@@ -98,6 +99,7 @@ function UserReport() {
                         value={emailSubject}
                         onChange={(e) => setEmailSubject(e.target.value)}
                         style={{ width: "100%", marginBottom: "10px" }}
+                        className="input"
                     />
 
                     <textarea
@@ -106,13 +108,14 @@ function UserReport() {
                     onChange={(e) => setEmailMessage(e.target.value)}
                     rows={6}
                     style={{ width: "100%", marginBottom: "10px" }}
+                    className="input"
                     />
 
-                    <button onClick={handleSendEmail} disabled={sending}>
+                    <button className="button-secondary" onClick={handleSendEmail} disabled={sending}>
                     {sending ? "Sending..." : "Send Email"}
                     </button>
 
-                    <button onClick={() => setSelectedUser(null)} style={{ marginLeft: "10px" }}>
+                    <button className="button-primary" onClick={() => setSelectedUser(null)} style={{ marginLeft: "10px" }}>
                     Cancel
                     </button>
                 </div>

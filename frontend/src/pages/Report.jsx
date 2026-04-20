@@ -62,22 +62,9 @@ function Report() {
     <div className="container">
       <div className="header-row" style={{ alignItems: 'center' }}>
         <h1>Reports</h1>
-        <HelpTooltip text="Return to your dashboard.">
-          <button
-            type="button"
-            onClick={() => navigate(dashboardPath)}
-            className="button-primary"
-            style={{ marginLeft: '16px' }}
-          >
-            Back to Dashboard
-          </button>
-        </HelpTooltip>
       </div>
 
-      <div style={{ marginTop: '16px', maxWidth: '820px' }}>
-        <p style={{ marginBottom: '12px' }}>
-          Generate a financial report and display it in the report output section.
-        </p>
+      <div>
 
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
           <HelpTooltip text="Generate a Trial Balance report from current data.">
@@ -138,11 +125,10 @@ function Report() {
             marginTop: '18px',
             border: '2px dashed var(--bff-primary)',
             borderRadius: '8px',
-            padding: '14px',
+            padding: '0 14px 14px',
             background: 'var(--bff-light-text)',
           }}
         >
-          <strong>Report output</strong>
           {generating ? (
             <p style={{ margin: '8px 0 0', color: 'var(--bff-dark-text)' }}>
               Generating report content...

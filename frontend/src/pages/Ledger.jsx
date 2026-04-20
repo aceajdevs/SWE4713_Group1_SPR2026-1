@@ -382,7 +382,7 @@ function Ledger() {
         </HelpTooltip>
       </div>
 
-      <div style={{ marginBottom: '24px' }}>
+      <div style={{ marginBottom: '24px', width: '100%', maxWidth: '600px' }}>
         <label htmlFor="ledger-account-search" style={{ display: 'block', fontWeight: 600, fontSize: '0.9rem', marginBottom: '6px' }}>
           Search (Opens another ledger)
         </label>
@@ -450,7 +450,7 @@ function Ledger() {
         <thead>
           <tr>
             <th>Date</th>
-            <th>Post Reference (PR)</th>
+            <th>PR</th>
             <th>Description</th>
             <th>Debit</th>
             <th>Credit</th>
@@ -473,30 +473,41 @@ function Ledger() {
               </td>
             </tr>
           ) : null}
-          {filteredEntries.map((entry) => (
-            <tr key={entry.ledgerID}>
-              <td>{formatDate(entry.entryDate)}</td>
-              <td>
-                {entry.journalEntryID ? (
-                  <button
-                    type="button"
-                    onClick={() => navigate(`/journal-entry/${entry.journalEntryID}`)}
-                    className="link"
-                    style={{ padding: 0, border: 'none', background: 'none', cursor: 'pointer' }}
-                    aria-label={`Open journal entry ${entry.journalEntryID}`}
-                  >
-                    {entry.journalEntryID}
-                  </button>
-                ) : (
-                  '-'
-                )}
-              </td>
-              <td>{entry.description?.trim() ? entry.description : ''}</td>
-              <td className='money'>{formatDebitCreditCell(entry.debit)}</td>
-              <td className='money'>{formatDebitCreditCell(entry.credit)}</td>
-              <td className='money'>{formatCurrency(entry.displayBalance)}</td>
-            </tr>
-          ))}
+          {filteredEntries.map((entry, idx) => {
+            // For all rows after the first (idx >= 0, since opening balance is not in filteredEntries),
+            // display '-' for 0 or $0.00 in debit, credit, and balance cells
+            const showDash = (val) => {
+              const n = parseFloat(val);
+              return n === 0 || val === 0 || val === '$0.00' || val === 0.0;
+            };
+            const debitCell = showDash(entry.debit) ? '-' : formatDebitCreditCell(entry.debit);
+            const creditCell = showDash(entry.credit) ? '-' : formatDebitCreditCell(entry.credit);
+            const balanceCell = showDash(entry.displayBalance) ? '-' : formatCurrency(entry.displayBalance);
+            return (
+              <tr key={entry.ledgerID}>
+                <td>{formatDate(entry.entryDate)}</td>
+                <td>
+                  {entry.journalEntryID ? (
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/journal-entry/${entry.journalEntryID}`)}
+                      className="link"
+                      style={{ padding: 0, border: 'none', background: 'none', cursor: 'pointer' }}
+                      aria-label={`Open journal entry ${entry.journalEntryID}`}
+                    >
+                      {entry.journalEntryID}
+                    </button>
+                  ) : (
+                    '-'
+                  )}
+                </td>
+                <td>{entry.description?.trim() ? entry.description : ''}</td>
+                <td className='money'>{debitCell}</td>
+                <td className='money'>{creditCell}</td>
+                <td className='money'>{balanceCell}</td>
+              </tr>
+            );
+          })}
         </tbody>
         <tfoot>
           <tr style={{ fontWeight: 'bold', borderTop: '2px solid var(--bff-dark-text)' }}>

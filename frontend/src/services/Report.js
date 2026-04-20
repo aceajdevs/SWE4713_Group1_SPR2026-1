@@ -132,8 +132,8 @@ function buildTrialBalance(accounts) {
       (row) =>
         `<tr>
           <td>${escapeHtml(row.account)}</td>
-          <td class="money">${formatMoney(row.debit)}</td>
-          <td class="money">${formatMoney(row.credit)}</td>
+          <td class="money">${row.debit === 0 ? '' : formatMoney(row.debit)}</td>
+          <td class="money">${row.credit === 0 ? '' : formatMoney(row.credit)}</td>
         </tr>`,
     )
     .join('');
@@ -162,12 +162,18 @@ function buildIncomeStatement(accounts) {
 
   const revenueRows = revenues
     .map(
-      (a) => `<tr><td>${escapeHtml(`${a.accountNumber} - ${a.accountName}`)}</td><td class="money">${formatMoney(signedBalance(a))}</td></tr>`,
+      (a) => {
+        const val = signedBalance(a);
+        return `<tr><td>${escapeHtml(`${a.accountNumber} - ${a.accountName}`)}</td><td class="money">${val === 0 ? '' : formatMoney(val)}</td></tr>`;
+      },
     )
     .join('');
   const expenseRows = expenses
     .map(
-      (a) => `<tr><td>${escapeHtml(`${a.accountNumber} - ${a.accountName}`)}</td><td class="money">${formatMoney(signedBalance(a))}</td></tr>`,
+      (a) => {
+        const val = signedBalance(a);
+        return `<tr><td>${escapeHtml(`${a.accountNumber} - ${a.accountName}`)}</td><td class="money">${val === 0 ? '' : formatMoney(val)}</td></tr>`;
+      },
     )
     .join('');
 
@@ -222,10 +228,10 @@ function buildBalanceSheet(accounts) {
   const renderRows = (list, amountGetter = signedBalance) =>
     list
       .map(
-        (a) =>
-          `<tr><td>${escapeHtml(`${a.accountNumber ? `${a.accountNumber} - ` : ''}${a.accountName}`)}</td><td class="money">${formatMoney(
-            amountGetter(a),
-          )}</td></tr>`,
+        (a) => {
+          const val = amountGetter(a);
+          return `<tr><td>${escapeHtml(`${a.accountNumber ? `${a.accountNumber} - ` : ''}${a.accountName}`)}</td><td class="money">${val === 0 ? '' : formatMoney(val)}</td></tr>`;
+        },
       )
       .join('');
 

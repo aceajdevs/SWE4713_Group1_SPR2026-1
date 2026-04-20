@@ -74,9 +74,9 @@
 }
 
 .calculator-toggle {
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
+  border: transparent;
+  background: transparent;
+  color: transparent;
   border-radius: 8px;
   width: 32px;
   height: 32px;
@@ -93,9 +93,11 @@
 }
 
 .calculator-icon {
-  font-size: 18px;
-  font-weight: 700;
-  line-height: 1;
+  height: 28px;
+  width: auto;
+  object-fit: contain;
+  vertical-align: middle;
+  transition: transform 0.3s ease;
 }
 
 .calculator-popover {

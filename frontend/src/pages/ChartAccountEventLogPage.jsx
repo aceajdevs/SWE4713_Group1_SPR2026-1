@@ -126,7 +126,7 @@ function EventLogEventTable({ ev }) {
         role="region"
         aria-label="Before and after snapshot fields. Scroll horizontally for more columns."
       >
-        <p className="event-log-fields-hint">Scroll → for more fields (~5–6 columns visible).</p>
+        <p className="event-log-fields-hint">Scroll → for more fields if on a small screen.</p>
         <table className="chart-account-event-fields-table">
           <thead>
             <tr>
@@ -229,16 +229,11 @@ function ChartAccountEventLogPage() {
     <div className="container chart-account-event-log-page">
       <div className="header-row" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
         <div>
-          <h1 style={{ marginBottom: '8px' }}>Account event log</h1>
-          {account && (
-            <p className="muted" style={{ margin: 0 }}>
-              <strong>{account.accountNumber}</strong> — {account.accountName}
-            </p>
-          )}
+          <h1 style={{ marginBottom: '8px' }}>{account.accountNumber} — {account.accountName} Event Log</h1>
         </div>
         <HelpTooltip text="Return to the chart of accounts list.">
           <button type="button" className="button-primary" onClick={() => navigate('/admin/chart-of-accounts')}>
-            Back to Chart of Accounts
+            Back
           </button>
         </HelpTooltip>
       </div>
@@ -253,9 +248,7 @@ function ChartAccountEventLogPage() {
       {!loading && !error && account && (
         <>
           <p style={{ fontSize: '0.95rem', color: '#374151', marginBottom: '16px' }}>
-            Event details stay on the left. Snapshot columns scroll horizontally (roughly <strong>5–6 fields</strong> visible at
-            a time); the first row is <strong>before</strong>, the second is <strong>after</strong>. Changed values are
-            highlighted.
+            The first row is <strong>before</strong>, the second is <strong>after</strong>. Changed values are highlighted such that <strong>blue</strong> is pre-change and <strong>orange</strong> is post-change.
           </p>
 
           {events.length === 0 ? (

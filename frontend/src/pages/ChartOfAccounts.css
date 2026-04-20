@@ -4,6 +4,52 @@
   display: flex;
   flex-direction: column;
 }
+
+.COA-table {
+  width: 90%;
+  margin: 0 auto 24px auto;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+.COA-number { width: 5% }
+.COA-name { width: 10% }
+.COA-description { width: 8% }
+.COA-type { width: 12% }
+.COA-normal { width: 5% }
+.COA-init { width: 6% }
+.COA-debit { width: 6% }
+.COA-credit { width: 6% }
+.COA-current { width: 6% }
+.COA-added { width: 11% }
+.COA-modified { width: 11% }
+.COA-status { width: 4% }
+.COA-event { width: 4% }
+.COA-actions { width: 6% }
+
+.COA-action-buttons {
+  display: flex;
+  flex-direction: row;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+}
+
+.COA-no-actions .COA-name {
+  width: 13%;
+}
+.COA-no-actions .COA-description {
+  width: 10%;
+}
+
+@media (max-width: 1200px) {
+  .COA-table { font-size: 0.95rem; }
+  .COA-description, .COA-added, .COA-modified { display: none; }
+}
+@media (max-width: 900px) {
+  .COA-table { font-size: 0.9rem; }
+  .COA-type, .COA-normal, .COA-init, .COA-debit, .COA-credit, .COA-current { display: none; }
+}
 .page-header {
   display: flex;
   justify-content: center;
@@ -235,8 +281,6 @@ table {
   transition: background-color 0.3s ease;
 }
 
-/* Icon tinting using CSS filters tied to color variables */
-/* These filters will dynamically reflect changes to --bff-red and --bff-green in global.css */
 .icon-deactivate {
   filter: brightness(0.9) saturate(0.8) hue-rotate(-10deg) drop-shadow(0 0 2px var(--bff-red));
   opacity: 0.9;

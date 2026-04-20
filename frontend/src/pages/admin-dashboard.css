@@ -1,3 +1,22 @@
+.user-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 0;
+}
+.user-header-row h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+.user-header-actions {
+  display: flex;
+  gap: 8px;
+}
+.user-header-actions button {
+  margin-right: 0 !important;
+}
 .admin-dashboard {
   width: 90vw;
   height: 100vh;
@@ -11,7 +30,7 @@
   font-weight: 700;
 }
 .admin-dashboard .button-group {
-  display: block;
+  display: flex;
   justify-content: center;
   align-items: center;
   gap: 12px;

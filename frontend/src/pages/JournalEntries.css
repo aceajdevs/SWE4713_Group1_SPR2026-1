@@ -1,0 +1,38 @@
+.user-report-table {
+  width: 90vw;
+  max-width: 90vw;
+  margin: 0 auto 2rem auto;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.user-report-table th, .user-report-table td {
+  padding: 8px 10px;
+  border: 1px solid #e0e6ef;
+  text-align: left;
+  overflow-wrap: break-word;
+  white-space: normal;
+}
+.user-report-table th.JE-id,
+.user-report-table td.JE-id { width: 3%; }
+.user-report-table th.JE-date,
+.user-report-table td.JE-date { width: 8%; }
+.user-report-table th.JE-type,
+.user-report-table td.JE-type { width: 8%; }
+.user-report-table th.JE-accounts,
+.user-report-table td.JE-accounts {
+  width: 61%;
+}
+
+/* When Actions column is present, reduce Accounts width */
+.user-report-table.has-actions th.JE-accounts,
+.user-report-table.has-actions td.JE-accounts {
+  width: 50%;
+}
+.user-report-table th.JE-money,
+.user-report-table td.JE-money { width: 7%; }
+.user-report-table th.JE-status,
+.user-report-table td.JE-status { width: 7%; }
+.user-report-table th.JE-createdby,
+.user-report-table td.JE-createdby { width: 6%; }
+.user-report-table th.JE-actions,
+.user-report-table td.JE-actions { width: 11%; }

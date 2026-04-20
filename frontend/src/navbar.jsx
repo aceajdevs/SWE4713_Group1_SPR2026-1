@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import './navbar.css';
 import logo from '../assets/Images/resourceDirectory/logo.png';
 import calendarIcon from '../assets/Images/resourceDirectory/calendarIcon.png';
+import calculatorIcon from '../assets/Images/resourceDirectory/Calculator.png';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import { HelpTooltip } from './components/HelpTooltip';
@@ -134,7 +135,7 @@ function Navbar() {
               aria-label="Open calculator"
               title="Calculator"
             >
-              <span className="calculator-icon" aria-hidden="true">+</span>
+              <img src={calculatorIcon} alt="Calculator" className="calendar-icon calculator-icon" aria-hidden="true" />
             </button>
             {calculatorOpen && (
               <div ref={calculatorPopupRef} className="calculator-popover">

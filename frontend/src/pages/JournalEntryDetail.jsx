@@ -123,7 +123,7 @@ function JournalEntryDetail() {
       </div>
 
       <h2>Lines</h2>
-      <table className="user-report-table">
+      <table className="table">
         <thead>
           <tr>
             <th>#</th>
