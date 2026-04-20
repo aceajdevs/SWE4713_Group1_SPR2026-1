@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import './navbar.css';
 import logo from '../assets/Images/resourceDirectory/logo.png';
 import calendarIcon from '../assets/Images/resourceDirectory/calendarIcon.png';
@@ -21,6 +21,11 @@ function Navbar() {
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
+  const formatCalculatorNumber = useCallback((value) => {
+    const rounded = Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+    return String(rounded);
+  }, []);
+
   useEffect(() => {
     const onDocMouseDown = (event) => {
       if (
@@ -37,17 +42,27 @@ function Navbar() {
     return () => document.removeEventListener('mousedown', onDocMouseDown);
   }, [calculatorOpen]);
 
-  const appendCalculatorToken = (token) => {
+  const appendCalculatorToken = useCallback((token) => {
     setCalculatorDisplay((prev) => {
       const current = prev === '0' ? '' : prev;
+      const isNumericToken = /^[0-9.]$/.test(token);
+      if (isNumericToken) {
+        const lastNumberMatch = current.match(/(?:^|[+\-*/(])([0-9]*\.?[0-9]*)$/);
+        const activeNumber = lastNumberMatch ? lastNumberMatch[1] : '';
+        if (token === '.' && activeNumber.includes('.')) return prev;
+        if (activeNumber.includes('.')) {
+          const decimalPart = activeNumber.split('.')[1] || '';
+          if (/^[0-9]$/.test(token) && decimalPart.length >= 2) return prev;
+        }
+      }
       const next = `${current}${token}`;
       return next || '0';
     });
-  };
+  }, []);
 
-  const clearCalculator = () => setCalculatorDisplay('0');
+  const clearCalculator = useCallback(() => setCalculatorDisplay('0'), []);
 
-  const evaluateCalculator = () => {
+  const evaluateCalculator = useCallback(() => {
     try {
       const sanitized = calculatorDisplay.replace(/[^0-9+\-*/.() ]/g, '');
       if (!sanitized.trim()) {
@@ -56,14 +71,65 @@ function Navbar() {
       }
       const result = Function(`"use strict"; return (${sanitized});`)();
       if (Number.isFinite(result)) {
-        setCalculatorDisplay(String(result));
+        setCalculatorDisplay(formatCalculatorNumber(result));
       } else {
         setCalculatorDisplay('Error');
       }
     } catch {
       setCalculatorDisplay('Error');
     }
-  };
+  }, [calculatorDisplay, formatCalculatorNumber]);
+
+  useEffect(() => {
+    if (!calculatorOpen) return undefined;
+
+    const onCalculatorKeyDown = (event) => {
+      const activeTag = document.activeElement?.tagName;
+      const isTypingInField =
+        activeTag === 'INPUT' ||
+        activeTag === 'TEXTAREA' ||
+        document.activeElement?.isContentEditable;
+      if (isTypingInField) return;
+
+      const { key } = event;
+      if (/^[0-9]$/.test(key)) {
+        event.preventDefault();
+        appendCalculatorToken(key);
+        return;
+      }
+      if (['+', '-', '*', '/', '(', ')', '.'].includes(key)) {
+        event.preventDefault();
+        appendCalculatorToken(key);
+        return;
+      }
+      if (key === 'Enter' || key === '=') {
+        event.preventDefault();
+        evaluateCalculator();
+        return;
+      }
+      if (key === 'Backspace') {
+        event.preventDefault();
+        setCalculatorDisplay((prev) => {
+          if (prev === 'Error') return '0';
+          const next = prev.slice(0, -1);
+          return next || '0';
+        });
+        return;
+      }
+      if (key === 'Delete' || key.toLowerCase() === 'c') {
+        event.preventDefault();
+        clearCalculator();
+        return;
+      }
+      if (key === 'Escape') {
+        event.preventDefault();
+        setCalculatorOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', onCalculatorKeyDown);
+    return () => window.removeEventListener('keydown', onCalculatorKeyDown);
+  }, [appendCalculatorToken, calculatorOpen, clearCalculator, evaluateCalculator]);
 
   const handleNavigation = (path) => {
     navigate(path);

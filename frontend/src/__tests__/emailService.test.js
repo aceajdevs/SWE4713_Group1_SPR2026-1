@@ -18,7 +18,7 @@ vi.mock('../supabaseClient', () => ({
   },
 }));
 
-import { sendNewAccountRequest, sendAdminEmail } from '../services/emailService';
+import { sendNewAccountRequest, sendAdminEmail, sendReportEmail } from '../services/emailService';
 
 describe('emailService', () => {
   beforeEach(() => {
@@ -103,6 +103,42 @@ describe('emailService', () => {
 
       const result = await sendAdminEmail('a@b.com', 'Bob', 'Hi', 'Hello');
       expect(result).toBe(true);
+    });
+  });
+
+  describe('sendReportEmail', () => {
+    it('sends report email with report details in message', async () => {
+      mockSend.mockResolvedValue({ status: 200 });
+
+      const result = await sendReportEmail({
+        recipientEmail: 'recipient@example.com',
+        recipientName: 'Report User',
+        reportTitle: 'Income Statement',
+        reportHtml: '<h1>Income Statement</h1><p>Total Revenue</p>',
+        generatedAt: '4/20/2026, 11:00:00 AM',
+      });
+
+      expect(result).toBe(true);
+      expect(mockSend).toHaveBeenCalledWith(
+        'service_h5dzete',
+        'template_admin_email',
+        expect.objectContaining({
+          to_email: 'recipient@example.com',
+          to_name: 'Report User',
+          subject: 'Income Statement - Generated Report',
+          message: expect.stringContaining('Generated on: 4/20/2026, 11:00:00 AM'),
+        })
+      );
+    });
+
+    it('throws when recipient email is missing', async () => {
+      await expect(
+        sendReportEmail({
+          recipientEmail: '   ',
+          reportTitle: 'Trial Balance',
+          reportHtml: '<p>Report</p>',
+        })
+      ).rejects.toThrow('Recipient email is required.');
     });
   });
 });
