@@ -76,6 +76,8 @@ export async function sendReportEmail({
     reportTitle,
     reportHtml,
     generatedAt,
+    pdfFilename,
+    pdfBase64,
 }) {
     const email = String(recipientEmail || '').trim();
     if (!email) {
@@ -88,14 +90,46 @@ export async function sendReportEmail({
     const message =
         `Please find the generated ${title} report details below.\n\n` +
         `Generated on: ${when}\n\n` +
-        `${plainReport || 'No report content available.'}`;
+        `${plainReport || 'No report content available.'}` +
+        (pdfBase64 ? '\n\nA PDF copy of this report is attached.' : '');
 
-    return sendAdminEmail(
-        email,
-        String(recipientName || '').trim() || 'Recipient',
-        `${title} - Generated Report`,
-        message,
-    );
+    try {
+        const response = await emailjs.send(
+            "service_h5dzete",
+            "template_admin_email",
+            {
+                from_email: "betterfinance3@gmail.com",
+                to_email: email,
+                to_name: String(recipientName || '').trim() || 'Recipient',
+                subject: `${title} - Generated Report`,
+                message,
+                report_pdf_filename: String(pdfFilename || `${title}.pdf`),
+                report_pdf_base64: pdfBase64 || '',
+                attachment_name: String(pdfFilename || `${title}.pdf`),
+                attachment_data: pdfBase64 || '',
+            }
+        );
+        console.log("Report email sent:", response.status);
+        return { sent: true, attachmentIncluded: Boolean(pdfBase64) };
+    } catch (error) {
+        console.error("Report email with attachment error:", error);
+        // Fallback: send without attachment so delivery still succeeds.
+        try {
+            const fallbackMessage =
+                `${message}\n\n` +
+                `Note: PDF attachment could not be included by the email provider for this send.`;
+            await sendAdminEmail(
+                email,
+                String(recipientName || '').trim() || 'Recipient',
+                `${title} - Generated Report`,
+                fallbackMessage,
+            );
+            return { sent: true, attachmentIncluded: false };
+        } catch (fallbackError) {
+            console.error("Report email fallback error:", fallbackError);
+            throw fallbackError;
+        }
+    }
 }
 
 // import nodemailer from 'nodemailer';

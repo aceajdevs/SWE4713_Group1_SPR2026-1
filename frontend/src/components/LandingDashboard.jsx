@@ -207,7 +207,7 @@ export default function LandingDashboard({ title, subtitle, actions = [] }) {
                 {action.label}
               </button>
             ))}
-            <button type="button" className="button-secondary" onClick={() => navigate('/ratios')}>
+            <button type="button" className="button-primary" onClick={() => navigate('/ratios')}>
               Financial Ratios
             </button>
           </div>

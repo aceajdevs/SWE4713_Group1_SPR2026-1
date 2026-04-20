@@ -1,18 +1,17 @@
 import React, { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { HelpTooltip } from '../components/HelpTooltip';
 import {
   REPORT_TYPES,
   generateReportHtml,
-  downloadHtmlReport,
+  downloadPdfReport,
+  getReportPdfBase64,
   reportFilenameBase,
 } from '../services/Report';
 import { sendReportEmail } from '../services/emailService';
 import '../global.css';
 
 function Report() {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const [generatedAt, setGeneratedAt] = useState('');
   const [reportTitle, setReportTitle] = useState('');
@@ -26,15 +25,6 @@ function Report() {
   const [recipientName, setRecipientName] = useState('');
   const [sendingEmail, setSendingEmail] = useState(false);
   const [emailStatus, setEmailStatus] = useState('');
-
-  const dashboardPath =
-    user?.role === 'administrator'
-      ? '/admin-dashboard'
-      : user?.role === 'manager'
-        ? '/manager-dashboard'
-        : user?.role === 'accountant'
-          ? '/accountant-dashboard'
-          : '/dashboard';
 
   const generateReport = useCallback(async (typeKey) => {
     setGenerating(true);
@@ -60,9 +50,9 @@ function Report() {
     }
   }, [asOfDate, periodEndDate, periodStartDate]);
 
-  const handleDownload = useCallback(() => {
+  const handleDownload = useCallback(async () => {
     if (!reportHtml.trim()) return;
-    downloadHtmlReport({
+    await downloadPdfReport({
       title: reportTitle || 'Report',
       htmlFragment: reportHtml,
       filenameBase: reportFilenameBase(activeType),
@@ -81,21 +71,34 @@ function Report() {
     setSendingEmail(true);
     setEmailStatus('');
     try {
-      await sendReportEmail({
+      const pdfFilename = `${reportFilenameBase(activeType)}.pdf`;
+      const pdfBase64 = await getReportPdfBase64({
+        title: reportTitle || 'Report',
+        htmlFragment: reportHtml,
+      });
+      const result = await sendReportEmail({
         recipientEmail: trimmedEmail,
         recipientName: recipientName.trim(),
         reportTitle: reportTitle || 'Report',
         reportHtml,
         generatedAt: generatedAt || new Date().toLocaleString(),
+        pdfFilename,
+        pdfBase64,
       });
-      setEmailStatus(`Report emailed successfully to ${trimmedEmail}.`);
+      if (result?.attachmentIncluded) {
+        setEmailStatus(`Report emailed successfully to ${trimmedEmail} with PDF attachment.`);
+      } else {
+        setEmailStatus(
+          `Report emailed to ${trimmedEmail}, but the provider did not attach the PDF.`
+        );
+      }
     } catch (error) {
       console.error('Failed to send report email:', error);
       setEmailStatus('Unable to send report email right now. Please try again.');
     } finally {
       setSendingEmail(false);
     }
-  }, [generatedAt, recipientEmail, recipientName, reportHtml, reportTitle]);
+  }, [activeType, generatedAt, recipientEmail, recipientName, reportHtml, reportTitle]);
 
   const hasReport = Boolean(reportHtml.trim());
 
@@ -172,14 +175,14 @@ function Report() {
             </button>
           </HelpTooltip>
 
-          <HelpTooltip text="Download the current report as an HTML file (open in a browser or print).">
+          <HelpTooltip text="Download the current report as a PDF file.">
             <button
               type="button"
               className="button-secondary"
               onClick={handleDownload}
               disabled={!hasReport || generating}
             >
-              Download Report
+              Download PDF
             </button>
           </HelpTooltip>
         </div>
