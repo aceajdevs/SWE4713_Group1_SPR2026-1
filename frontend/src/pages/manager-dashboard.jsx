@@ -1,35 +1,20 @@
 import React from 'react';
 import '../global.css';
-import './manager-dashboard.css';
-import { useNavigate } from 'react-router-dom';
+import LandingDashboard from '../components/LandingDashboard';
 
 function ManagerDashboard() {
-
-  const navigate = useNavigate();
-  
   return (
-    <main className="dashboard-main">
-      <div className="dashboard-card">
-        <div className="dashboard-header">
-          <h1>Manager Dashboard</h1>
-          <p className="muted">Welcome! Select a service below.</p>
-        </div>
-        <div className="dashboard-buttons">
-          <button className="button-primary" onClick={() => navigate('/journal-entry/new')}>
-            New Journal Entry
-          </button>
-          <button className="button-primary" onClick={() => navigate('/journal-entries')}>
-            Review Journal Entries
-          </button>
-          <button className="button-primary" onClick={() => navigate('/admin/chart-of-accounts')}>
-            Chart of Accounts
-          </button>
-          <button className="button-primary" onClick={() => navigate('/report')}>
-            Reports
-          </button>
-        </div>
-      </div>
-  </main>
+    <LandingDashboard
+      title="Manager Dashboard"
+      subtitle="Use the shortcuts below to review journals, monitor key ratios, and access core accounting pages."
+      actions={[
+        { label: 'New Journal Entry', path: '/journal-entry/new' },
+        { label: 'Review Journal Entries', path: '/journal-entries' },
+        { label: 'Posted Journals', path: '/posted-journal-entries' },
+        { label: 'Chart of Accounts', path: '/admin/chart-of-accounts' },
+        { label: 'Reports', path: '/report' },
+      ]}
+    />
   );
 }
 

@@ -54,7 +54,6 @@ function Navbar() {
         setCalculatorDisplay('0');
         return;
       }
-      // eslint-disable-next-line no-new-func
       const result = Function(`"use strict"; return (${sanitized});`)();
       if (Number.isFinite(result)) {
         setCalculatorDisplay(String(result));
@@ -75,6 +74,7 @@ function Navbar() {
   const canAccessJournalEntries = user?.role === 'manager' || user?.role === 'accountant';
   const canViewPostedJournalReport =
     user?.role === 'manager' || user?.role === 'accountant' || user?.role === 'administrator';
+  const canViewRatios = canViewPostedJournalReport;
   const isAdmin = user?.role === 'administrator';
   const isManager = user?.role === 'manager';
 
@@ -222,14 +222,16 @@ function Navbar() {
               >
                 Reports
               </a>
-              <a
-                href="#/ratios"
-                className="nav-link center-link"
-                onClick={() => handleNavigation('/ratios')}
-              >
-                Financial Ratios
-              </a>
             </>
+          )}
+          {canViewRatios && (
+            <a
+              href="#/ratios"
+              className="nav-link center-link"
+              onClick={() => handleNavigation('/ratios')}
+            >
+              Financial Ratios
+            </a>
           )}
         </div>
 

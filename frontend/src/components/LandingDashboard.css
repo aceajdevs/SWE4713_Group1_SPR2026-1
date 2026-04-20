@@ -1,0 +1,117 @@
+.landing-dashboard-main {
+  padding: 24px;
+  display: flex;
+  justify-content: center;
+}
+
+.landing-dashboard-card {
+  width: min(1100px, 95vw);
+  background: #fff;
+  border: 1px solid var(--bff-light-secondary);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+  padding: 24px;
+  display: grid;
+  gap: 20px;
+}
+
+.landing-dashboard-header h1 {
+  color: var(--bff-primary);
+  margin-bottom: 4px;
+}
+
+.landing-dashboard-header p {
+  color: #475569;
+}
+
+.landing-dashboard-actions h2,
+.landing-dashboard-status h2,
+.landing-dashboard-messages h2 {
+  color: var(--bff-dark-primary);
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+}
+
+.landing-action-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.landing-status-header p {
+  color: #475569;
+  font-size: 0.9rem;
+}
+
+.landing-ratio-grid {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.landing-ratio-card {
+  border: 1px solid var(--bff-light-secondary);
+  border-radius: 10px;
+  padding: 12px;
+  display: grid;
+  gap: 4px;
+  background: #f8fafc;
+}
+
+.landing-ratio-card h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.landing-ratio-card strong {
+  font-size: 1.2rem;
+}
+
+.landing-ratio-card span {
+  color: #334155;
+  font-size: 0.86rem;
+}
+
+.landing-ratio-card.status-good {
+  border-left: 5px solid var(--bff-green);
+}
+
+.landing-ratio-card.status-warning {
+  border-left: 5px solid #d28b00;
+  background: #fffaf0;
+}
+
+.landing-ratio-card.status-risk {
+  border-left: 5px solid var(--bff-red);
+  background: #fff4f4;
+}
+
+.landing-ratio-card.status-unknown {
+  border-left: 5px solid #64748b;
+}
+
+.landing-period-caption {
+  margin-top: 10px;
+  font-size: 0.9rem;
+  color: #475569;
+}
+
+.landing-dashboard-messages ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.landing-dashboard-messages li {
+  margin: 4px 0;
+}
+
+@media (max-width: 640px) {
+  .landing-dashboard-main {
+    padding: 12px;
+  }
+
+  .landing-dashboard-card {
+    padding: 14px;
+  }
+}

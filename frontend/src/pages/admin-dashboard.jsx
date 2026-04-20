@@ -5,7 +5,8 @@ import UserReport from '../components/admin/UserReport';
 import SuspendUser from '../components/admin/SuspendUser';
 import ExpiredPasswords from '../components/admin/ExpiredPasswords';
 import PasswordExpiryNotifyPanel from '../components/admin/PasswordExpiryNotifyPanel';
-import './admin-dashboard.css'
+import LandingDashboard from '../components/LandingDashboard';
+import './admin-dashboard.css';
 
 function AdminDashboard() {
   const navigate = useNavigate();
@@ -14,6 +15,16 @@ function AdminDashboard() {
   return (
     <div className="admin-dashboard">
       <h1>Administrator Dashboard</h1>
+      <LandingDashboard
+        title="Financial Dashboard"
+        subtitle="Review ratio health and system-wide accounting alerts."
+        actions={[
+          { label: 'User Account Requests', path: '/admin/user-account-request' },
+          { label: 'Create User', path: '/admin/create-user' },
+          { label: 'Chart of Accounts', path: '/admin/chart-of-accounts' },
+          { label: 'Posted Journals', path: '/posted-journal-entries' },
+        ]}
+      />
 
       <div className="dashboard-content">
         <div className="left-column">
