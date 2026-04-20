@@ -225,11 +225,15 @@ function ChartAccountEventLogPage() {
     };
   }, [accountId, user, navigate]);
 
+  const headerTitle = account
+    ? `${account.accountNumber} — ${account.accountName} Event Log`
+    : 'Account Event Log';
+
   return (
     <div className="container chart-account-event-log-page">
       <div className="header-row" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
         <div>
-          <h1 style={{ marginBottom: '8px' }}>{account.accountNumber} — {account.accountName} Event Log</h1>
+          <h1 style={{ marginBottom: '8px' }}>{headerTitle}</h1>
         </div>
         <HelpTooltip text="Return to the chart of accounts list.">
           <button type="button" className="button-primary" onClick={() => navigate('/admin/chart-of-accounts')}>
