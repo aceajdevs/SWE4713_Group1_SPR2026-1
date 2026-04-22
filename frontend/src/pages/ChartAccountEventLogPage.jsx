@@ -126,7 +126,6 @@ function EventLogEventTable({ ev }) {
         role="region"
         aria-label="Before and after snapshot fields. Scroll horizontally for more columns."
       >
-        <p className="event-log-fields-hint">Scroll → for more fields if on a small screen.</p>
         <table className="chart-account-event-fields-table">
           <thead>
             <tr>
