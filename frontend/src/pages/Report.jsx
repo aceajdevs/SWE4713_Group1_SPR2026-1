@@ -5,7 +5,7 @@ import {
   REPORT_TYPES,
   generateReportHtml,
   downloadPdfReport,
-  getReportPdfBase64,
+  getReportJpegBase64,
   reportFilenameBase,
 } from '../services/Report';
 import { sendReportEmail } from '../services/emailService';
@@ -71,25 +71,24 @@ function Report() {
     setSendingEmail(true);
     setEmailStatus('');
     try {
-      const pdfFilename = `${reportFilenameBase(activeType)}.pdf`;
-      const pdfBase64 = await getReportPdfBase64({
+      const jpegFilename = `${reportFilenameBase(activeType)}.jpg`;
+      const jpegBase64 = await getReportJpegBase64({
         title: reportTitle || 'Report',
         htmlFragment: reportHtml,
       });
       const result = await sendReportEmail({
         recipientEmail: trimmedEmail,
         recipientName: recipientName.trim(),
-        reportTitle: reportTitle || 'Report',
-        reportHtml,
-        generatedAt: generatedAt || new Date().toLocaleString(),
-        pdfFilename,
-        pdfBase64,
+        subject: `${reportTitle || 'Report'} - Report Image`,
+        filename: jpegFilename,
+        contentType: 'image/jpeg',
+        attachmentBase64: jpegBase64,
       });
       if (result?.attachmentIncluded) {
-        setEmailStatus(`Report emailed successfully to ${trimmedEmail} with PDF attachment.`);
+        setEmailStatus(`Report emailed successfully to ${trimmedEmail} with JPEG attachment.`);
       } else {
         setEmailStatus(
-          `Report emailed to ${trimmedEmail}, but the provider did not attach the PDF.`
+          `Report emailed to ${trimmedEmail}, but the provider did not attach the JPEG.`
         );
       }
     } catch (error) {

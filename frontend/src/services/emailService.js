@@ -72,64 +72,38 @@ function htmlToPlainText(html) {
 
 export async function sendReportEmail({
     recipientEmail,
-    recipientName,
-    reportTitle,
-    reportHtml,
-    generatedAt,
-    pdfFilename,
-    pdfBase64,
+    subject,
+    filename,
+    contentType,
+    attachmentBase64,
 }) {
     const email = String(recipientEmail || '').trim();
     if (!email) {
         throw new Error('Recipient email is required.');
     }
 
-    const title = String(reportTitle || 'Report').trim();
-    const when = String(generatedAt || new Date().toLocaleString()).trim();
-    const plainReport = htmlToPlainText(reportHtml);
-    const message =
-        `Please find the generated ${title} report details below.\n\n` +
-        `Generated on: ${when}\n\n` +
-        `${plainReport || 'No report content available.'}` +
-        (pdfBase64 ? '\n\nA PDF copy of this report is attached.' : '');
+    const attachment = String(attachmentBase64 || '').trim();
+    if (!attachment) throw new Error('Unable to generate the JPEG attachment.');
 
-    try {
-        const response = await emailjs.send(
-            "service_h5dzete",
-            "template_admin_email",
-            {
-                from_email: "betterfinance3@gmail.com",
-                to_email: email,
-                to_name: String(recipientName || '').trim() || 'Recipient',
-                subject: `${title} - Generated Report`,
-                message,
-                report_pdf_filename: String(pdfFilename || `${title}.pdf`),
-                report_pdf_base64: pdfBase64 || '',
-                attachment_name: String(pdfFilename || `${title}.pdf`),
-                attachment_data: pdfBase64 || '',
-            }
-        );
-        console.log("Report email sent:", response.status);
-        return { sent: true, attachmentIncluded: Boolean(pdfBase64) };
-    } catch (error) {
-        console.error("Report email with attachment error:", error);
-        // Fallback: send without attachment so delivery still succeeds.
-        try {
-            const fallbackMessage =
-                `${message}\n\n` +
-                `Note: PDF attachment could not be included by the email provider for this send.`;
-            await sendAdminEmail(
-                email,
-                String(recipientName || '').trim() || 'Recipient',
-                `${title} - Generated Report`,
-                fallbackMessage,
-            );
-            return { sent: true, attachmentIncluded: false };
-        } catch (fallbackError) {
-            console.error("Report email fallback error:", fallbackError);
-            throw fallbackError;
-        }
+    const response = await fetch('/api/send-pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            to: email,
+            subject: String(subject || 'Report').trim() || 'Report',
+            text: '',
+            filename: String(filename || 'report.jpg'),
+            attachmentContentType: String(contentType || 'image/jpeg'),
+            attachmentBase64: attachment,
+        }),
+    });
+
+    if (!response.ok) {
+        const detail = await response.text().catch(() => '');
+        throw new Error(`Email send failed (${response.status}). ${detail}`.trim());
     }
+
+    return { sent: true, attachmentIncluded: true };
 }
 
 // import nodemailer from 'nodemailer';
