@@ -820,6 +820,30 @@ ${htmlFragment}
 </html>`;
 }
 
+async function createReportJpegDataUri({ title, htmlFragment }) {
+  const wrapper = document.createElement('div');
+  wrapper.style.position = 'fixed';
+  wrapper.style.left = '-10000px';
+  wrapper.style.top = '0';
+  wrapper.style.width = '900px';
+  wrapper.style.background = '#fff';
+  wrapper.innerHTML = buildPrintableReportDocument({ title, htmlFragment });
+  document.body.appendChild(wrapper);
+
+  try {
+    const canvas = await html2canvas(wrapper, {
+      scale: 1,
+      useCORS: true,
+      logging: false,
+      backgroundColor: '#ffffff',
+    });
+
+    return canvas.toDataURL('image/jpeg', 0.75);
+  } finally {
+    document.body.removeChild(wrapper);
+  }
+}
+
 async function createReportPdfBlob({ title, htmlFragment }) {
   const wrapper = document.createElement('div');
   wrapper.style.position = 'fixed';
@@ -832,13 +856,13 @@ async function createReportPdfBlob({ title, htmlFragment }) {
 
   try {
     const canvas = await html2canvas(wrapper, {
-      scale: 2,
+      scale: 1,
       useCORS: true,
       logging: false,
       backgroundColor: '#ffffff',
     });
 
-    const imgData = canvas.toDataURL('image/png');
+    const imgData = canvas.toDataURL('image/jpeg', 0.75);
     const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
@@ -848,13 +872,13 @@ async function createReportPdfBlob({ title, htmlFragment }) {
     let heightLeft = imgHeight;
     let position = 0;
 
-    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+    pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
     heightLeft -= pdfHeight;
 
     while (heightLeft > 0) {
       position = heightLeft - imgHeight;
       pdf.addPage();
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
       heightLeft -= pdfHeight;
     }
 
@@ -877,6 +901,10 @@ function blobToBase64(blob) {
   });
 }
 
+export async function getReportPdfBlob({ title, htmlFragment }) {
+  return createReportPdfBlob({ title, htmlFragment });
+}
+
 export async function downloadPdfReport({ title, htmlFragment, filenameBase }) {
   const blob = await createReportPdfBlob({ title, htmlFragment });
   const url = URL.createObjectURL(blob);
@@ -892,4 +920,10 @@ export async function downloadPdfReport({ title, htmlFragment, filenameBase }) {
 export async function getReportPdfBase64({ title, htmlFragment }) {
   const blob = await createReportPdfBlob({ title, htmlFragment });
   return blobToBase64(blob);
+}
+
+export async function getReportJpegBase64({ title, htmlFragment }) {
+  const dataUri = await createReportJpegDataUri({ title, htmlFragment });
+  const base64 = String(dataUri).includes(',') ? String(dataUri).split(',')[1] : '';
+  return base64;
 }
