@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState, useRef } from 'react';
 import './navbar.css';
 import logo from '../assets/Images/resourceDirectory/logo.png';
-import calendarIcon from '../assets/Images/resourceDirectory/calendarIcon.png';
+import calendarIcon from '../assets/Images/resourceDirectory/CalendarIcon.png';
 import calculatorIcon from '../assets/Images/resourceDirectory/Calculator.png';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
