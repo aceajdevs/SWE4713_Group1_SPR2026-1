@@ -226,6 +226,38 @@ function Report() {
         </div>
       </div>
       
+      <div style={{ margin: '14px auto 0', display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', maxWidth: reportContentMaxWidth }} role="group">
+        <input
+          type="email"
+          className="input"
+          placeholder="Recipient email"
+          value={recipientEmail}
+          onChange={(event) => setRecipientEmail(event.target.value)}
+          style={{ width: '20vw' }}
+        />
+        <input
+          type="text"
+          className="input"
+          placeholder="Recipient name (optional)"
+          value={recipientName}
+          onChange={(event) => setRecipientName(event.target.value)}
+          style={{ width: '20vw' }}
+        />
+        <HelpTooltip text="Send the currently displayed report to the recipient by email.">
+          <button
+            type="button"
+            className="button-secondary"
+            onClick={handleSendEmail}
+            disabled={!hasReport || generating || sendingEmail}
+          >
+            {sendingEmail ? 'Sending Email...' : 'Email Report'}
+          </button>
+        </HelpTooltip>
+      </div>
+      {emailStatus ? (
+        <p style={{ margin: '8px auto 0', color: 'var(--bff-dark-text)', maxWidth: reportContentMaxWidth, textAlign: 'center' }}>{emailStatus}</p>
+      ) : null}
+
       <div style={{ maxWidth: reportContentMaxWidth, margin: '1vh auto 10vh', display: 'flex', justifyContent: 'center' }}>
         <HelpTooltip text="Download the current report as a PDF file.">
           <button
