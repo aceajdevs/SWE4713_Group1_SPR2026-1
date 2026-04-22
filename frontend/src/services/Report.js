@@ -39,26 +39,44 @@ function periodLabelForType(typeKey, options = {}) {
   const startRaw = options.startDate || '';
   const endRaw = options.endDate || options.asOfDate || todayRaw;
   const asOfRaw = options.asOfDate || options.endDate || todayRaw;
+  const endText = formatDisplayDate(endRaw);
+  const startText = formatDisplayDate(startRaw);
 
   if (DURATION_REPORT_TYPES.has(typeKey)) {
-    const endText = formatDisplayDate(endRaw);
-    const startText = formatDisplayDate(startRaw);
-    if (startText) {
-      return `Period Ending on ${endText} (${startText} - ${endText})`;
+    if (typeKey === REPORT_TYPES.RETAINED_EARNINGS) {
+      return `For the Year Ended ${endText}`;
     }
-    return `Period Ending on ${endText}`;
+    if (startText) {
+      return `For the Period ${startText} to ${endText}`;
+    }
+    return `For the Period Ended ${endText}`;
+  }
+
+  if (typeKey === REPORT_TYPES.BALANCE_SHEET) {
+    return `At ${formatDisplayDate(asOfRaw)}`;
   }
 
   return `As of ${formatDisplayDate(asOfRaw)}`;
 }
 
-function wrapReportWithHeader({ title, bodyHtml, periodLabel }) {
+function safeCssClassSuffix(text) {
+  return String(text || 'report').replace(/[^a-z0-9_-]+/gi, '-').replace(/^-|-$/g, '').toLowerCase();
+}
+
+function wrapReportWithHeader({ title, bodyHtml, periodLabel, typeKey }) {
+  const typeClass = safeCssClassSuffix(typeKey);
   return {
     title,
-    html: `<h1>${escapeHtml(title)}</h1>
-      <h2>Addams &amp; Family</h2>
-      <p><strong>${escapeHtml(periodLabel)}</strong></p>
-      ${bodyHtml}`,
+    html: `
+      <section class="report-bw report-type-${typeClass}">
+        <header class="report-header-block">
+          <p class="report-company">Addams &amp; Family Inc.</p>
+          <p class="report-name">${escapeHtml(title)}</p>
+          <p class="report-period">${escapeHtml(periodLabel)}</p>
+        </header>
+        <hr class="report-header-divider" />
+        ${bodyHtml}
+      </section>`,
   };
 }
 
@@ -76,6 +94,24 @@ function formatMoney(value) {
     currency: 'USD',
     minimumFractionDigits: 2,
   }).format(n);
+}
+
+function formatMoneyAbs(value) {
+  return formatMoney(Math.abs(Number(value) || 0));
+}
+
+function formatMoneyInParentheses(value) {
+  return `(${formatMoneyAbs(value)})`;
+}
+
+function formatShortDate(rawDate) {
+  if (!rawDate) return '';
+  const date = new Date(`${rawDate}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return String(rawDate);
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  const year = String(date.getFullYear()).slice(-2);
+  return `${month}/${day}/${year}`;
 }
 
 function signedBalance(account) {
@@ -163,7 +199,7 @@ function buildTrialBalance(accounts) {
     .map((a) => {
       const { debit, credit } = splitBalanceBySide(a);
       return {
-        account: `${a.accountNumber} - ${a.accountName}`,
+        account: `${a.accountName}`,
         debit,
         credit,
       };
@@ -177,7 +213,7 @@ function buildTrialBalance(accounts) {
     .map(
       (row) =>
         `<tr>
-          <td>${escapeHtml(row.account)}</td>
+          <td class="label">${escapeHtml(row.account)}</td>
           <td class="money">${row.debit === 0 ? '' : formatMoney(row.debit)}</td>
           <td class="money">${row.credit === 0 ? '' : formatMoney(row.credit)}</td>
         </tr>`,
@@ -186,13 +222,21 @@ function buildTrialBalance(accounts) {
 
   return {
     title: 'Trial Balance',
-    html: `<table>
+    html: `<table class="report-table trial-balance-table">
         <thead>
-          <tr><th>Account</th><th class="money">Debit</th><th class="money">Credit</th></tr>
+          <tr class="trial-balance-column-headings">
+            <th></th>
+            <th class="money amount-single-underline">Debit</th>
+            <th class="money amount-single-underline">Credit</th>
+          </tr>
         </thead>
         <tbody>${bodyRows}</tbody>
-        <tfoot>
-          <tr><th>Total</th><th class="money">${formatMoney(totalDebit)}</th><th class="money">${formatMoney(totalCredit)}</th></tr>
+        <tfoot class="trial-balance-footer">
+          <tr class="trial-balance-total-row">
+            <th></th>
+            <th class="money amount-double-underline">${formatMoney(totalDebit)}</th>
+            <th class="money amount-double-underline">${formatMoney(totalCredit)}</th>
+          </tr>
         </tfoot>
       </table>`,
   };
@@ -209,7 +253,7 @@ function buildIncomeStatement(accounts) {
     .map(
       (a) => {
         const val = signedBalance(a);
-        return `<tr><td>${escapeHtml(`${a.accountNumber} - ${a.accountName}`)}</td><td class="money">${val === 0 ? '' : formatMoney(val)}</td></tr>`;
+        return `<tr><td class="label indent-1">${escapeHtml(`${a.accountName}`)}</td><td class="money">${val === 0 ? '' : formatMoney(val)}</td></tr>`;
       },
     )
     .join('');
@@ -217,31 +261,94 @@ function buildIncomeStatement(accounts) {
     .map(
       (a) => {
         const val = signedBalance(a);
-        return `<tr><td>${escapeHtml(`${a.accountNumber} - ${a.accountName}`)}</td><td class="money">${val === 0 ? '' : formatMoney(val)}</td></tr>`;
+        return `<tr><td class="label indent-1">${escapeHtml(`${a.accountName}`)}</td><td class="money">${val === 0 ? '' : formatMoney(val)}</td></tr>`;
       },
     )
     .join('');
 
   return {
     title: 'Income Statement',
-    html: `<h2>Revenue</h2>
-      <table><tbody>${revenueRows}<tr><th>Total Revenue</th><th class="money">${formatMoney(revenueTotal)}</th></tr></tbody></table>
-      <h2>Expenses</h2>
-      <table><tbody>${expenseRows}<tr><th>Total Expenses</th><th class="money">${formatMoney(expenseTotal)}</th></tr></tbody></table>
-      <table><tbody><tr><th>Net Income</th><th class="money">${formatMoney(netIncome)}</th></tr></tbody></table>`,
+    html: `
+      <section class="statement-section">
+        <h3 class="statement-group-title">Revenues</h3>
+        <table class="report-table income-statement-table">
+          <tbody>
+            ${revenueRows}
+            <tr class="statement-total-row">
+              <th class="label">Total Revenues</th>
+              <th class="money amount-single-underline">${formatMoney(revenueTotal)}</th>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="statement-section">
+        <h3 class="statement-group-title">Expenses</h3>
+        <table class="report-table income-statement-table">
+          <tbody>
+            ${expenseRows}
+            <tr class="statement-total-row">
+              <th class="label">Total Expenses</th>
+              <th class="money amount-single-underline">${formatMoney(expenseTotal)}</th>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <table class="report-table income-statement-table statement-net-table">
+        <tbody>
+          <tr class="statement-net-row">
+            <th class="label">Net Income (Loss)</th>
+            <th class="money amount-double-underline">${formatMoney(netIncome)}</th>
+          </tr>
+        </tbody>
+      </table>`,
   };
 }
 
 function buildBalanceSheet(accounts) {
   const assets = accounts.filter((a) => String(a.type || '').toLowerCase() === 'assets');
-  const liabilities = accounts.filter((a) => {
-    const type = String(a.type || '').toLowerCase();
-    const subType = String(a.subType || '').toLowerCase();
-    const name = String(a.accountName || '').toLowerCase();
-    const isCurrentLiability = type === 'liabilities' && subType === 'current liabilities';
+
+  const normalize = (text) => String(text || '').toLowerCase();
+  const isCurrentAsset = (account) => {
+    const subType = normalize(account.subType);
+    const name = normalize(account.accountName);
+    const knownCurrentAssets = [
+      'cash',
+      'accounts receivable',
+      'prepaid rent',
+      'prepaid insurance',
+      'supplies',
+    ];
+    return (
+      subType.includes('current asset') ||
+      knownCurrentAssets.some((assetName) => name.includes(assetName))
+    );
+  };
+  const isContraAsset = (account) => normalize(account.accountName).includes('accumulated depreciation');
+
+  const currentAssets = assets.filter(isCurrentAsset);
+  const contraAssets = assets.filter(isContraAsset);
+  const propertyPlantEquipment = assets.filter(
+    (a) => !isCurrentAsset(a) && !isContraAsset(a),
+  );
+
+  const liabilityRows = new Map();
+  for (const account of accounts) {
+    const type = normalize(account.type);
+    const name = normalize(account.accountName);
+    const isLiability = type === 'liabilities';
     const isUnearnedRevenue = name.includes('unearned revenue');
-    return isCurrentLiability || isUnearnedRevenue;
-  });
+    if (isLiability || isUnearnedRevenue) {
+      const key = account.accountID || account.accountName;
+      liabilityRows.set(key, account);
+    }
+  }
+  const liabilities = Array.from(liabilityRows.values());
+
+  const currentLiabilities = liabilities.filter((a) => normalize(a.subType).includes('current liabilities'));
+  const otherLiabilities = liabilities.filter((a) => !normalize(a.subType).includes('current liabilities'));
+
   const equity = accounts.filter((a) => String(a.type || '').toLowerCase() === 'equity');
   const revenues = accounts.filter((a) => String(a.type || '').toLowerCase() === 'revenue');
   const expenses = accounts.filter((a) => String(a.type || '').toLowerCase() === 'expenses');
@@ -269,53 +376,147 @@ function buildBalanceSheet(accounts) {
     },
   ];
 
-  const renderRows = (list, amountGetter = signedBalance) =>
-    list
+  const renderRows = (list, options = {}) => {
+    const amountGetter = options.amountGetter || signedBalance;
+    const amountFormatter = options.amountFormatter || formatMoney;
+    const indentClass = options.indentClass || 'indent-1';
+
+    return list
       .map(
         (a) => {
           const val = amountGetter(a);
-          return `<tr><td>${escapeHtml(`${a.accountNumber ? `${a.accountNumber} - ` : ''}${a.accountName}`)}</td><td class="money">${val === 0 ? '' : formatMoney(val)}</td></tr>`;
+          return `<tr><td class="label ${indentClass}">${escapeHtml(`${a.accountName}`)}</td><td class="money">${val === 0 ? '' : amountFormatter(val)}</td></tr>`;
         },
       )
       .join('');
+  };
 
-  const totalAssets = assets.reduce((sum, a) => sum + signedBalance(a), 0);
+  const currentAssetTotal = currentAssets.reduce((sum, a) => sum + signedBalance(a), 0);
+  const ppeGross = propertyPlantEquipment.reduce((sum, a) => sum + signedBalance(a), 0);
+  const contraAssetTotal = contraAssets.reduce((sum, a) => sum + Math.abs(signedBalance(a)), 0);
+  const ppeNet = ppeGross - contraAssetTotal;
+  const totalAssets = currentAssetTotal + ppeNet;
+
   const liabilityAmount = (a) => Math.abs(signedBalance(a));
+  const totalCurrentLiabilities = currentLiabilities.reduce((sum, a) => sum + liabilityAmount(a), 0);
   const totalLiabilities = liabilities.reduce((sum, a) => sum + liabilityAmount(a), 0);
   const totalEquity = equityForDisplay.reduce((sum, a) => sum + signedBalance(a), 0);
 
   return {
     title: 'Balance Sheet',
-    html: `<h2>Assets</h2>
-      <table><tbody>${renderRows(assets)}<tr><th>Total Assets</th><th class="money">${formatMoney(totalAssets)}</th></tr></tbody></table>
-      <h2>Liabilities</h2>
-      <table><tbody>${renderRows(liabilities, liabilityAmount)}<tr><th>Total Liabilities</th><th class="money">${formatMoney(totalLiabilities)}</th></tr></tbody></table>
-      <h2>Equity</h2>
-      <table><tbody>${renderRows(equityForDisplay)}<tr><th>Total Equity</th><th class="money">${formatMoney(totalEquity)}</th></tr></tbody></table>
-      <table><tbody><tr><th>Total Liabilities + Equity</th><th class="money">${formatMoney(totalLiabilities + totalEquity)}</th></tr></tbody></table>`,
+    html: `<section class="balance-sheet-section">
+      <h3 class="statement-group-title">Assets</h3>
+      <table class="report-table balance-sheet-table">
+        <tbody>
+          <tr class="balance-sheet-heading-row"><th class="label indent-1">Current Assets</th><th class="money"></th></tr>
+          ${renderRows(currentAssets, { indentClass: 'indent-2' })}
+          <tr class="balance-sheet-total-row">
+            <th class="label indent-1">Total Current Assets</th>
+            <th class="money amount-single-underline">${formatMoney(currentAssetTotal)}</th>
+          </tr>
+
+          <tr class="balance-sheet-heading-row"><th class="label indent-1">Property Plant &amp; Equipment</th><th class="money"></th></tr>
+          ${renderRows(propertyPlantEquipment, { indentClass: 'indent-2' })}
+          ${renderRows(contraAssets, {
+            indentClass: 'indent-2',
+            amountGetter: (a) => Math.abs(signedBalance(a)),
+            amountFormatter: formatMoneyInParentheses,
+          })}
+          <tr class="balance-sheet-total-row">
+            <th class="label indent-1">Property Plant &amp; Equipment, Net</th>
+            <th class="money amount-single-underline">${formatMoney(ppeNet)}</th>
+          </tr>
+
+          <tr class="balance-sheet-grand-total-row">
+            <th class="label">Total Assets</th>
+            <th class="money amount-double-underline">${formatMoney(totalAssets)}</th>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="balance-sheet-section">
+      <h3 class="statement-group-title">Liabilities &amp; Stockholders&#39; Equity</h3>
+      <table class="report-table balance-sheet-table">
+        <tbody>
+          <tr class="balance-sheet-heading-row"><th class="label">Liabilities</th><th class="money"></th></tr>
+          <tr class="balance-sheet-heading-row"><th class="label indent-1">Current Liabilities</th><th class="money"></th></tr>
+          ${renderRows(currentLiabilities, {
+            indentClass: 'indent-2',
+            amountGetter: liabilityAmount,
+          })}
+          <tr class="balance-sheet-total-row">
+            <th class="label indent-1">Total Current Liabilities</th>
+            <th class="money amount-single-underline">${formatMoney(totalCurrentLiabilities)}</th>
+          </tr>
+          ${renderRows(otherLiabilities, {
+            indentClass: 'indent-1',
+            amountGetter: liabilityAmount,
+          })}
+          <tr class="balance-sheet-total-row">
+            <th class="label">Total Liabilities</th>
+            <th class="money amount-single-underline">${formatMoney(totalLiabilities)}</th>
+          </tr>
+
+          <tr class="balance-sheet-spacer-row"><td></td><td></td></tr>
+
+          <tr class="balance-sheet-heading-row"><th class="label">Stockholders&#39; Equity</th><th class="money"></th></tr>
+          ${renderRows(equityForDisplay, { indentClass: 'indent-1' })}
+          <tr class="balance-sheet-total-row">
+            <th class="label">Total Stockholders&#39; Equity</th>
+            <th class="money amount-single-underline">${formatMoney(totalEquity)}</th>
+          </tr>
+
+          <tr class="balance-sheet-grand-total-row">
+            <th class="label">Total Liabilities &amp; Stockholders&#39; Equity</th>
+            <th class="money amount-double-underline">${formatMoney(totalLiabilities + totalEquity)}</th>
+          </tr>
+        </tbody>
+      </table>
+    </section>`,
   };
 }
 
-function buildRetainedEarnings(accounts) {
+function buildRetainedEarnings(accounts, options = {}) {
   const revenues = accounts.filter((a) => String(a.type || '').toLowerCase() === 'revenue');
   const expenses = accounts.filter((a) => String(a.type || '').toLowerCase() === 'expenses');
   const retained = accounts.filter((a) => String(a.subType || '').toLowerCase() === 'retained earnings');
+  const dividends = accounts.filter((a) => String(a.accountName || '').toLowerCase().includes('dividend'));
 
   const beginningRetained = retained.reduce((sum, a) => sum + (Number(a.initBalance) || 0), 0);
   const revenueTotal = revenues.reduce((sum, a) => sum + signedBalance(a), 0);
   const expenseTotal = expenses.reduce((sum, a) => sum + signedBalance(a), 0);
   const netIncome = revenueTotal - expenseTotal;
-  const endingRetained = beginningRetained + netIncome;
+  const dividendsTotal = dividends.reduce((sum, a) => sum + Math.abs(signedBalance(a)), 0);
+  const endingRetained = beginningRetained + netIncome - dividendsTotal;
+
+  const startLabel = formatShortDate(options.startDate);
+  const endLabel = formatShortDate(options.endDate || options.asOfDate || new Date().toISOString().slice(0, 10));
 
   return {
     title: 'Statement of Retained Earnings',
-    html: `<table>
+    html: `<section class="retained-earnings-section">
+      <table class="report-table retained-earnings-table">
         <tbody>
-          <tr><td>Beginning Retained Earnings</td><td class="money">${formatMoney(beginningRetained)}</td></tr>
-          <tr><td>Plus: Net Income</td><td class="money">${formatMoney(netIncome)}</td></tr>
-          <tr><th>Ending Retained Earnings</th><th class="money">${formatMoney(endingRetained)}</th></tr>
+          <tr class="retained-earnings-detail-row">
+            <td class="label indent-0">Beginning Retained Earnings${startLabel ? `, ${escapeHtml(startLabel)}` : ''}</td>
+            <td class="money">${formatMoney(beginningRetained)}</td>
+          </tr>
+          <tr class="retained-earnings-detail-row">
+            <td class="label indent-0">Add: Net Income</td>
+            <td class="money">${formatMoney(netIncome)}</td>
+          </tr>
+          <tr class="retained-earnings-detail-row retained-earnings-less-row">
+            <td class="label indent-0">Less: Dividends</td>
+            <td class="money amount-single-underline">${formatMoney(dividendsTotal)}</td>
+          </tr>
+          <tr class="retained-earnings-final-row">
+            <th class="label indent-0">End Retained Earnings${endLabel ? `, ${escapeHtml(endLabel)}` : ''}</th>
+            <th class="money amount-double-underline">${formatMoney(endingRetained)}</th>
+          </tr>
         </tbody>
-      </table>`,
+      </table>
+    </section>`,
   };
 }
 
@@ -325,13 +526,14 @@ export async function generateReportHtml(typeKey, options = {}) {
   if (typeKey === REPORT_TYPES.TRIAL_BALANCE) baseReport = buildTrialBalance(accounts);
   else if (typeKey === REPORT_TYPES.INCOME_STATEMENT) baseReport = buildIncomeStatement(accounts);
   else if (typeKey === REPORT_TYPES.BALANCE_SHEET) baseReport = buildBalanceSheet(accounts);
-  else if (typeKey === REPORT_TYPES.RETAINED_EARNINGS) baseReport = buildRetainedEarnings(accounts);
+  else if (typeKey === REPORT_TYPES.RETAINED_EARNINGS) baseReport = buildRetainedEarnings(accounts, options);
   else baseReport = { title: 'Report', html: '<p>No report type selected.</p>' };
 
   return wrapReportWithHeader({
     title: baseReport.title,
     bodyHtml: baseReport.html,
     periodLabel: periodLabelForType(typeKey, options),
+    typeKey,
   });
 }
 
@@ -378,11 +580,108 @@ export function downloadHtmlReport({ title, htmlFragment, filenameBase }) {
 <title>${safeTitle}</title>
 <style>
   body { font-family: system-ui, "Segoe UI", sans-serif; padding: 24px; color: #111; max-width: 900px; margin: 0 auto; }
-  table { border-collapse: collapse; width: 100%; margin-top: 8px; }
-  th, td { border: 1px solid #ccc; padding: 8px 12px; text-align: left; }
-  th { background: #f5f5f5; }
-  td.money, th.money { text-align: right; }
-  h1 { font-size: 1.35rem; margin: 0 0 16px; }
+  .report-bw { color: #000; background: #fff; }
+  .report-header-block { text-align: center; }
+  .report-company, .report-name, .report-period { margin: 0; font-weight: 700; }
+  .report-company, .report-name { font-size: 1.35rem; }
+  .report-period { font-size: 1rem; margin-top: 4px; }
+  .report-header-divider { border: 0; border-top: 2px solid #000; margin: 10px 0 18px; }
+
+  .report-table { display: table; width: 100%; border-collapse: collapse; border-spacing: 0; margin: 0; }
+  .report-table tbody tr { background: #fff; }
+  .report-table td, .report-table th {
+    border: 0;
+    padding: 4px 0;
+    text-align: left;
+    color: #000;
+    background: #fff;
+    font-weight: 400;
+  }
+  .report-table .label.indent-1 { padding-left: 44px; }
+  .report-table .label.indent-2 { padding-left: 72px; }
+  .report-table td.money, .report-table th.money { text-align: right; width: 220px; white-space: nowrap; }
+
+  .statement-section { margin: 0 0 20px; }
+  .statement-group-title { margin: 0 0 6px; font-size: 1.85rem; }
+  .statement-total-row th { font-size: 1.9rem; font-weight: 700; padding-top: 2px; }
+  .statement-net-table { margin-top: 4px; }
+  .statement-net-row th { font-size: 1.9rem; font-weight: 700; }
+
+  .amount-single-underline, .amount-double-underline {
+    text-decoration-line: underline;
+    text-decoration-color: #000;
+    text-decoration-style: solid;
+  }
+  .amount-single-underline { text-decoration-thickness: 1px; text-underline-offset: 8px; }
+  .amount-double-underline {
+    text-decoration-thickness: 2px;
+    text-decoration-style: double;
+    text-underline-offset: 8px;
+  }
+
+  .trial-balance-table { table-layout: fixed; }
+  .trial-balance-table thead th,
+  .trial-balance-table tbody td,
+  .trial-balance-table tfoot th {
+    border: 0;
+    background: #fff;
+    color: #000;
+  }
+  .trial-balance-table .label { padding-left: 16px; }
+  .trial-balance-table tbody tr td { border-bottom: 2px solid #000; }
+  .trial-balance-table .money { width: 170px; }
+  .trial-balance-table .trial-balance-column-headings th {
+    font-size: 1.9rem;
+    font-weight: 700;
+    padding-bottom: 2px;
+  }
+  .trial-balance-table .trial-balance-column-headings th:first-child {
+    padding: 0;
+    width: auto;
+  }
+  .trial-balance-table .trial-balance-total-row th {
+    font-size: 2rem;
+    font-weight: 700;
+    border: 0;
+    padding-top: 8px;
+  }
+
+  .balance-sheet-section { margin: 0 0 20px; }
+  .balance-sheet-table { table-layout: fixed; }
+  .balance-sheet-table .money { width: 190px; }
+  .balance-sheet-table .balance-sheet-heading-row th {
+    font-size: 1.85rem;
+    font-weight: 700;
+    padding-top: 2px;
+    padding-bottom: 2px;
+  }
+  .balance-sheet-table .balance-sheet-total-row th {
+    font-size: 1.85rem;
+    font-weight: 700;
+    padding-top: 2px;
+    padding-bottom: 2px;
+  }
+  .balance-sheet-table .balance-sheet-grand-total-row th {
+    font-size: 1.95rem;
+    font-weight: 700;
+    padding-top: 4px;
+  }
+  .balance-sheet-table .balance-sheet-spacer-row td { padding: 10px 0; }
+
+  .retained-earnings-section { margin: 0 0 20px; }
+  .retained-earnings-table { table-layout: fixed; }
+  .retained-earnings-table .money { width: 190px; }
+  .retained-earnings-table .retained-earnings-detail-row td {
+    font-size: 1.85rem;
+    font-weight: 400;
+    padding-top: 1px;
+    padding-bottom: 1px;
+  }
+  .retained-earnings-table .retained-earnings-final-row th {
+    font-size: 1.95rem;
+    font-weight: 700;
+    padding-top: 2px;
+  }
 </style>
 </head>
 <body>
@@ -411,12 +710,108 @@ function buildPrintableReportDocument({ title, htmlFragment }) {
 <title>${safeTitle}</title>
 <style>
   body { font-family: system-ui, "Segoe UI", sans-serif; padding: 24px; color: #111; max-width: 900px; margin: 0 auto; }
-  table { border-collapse: collapse; width: 100%; margin-top: 8px; }
-  th, td { border: 1px solid #ccc; padding: 8px 12px; text-align: left; }
-  th { background: #f5f5f5; }
-  td.money, th.money { text-align: right; }
-  h1 { font-size: 1.35rem; margin: 0 0 10px; }
-  h2 { margin: 0 0 10px; }
+  .report-bw { color: #000; background: #fff; }
+  .report-header-block { text-align: center; }
+  .report-company, .report-name, .report-period { margin: 0; font-weight: 700; }
+  .report-company, .report-name { font-size: 1.35rem; }
+  .report-period { font-size: 1rem; margin-top: 4px; }
+  .report-header-divider { border: 0; border-top: 2px solid #000; margin: 10px 0 18px; }
+
+  .report-table { display: table; width: 100%; border-collapse: collapse; border-spacing: 0; margin: 0; }
+  .report-table tbody tr { background: #fff; }
+  .report-table td, .report-table th {
+    border: 0;
+    padding: 4px 0;
+    text-align: left;
+    color: #000;
+    background: #fff;
+    font-weight: 400;
+  }
+  .report-table .label.indent-1 { padding-left: 44px; }
+  .report-table .label.indent-2 { padding-left: 72px; }
+  .report-table td.money, .report-table th.money { text-align: right; width: 220px; white-space: nowrap; }
+
+  .statement-section { margin: 0 0 20px; }
+  .statement-group-title { margin: 0 0 6px; font-size: 1.85rem; }
+  .statement-total-row th { font-size: 1.9rem; font-weight: 700; padding-top: 2px; }
+  .statement-net-table { margin-top: 4px; }
+  .statement-net-row th { font-size: 1.9rem; font-weight: 700; }
+
+  .amount-single-underline, .amount-double-underline {
+    text-decoration-line: underline;
+    text-decoration-color: #000;
+    text-decoration-style: solid;
+  }
+  .amount-single-underline { text-decoration-thickness: 1px; text-underline-offset: 8px; }
+  .amount-double-underline {
+    text-decoration-thickness: 2px;
+    text-decoration-style: double;
+    text-underline-offset: 8px;
+  }
+
+  .trial-balance-table { table-layout: fixed; }
+  .trial-balance-table thead th,
+  .trial-balance-table tbody td,
+  .trial-balance-table tfoot th {
+    border: 0;
+    background: #fff;
+    color: #000;
+  }
+  .trial-balance-table .label { padding-left: 16px; }
+  .trial-balance-table tbody tr td { border-bottom: 2px solid #000; }
+  .trial-balance-table .money { width: 170px; }
+  .trial-balance-table .trial-balance-column-headings th {
+    font-size: 1.9rem;
+    font-weight: 700;
+    padding-bottom: 2px;
+  }
+  .trial-balance-table .trial-balance-column-headings th:first-child {
+    padding: 0;
+    width: auto;
+  }
+  .trial-balance-table .trial-balance-total-row th {
+    font-size: 2rem;
+    font-weight: 700;
+    border: 0;
+    padding-top: 8px;
+  }
+
+  .balance-sheet-section { margin: 0 0 20px; }
+  .balance-sheet-table { table-layout: fixed; }
+  .balance-sheet-table .money { width: 190px; }
+  .balance-sheet-table .balance-sheet-heading-row th {
+    font-size: 1.85rem;
+    font-weight: 700;
+    padding-top: 2px;
+    padding-bottom: 2px;
+  }
+  .balance-sheet-table .balance-sheet-total-row th {
+    font-size: 1.85rem;
+    font-weight: 700;
+    padding-top: 2px;
+    padding-bottom: 2px;
+  }
+  .balance-sheet-table .balance-sheet-grand-total-row th {
+    font-size: 1.95rem;
+    font-weight: 700;
+    padding-top: 4px;
+  }
+  .balance-sheet-table .balance-sheet-spacer-row td { padding: 10px 0; }
+
+  .retained-earnings-section { margin: 0 0 20px; }
+  .retained-earnings-table { table-layout: fixed; }
+  .retained-earnings-table .money { width: 190px; }
+  .retained-earnings-table .retained-earnings-detail-row td {
+    font-size: 1.85rem;
+    font-weight: 400;
+    padding-top: 1px;
+    padding-bottom: 1px;
+  }
+  .retained-earnings-table .retained-earnings-final-row th {
+    font-size: 1.95rem;
+    font-weight: 700;
+    padding-top: 2px;
+  }
 </style>
 </head>
 <body>

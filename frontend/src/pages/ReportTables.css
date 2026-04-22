@@ -1,0 +1,221 @@
+.report-html-output .report-bw {
+  color: #000;
+  background: #fff;
+}
+
+.report-html-output .report-header-block {
+  text-align: center;
+}
+
+.report-html-output .report-company,
+.report-html-output .report-name,
+.report-html-output .report-period {
+  margin: 0;
+  color: #000;
+  font-weight: 700;
+}
+
+.report-html-output .report-company,
+.report-html-output .report-name {
+  font-size: 1.35rem;
+}
+
+.report-html-output .report-period {
+  margin-top: 4px;
+  font-size: 1rem;
+}
+
+.report-html-output .report-header-divider {
+  border: 0;
+  border-top: 2px solid #000;
+  margin: 10px 0 18px;
+}
+
+.report-html-output .report-table {
+  display: table;
+  width: 100%;
+  margin: 0;
+  border: 0;
+  border-collapse: collapse;
+  border-spacing: 0;
+  border-radius: 0;
+  color: #000;
+}
+
+.report-html-output .report-table tbody tr,
+.report-html-output .report-table tbody tr:nth-child(even),
+.report-html-output .report-table tbody tr:hover {
+  background: #fff;
+  color: #000;
+}
+
+.report-html-output .report-table th,
+.report-html-output .report-table td {
+  border: 0;
+  padding: 4px 0;
+  text-align: left;
+  color: #000;
+  background: #fff;
+  font-weight: 400;
+}
+
+.report-html-output .report-table td.money,
+.report-html-output .report-table th.money {
+  width: 220px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.report-html-output .report-table .label.indent-1 {
+  padding-left: 44px;
+}
+
+.report-html-output .report-table .label.indent-2 {
+  padding-left: 72px;
+}
+
+.report-html-output .statement-section {
+  margin: 0 0 20px;
+}
+
+.report-html-output .statement-group-title {
+  margin: 0 0 6px;
+  color: #000;
+  font-size: 1.85rem;
+}
+
+.report-html-output .statement-total-row th,
+.report-html-output .statement-net-row th {
+  color: #000;
+  font-size: 1.9rem;
+  font-weight: 700;
+}
+
+.report-html-output .statement-total-row th {
+  padding-top: 2px;
+}
+
+.report-html-output .statement-net-table {
+  margin-top: 4px;
+}
+
+.report-html-output .amount-single-underline,
+.report-html-output .amount-double-underline {
+  text-decoration-line: underline;
+  text-decoration-color: #000;
+  text-decoration-style: solid;
+}
+
+.report-html-output .amount-single-underline {
+  text-decoration-thickness: 1px;
+  text-underline-offset: 8px;
+}
+
+.report-html-output .amount-double-underline {
+  text-decoration-thickness: 2px;
+  text-decoration-style: double;
+  text-underline-offset: 8px;
+}
+
+.report-html-output .trial-balance-table {
+  table-layout: fixed;
+}
+
+.report-html-output .trial-balance-table thead th,
+.report-html-output .trial-balance-table tbody td,
+.report-html-output .trial-balance-table tfoot th {
+  border: 0;
+  color: #000;
+  background: #fff;
+}
+
+.report-html-output .trial-balance-table .label {
+  padding-left: 16px;
+}
+
+.report-html-output .trial-balance-table tbody tr td {
+  border-bottom: 2px solid #000;
+}
+
+.report-html-output .trial-balance-table .money {
+  width: 170px;
+}
+
+.report-html-output .trial-balance-table .trial-balance-column-headings th {
+  font-size: 1.9rem;
+  font-weight: 700;
+  padding-bottom: 2px;
+}
+
+.report-html-output .trial-balance-table .trial-balance-column-headings th:first-child {
+  width: auto;
+  padding: 0;
+}
+
+.report-html-output .trial-balance-table .trial-balance-total-row th {
+  border: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  padding-top: 8px;
+}
+
+.report-html-output .balance-sheet-section {
+  margin: 0 0 20px;
+}
+
+.report-html-output .balance-sheet-table {
+  table-layout: fixed;
+}
+
+.report-html-output .balance-sheet-table .money {
+  width: 190px;
+}
+
+.report-html-output .balance-sheet-table .balance-sheet-heading-row th {
+  font-size: 1.85rem;
+  font-weight: 700;
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
+.report-html-output .balance-sheet-table .balance-sheet-total-row th {
+  font-size: 1.85rem;
+  font-weight: 700;
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
+.report-html-output .balance-sheet-table .balance-sheet-grand-total-row th {
+  font-size: 1.95rem;
+  font-weight: 700;
+  padding-top: 4px;
+}
+
+.report-html-output .balance-sheet-table .balance-sheet-spacer-row td {
+  padding: 10px 0;
+}
+
+.report-html-output .retained-earnings-section {
+  margin: 0 0 20px;
+}
+
+.report-html-output .retained-earnings-table {
+  table-layout: fixed;
+}
+
+.report-html-output .retained-earnings-table .money {
+  width: 190px;
+}
+
+.report-html-output .retained-earnings-table .retained-earnings-detail-row td {
+  font-size: 1.85rem;
+  font-weight: 400;
+  padding-top: 1px;
+  padding-bottom: 1px;
+}
+
+.report-html-output .retained-earnings-table .retained-earnings-final-row th {
+  font-size: 1.95rem;
+  font-weight: 700;
+  padding-top: 2px;
+}

@@ -10,6 +10,7 @@ import {
 } from '../services/Report';
 import { sendReportEmail } from '../services/emailService';
 import '../global.css';
+import './ReportTables.css';
 
 function Report() {
   const { user } = useAuth();
@@ -101,6 +102,7 @@ function Report() {
   }, [activeType, generatedAt, recipientEmail, recipientName, reportHtml, reportTitle]);
 
   const hasReport = Boolean(reportHtml.trim());
+  const reportContentMaxWidth = '840px';
 
   return (
     <div className="container">
@@ -109,31 +111,43 @@ function Report() {
       </div>
 
       <div>
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '12px' }}>
-          <input
-            type="date"
-            className="text-input"
-            value={periodStartDate}
-            onChange={(event) => setPeriodStartDate(event.target.value)}
-            title="Start date (duration reports)"
-          />
-          <input
-            type="date"
-            className="text-input"
-            value={periodEndDate}
-            onChange={(event) => setPeriodEndDate(event.target.value)}
-            title="End date (duration reports)"
-          />
-          <input
-            type="date"
-            className="text-input"
-            value={asOfDate}
-            onChange={(event) => setAsOfDate(event.target.value)}
-            title="As of date (point-in-time reports)"
-          />
+        
+        <div className="input-group" style={{ maxWidth: reportContentMaxWidth, margin: '0 auto' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '30px', flexWrap: 'wrap', marginBottom: '12px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', width: '15vw' }}>
+              <label style={{ marginBottom: '6px' }}>Period Start Date:</label>
+              <input
+                type="date"
+                className="input"
+                value={periodStartDate}
+                onChange={(event) => setPeriodStartDate(event.target.value)}
+                title="Start date (duration reports)"
+              />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', width: '15vw' }}>
+              <label style={{ marginBottom: '6px' }}>Period End Date:</label>
+              <input
+                type="date"
+                className="input"
+                value={periodEndDate}
+                onChange={(event) => setPeriodEndDate(event.target.value)}
+                title="End date (duration reports)"
+              />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', width: '15vw' }}>
+              <label style={{ marginBottom: '6px' }}>As of Date:</label>
+              <input
+                type="date"
+                className="input"
+                value={asOfDate}
+                onChange={(event) => setAsOfDate(event.target.value)}
+                title="As of date (point-in-time reports)"
+              />
+            </div>
+          </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', maxWidth: reportContentMaxWidth, margin: '0 auto' }}>
           <HelpTooltip text="Generate a Trial Balance report from current data.">
             <button
               type="button"
@@ -141,7 +155,7 @@ function Report() {
               onClick={() => generateReport(REPORT_TYPES.TRIAL_BALANCE)}
               disabled={generating}
             >
-              Generate Trial Balance
+              Trial Balance
             </button>
           </HelpTooltip>
           <HelpTooltip text="Generate an Income Statement report from current data.">
@@ -151,7 +165,7 @@ function Report() {
               onClick={() => generateReport(REPORT_TYPES.INCOME_STATEMENT)}
               disabled={generating}
             >
-              Generate Income Statement
+              Income Statement
             </button>
           </HelpTooltip>
           <HelpTooltip text="Generate a Balance Sheet report from current data.">
@@ -161,7 +175,7 @@ function Report() {
               onClick={() => generateReport(REPORT_TYPES.BALANCE_SHEET)}
               disabled={generating}
             >
-              Generate Balance Sheet
+              Balance Sheet
             </button>
           </HelpTooltip>
           <HelpTooltip text="Generate a Retained Earnings Statement report from current data.">
@@ -171,61 +185,19 @@ function Report() {
               onClick={() => generateReport(REPORT_TYPES.RETAINED_EARNINGS)}
               disabled={generating}
             >
-              Generate Retained Earnings
-            </button>
-          </HelpTooltip>
-
-          <HelpTooltip text="Download the current report as a PDF file.">
-            <button
-              type="button"
-              className="button-secondary"
-              onClick={handleDownload}
-              disabled={!hasReport || generating}
-            >
-              Download PDF
+              Retained Earnings
             </button>
           </HelpTooltip>
         </div>
-
-        <div style={{ marginTop: '14px', display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
-          <input
-            type="email"
-            className="text-input"
-            placeholder="Recipient email"
-            value={recipientEmail}
-            onChange={(event) => setRecipientEmail(event.target.value)}
-            style={{ minWidth: '260px' }}
-          />
-          <input
-            type="text"
-            className="text-input"
-            placeholder="Recipient name (optional)"
-            value={recipientName}
-            onChange={(event) => setRecipientName(event.target.value)}
-            style={{ minWidth: '220px' }}
-          />
-          <HelpTooltip text="Send the currently displayed report to the recipient by email.">
-            <button
-              type="button"
-              className="button-secondary"
-              onClick={handleSendEmail}
-              disabled={!hasReport || generating || sendingEmail}
-            >
-              {sendingEmail ? 'Sending Email...' : 'Email Report'}
-            </button>
-          </HelpTooltip>
-        </div>
-        {emailStatus ? (
-          <p style={{ marginTop: '8px', color: 'var(--bff-dark-text)' }}>{emailStatus}</p>
-        ) : null}
-
-        <div
+        <div className="report-output"
           style={{
-            marginTop: '18px',
+            margin: '18px auto 0',
             border: '2px dashed var(--bff-primary)',
             borderRadius: '8px',
             padding: '0 14px 14px',
             background: 'var(--bff-light-text)',
+            width: '100%',
+            maxWidth: reportContentMaxWidth,
           }}
         >
           {generating ? (
@@ -253,6 +225,20 @@ function Report() {
           ) : null}
         </div>
       </div>
+      
+      <div style={{ maxWidth: reportContentMaxWidth, margin: '1vh auto 10vh', display: 'flex', justifyContent: 'center' }}>
+        <HelpTooltip text="Download the current report as a PDF file.">
+          <button
+            type="button"
+            className="button-secondary"
+            onClick={handleDownload}
+            disabled={!hasReport || generating}
+          >
+            Download PDF
+          </button>
+        </HelpTooltip>
+      </div>
+      
     </div>
   );
 }
