@@ -23,6 +23,7 @@ import { sendNewAccountRequest, sendAdminEmail, sendReportEmail } from '../servi
 describe('emailService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    global.fetch = vi.fn();
   });
 
   // ══════════════════════════════════════════════
@@ -107,32 +108,28 @@ describe('emailService', () => {
   });
 
   describe('sendReportEmail', () => {
-    it('sends report email with report details in message', async () => {
-      mockSend.mockResolvedValue({ status: 200 });
+    it('sends report email via /api/send-pdf with attachment', async () => {
+      global.fetch.mockResolvedValue({
+        ok: true,
+        status: 200,
+        text: vi.fn(async () => ''),
+      });
 
       const result = await sendReportEmail({
         recipientEmail: 'recipient@example.com',
-        recipientName: 'Report User',
-        reportTitle: 'Income Statement',
-        reportHtml: '<h1>Income Statement</h1><p>Total Revenue</p>',
-        generatedAt: '4/20/2026, 11:00:00 AM',
-        pdfFilename: 'income-statement-2026-04-20.pdf',
-        pdfBase64: 'JVBERi0xLjQKJ...',
+        subject: 'Income Statement - Report Image',
+        filename: 'income-statement.jpg',
+        contentType: 'image/jpeg',
+        attachmentBase64: 'base64jpegdata...',
       });
 
       expect(result).toEqual({ sent: true, attachmentIncluded: true });
-      expect(mockSend).toHaveBeenCalledWith(
-        'service_h5dzete',
-        'template_admin_email',
+      expect(global.fetch).toHaveBeenCalledTimes(1);
+      expect(global.fetch).toHaveBeenCalledWith(
+        '/api/send-pdf',
         expect.objectContaining({
-          to_email: 'recipient@example.com',
-          to_name: 'Report User',
-          subject: 'Income Statement - Generated Report',
-          message: expect.stringContaining('Generated on: 4/20/2026, 11:00:00 AM'),
-          report_pdf_filename: 'income-statement-2026-04-20.pdf',
-          report_pdf_base64: 'JVBERi0xLjQKJ...',
-          attachment_name: 'income-statement-2026-04-20.pdf',
-          attachment_data: 'JVBERi0xLjQKJ...',
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
         })
       );
     });
@@ -147,22 +144,16 @@ describe('emailService', () => {
       ).rejects.toThrow('Recipient email is required.');
     });
 
-    it('falls back to non-attachment email when attachment send fails', async () => {
-      mockSend
-        .mockRejectedValueOnce(new Error('Payload too large'))
-        .mockResolvedValueOnce({ status: 200 });
-
-      const result = await sendReportEmail({
-        recipientEmail: 'recipient@example.com',
-        recipientName: 'Report User',
-        reportTitle: 'Balance Sheet',
-        reportHtml: '<h1>Balance Sheet</h1>',
-        pdfFilename: 'balance-sheet.pdf',
-        pdfBase64: 'JVBERi0xLjQKJ...',
-      });
-
-      expect(result).toEqual({ sent: true, attachmentIncluded: false });
-      expect(mockSend).toHaveBeenCalledTimes(2);
+    it('throws when attachment is missing', async () => {
+      await expect(
+        sendReportEmail({
+          recipientEmail: 'recipient@example.com',
+          subject: 'Report Image',
+          filename: 'report.jpg',
+          contentType: 'image/jpeg',
+          attachmentBase64: '   ',
+        })
+      ).rejects.toThrow('Unable to generate the JPEG attachment.');
     });
   });
 });
