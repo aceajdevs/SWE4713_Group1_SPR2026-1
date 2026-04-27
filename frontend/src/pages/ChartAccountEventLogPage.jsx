@@ -32,9 +32,29 @@ function parseSnapshotJson(text) {
   }
 }
 
-function formatFieldValue(val) {
+function isBalanceFieldKey(key) {
+  return typeof key === 'string' && /balance/i.test(key);
+}
+
+function formatBalanceNumber(n) {
+  if (!Number.isFinite(n)) return null;
+  return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function formatFieldValue(val, key) {
   if (val === null || val === undefined) return '—';
   if (typeof val === 'object') return JSON.stringify(val);
+  if (isBalanceFieldKey(key)) {
+    if (typeof val === 'number' && Number.isFinite(val)) {
+      return formatBalanceNumber(val) ?? String(val);
+    }
+    if (typeof val === 'string' && val.trim() !== '') {
+      const n = Number(val);
+      if (Number.isFinite(n)) {
+        return formatBalanceNumber(n) ?? val;
+      }
+    }
+  }
   return String(val);
 }
 
@@ -82,10 +102,10 @@ function renderFieldCells(keys, beforeObj, afterObj, row) {
       .join(' ');
     const content = isBefore
       ? hasBefore
-        ? formatFieldValue(bv)
+        ? formatFieldValue(bv, key)
         : '—'
       : hasAfter
-        ? formatFieldValue(av)
+        ? formatFieldValue(av, key)
         : '—';
     return (
       <td key={`${row}-${key}`} className={tdClass}>
@@ -250,9 +270,7 @@ function ChartAccountEventLogPage() {
 
       {!loading && !error && account && (
         <>
-          <p style={{ fontSize: '0.95rem', color: '#374151', marginBottom: '16px' }}>
-            The first row is <strong>before</strong>, the second is <strong>after</strong>. Changed values are highlighted such that <strong>blue</strong> is pre-change and <strong>orange</strong> is post-change.
-          </p>
+          
 
           {events.length === 0 ? (
             <p style={{ color: '#6b7280' }}>No events recorded for this account yet.</p>
