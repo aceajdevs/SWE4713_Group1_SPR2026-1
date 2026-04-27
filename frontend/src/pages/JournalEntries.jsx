@@ -32,6 +32,7 @@ function JournalEntries() {
   const isAccountant = user?.role === 'accountant';
   const isAdmin = user?.role === 'administrator';
   const canView = isManager || isAccountant || isAdmin;
+  const canOpenLedger = !isAdmin;
   const ledgerBasePath = '/admin/ledger';
 
   useEffect(() => {
@@ -226,15 +227,21 @@ function JournalEntries() {
                           .filter((l) => l.accountID && l.accountName && l.accountNumber)
                           .filter((line, index, all) => all.findIndex((x) => x.accountID === line.accountID) === index)
                           .map((line) => (
-                            <button
-                              key={`${entry.journalEntryID}-${line.accountID}`}
-                              type="button"
-                              onClick={() => navigate(`${ledgerBasePath}/${line.accountNumber}`)}
-                              style={{ background: 'none', border: 'none', color: '#0066cc', cursor: 'pointer', textDecoration: 'underline', padding: 0 }}
-                              title="Open account ledger"
-                            >
-                              {line.accountNumber} - {line.accountName}
-                            </button>
+                            canOpenLedger ? (
+                              <button
+                                key={`${entry.journalEntryID}-${line.accountID}`}
+                                type="button"
+                                onClick={() => navigate(`${ledgerBasePath}/${line.accountNumber}`)}
+                                style={{ background: 'none', border: 'none', color: '#0066cc', cursor: 'pointer', textDecoration: 'underline', padding: 0 }}
+                                title="Open account ledger"
+                              >
+                                {line.accountNumber} - {line.accountName}
+                              </button>
+                            ) : (
+                              <span key={`${entry.journalEntryID}-${line.accountID}`}>
+                                {line.accountNumber} - {line.accountName}
+                              </span>
+                            )
                           ))}
                       </div>
                     ) : (

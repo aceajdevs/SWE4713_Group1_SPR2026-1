@@ -139,8 +139,9 @@ function Navbar() {
   const canAccessChartOfAccounts = ['administrator', 'manager', 'accountant'].includes(user?.role);
   const canAccessJournalEntries = user?.role === 'manager' || user?.role === 'accountant';
   const canViewPostedJournalReport =
+    user?.role === 'manager' || user?.role === 'accountant';
+  const canViewRatios =
     user?.role === 'manager' || user?.role === 'accountant' || user?.role === 'administrator';
-  const canViewRatios = canViewPostedJournalReport;
   const isAdmin = user?.role === 'administrator';
   const isManager = user?.role === 'manager';
 

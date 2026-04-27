@@ -148,6 +148,7 @@ function Ledger() {
   const { accountNumber } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const isAdmin = user?.role === 'administrator';
   const [account, setAccount] = useState(null);
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -159,6 +160,13 @@ function Ledger() {
   const [accountPickList, setAccountPickList] = useState([]);
 
   const loadLedger = useCallback(async () => {
+    if (isAdmin) {
+      setError('Administrators do not have permission to view the ledger.');
+      setAccount(null);
+      setEntries([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -200,7 +208,7 @@ function Ledger() {
       setEntries([]);
     }
     setLoading(false);
-  }, [accountNumber, user?.role]);
+  }, [accountNumber, isAdmin, user?.role]);
 
 
   useEffect(() => {

@@ -81,6 +81,7 @@ function ChartOfAccounts() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const isAdmin = user?.role === 'administrator';
+  const canOpenLedger = !isAdmin;
   const dashboardPath =
     user?.role === 'administrator'
       ? '/admin-dashboard'
@@ -677,9 +678,11 @@ function ChartOfAccounts() {
               filteredAccounts.map((account) => (
                 <tr
                   key={account.accountID}
-                  onClick={() => navigate(`/admin/ledger/${account.accountNumber}`)}
-                  style={{ cursor: 'pointer' }}
-                  title="Open account ledger"
+                  onClick={() => {
+                    if (canOpenLedger) navigate(`/admin/ledger/${account.accountNumber}`);
+                  }}
+                  style={{ cursor: canOpenLedger ? 'pointer' : 'default' }}
+                  title={canOpenLedger ? 'Open account ledger' : undefined}
                 >
                   <td className="COA-number">
                     <span style={{ color: 'var(--bff-primary)', textDecoration: 'underline' }}>{account.accountNumber}</span>
@@ -773,15 +776,17 @@ function ChartOfAccounts() {
             </select>
             {selectedAccount && (
               <>
-                <HelpTooltip text="View journal activity and balances for the selected account.">
-                  <button
-                    type="button"
-                    onClick={() => navigate(`/admin/ledger/${selectedAccount.accountNumber}`)}
-                    className="button-primary"
-                  >
-                    Open Ledger
-                  </button>
-                </HelpTooltip>
+                {canOpenLedger && (
+                  <HelpTooltip text="View journal activity and balances for the selected account.">
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/admin/ledger/${selectedAccount.accountNumber}`)}
+                      className="button-primary"
+                    >
+                      Open Ledger
+                    </button>
+                  </HelpTooltip>
+                )}
                 <HelpTooltip text="View audit events for this account (before/after snapshots).">
                   <button
                     type="button"
@@ -808,21 +813,25 @@ function ChartOfAccounts() {
                   <tr>
                     <th>Account Name</th>
                     <td>
-                      <button
-                        type="button"
-                        className="button-primary"
-                        onClick={() => navigate(`/admin/ledger/${selectedAccount.accountNumber}`)}
-                        style={{
-                          background: 'transparent',
-                          border: 'none',
-                          padding: 0,
-                          textDecoration: 'underline',
-                          cursor: 'pointer',
-                          font: 'inherit'
-                        }}
-                      >
-                        {selectedAccount.accountName}
-                      </button>
+                      {canOpenLedger ? (
+                        <button
+                          type="button"
+                          className="button-primary"
+                          onClick={() => navigate(`/admin/ledger/${selectedAccount.accountNumber}`)}
+                          style={{
+                            background: 'transparent',
+                            border: 'none',
+                            padding: 0,
+                            textDecoration: 'underline',
+                            cursor: 'pointer',
+                            font: 'inherit'
+                          }}
+                        >
+                          {selectedAccount.accountName}
+                        </button>
+                      ) : (
+                        selectedAccount.accountName
+                      )}
                     </td>
                   </tr>
                   <tr><th>Description</th><td>{selectedAccount.description || 'N/A'}</td></tr>

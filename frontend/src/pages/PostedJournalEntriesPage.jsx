@@ -47,8 +47,8 @@ function PostedJournalEntriesPage() {
 
   const canView =
     user?.role === 'manager' ||
-    user?.role === 'accountant' ||
-    user?.role === 'administrator';
+    user?.role === 'accountant';
+  const canOpenLedger = user?.role !== 'administrator';
 
   const ledgerBasePath = '/admin/ledger';
 
@@ -186,16 +186,22 @@ function PostedJournalEntriesPage() {
                         {(entry.lines || [])
                           .filter((l) => l.accountID && l.accountName && l.accountNumber && Number(l.debit) > 0)
                           .map((line) => (
-                            <button
-                              key={`debited-${entry.journalEntryID}-${line.accountID}`}
-                              type="button"
-                              className="link"
-                              style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
-                              onClick={() => navigate(`${ledgerBasePath}/${line.accountNumber}`)}
-                              title="Open account ledger"
-                            >
-                              {line.accountNumber} — {line.accountName}
-                            </button>
+                            canOpenLedger ? (
+                              <button
+                                key={`debited-${entry.journalEntryID}-${line.accountID}`}
+                                type="button"
+                                className="link"
+                                style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+                                onClick={() => navigate(`${ledgerBasePath}/${line.accountNumber}`)}
+                                title="Open account ledger"
+                              >
+                                {line.accountNumber} — {line.accountName}
+                              </button>
+                            ) : (
+                              <span key={`debited-${entry.journalEntryID}-${line.accountID}`}>
+                                {line.accountNumber} — {line.accountName}
+                              </span>
+                            )
                           ))}
                       </div>
                     ) : (
@@ -208,16 +214,22 @@ function PostedJournalEntriesPage() {
                         {(entry.lines || [])
                           .filter((l) => l.accountID && l.accountName && l.accountNumber && Number(l.credit) > 0)
                           .map((line) => (
-                            <button
-                              key={`credited-${entry.journalEntryID}-${line.accountID}`}
-                              type="button"
-                              className="link"
-                              style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
-                              onClick={() => navigate(`${ledgerBasePath}/${line.accountNumber}`)}
-                              title="Open account ledger"
-                            >
-                              {line.accountNumber} — {line.accountName}
-                            </button>
+                            canOpenLedger ? (
+                              <button
+                                key={`credited-${entry.journalEntryID}-${line.accountID}`}
+                                type="button"
+                                className="link"
+                                style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+                                onClick={() => navigate(`${ledgerBasePath}/${line.accountNumber}`)}
+                                title="Open account ledger"
+                              >
+                                {line.accountNumber} — {line.accountName}
+                              </button>
+                            ) : (
+                              <span key={`credited-${entry.journalEntryID}-${line.accountID}`}>
+                                {line.accountNumber} — {line.accountName}
+                              </span>
+                            )
                           ))}
                       </div>
                     ) : (

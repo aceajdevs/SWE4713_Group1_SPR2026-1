@@ -12,6 +12,7 @@ function JournalEntryDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const canOpenLedger = user?.role !== 'administrator';
 
   const [entry, setEntry] = useState(null);
   const [lines, setLines] = useState([]);
@@ -140,13 +141,17 @@ function JournalEntryDetail() {
                 <td>{index + 1}</td>
                 <td>
                   {acc ? (
-                    <button
-                      type="button"
-                      onClick={() => navigate(`/admin/ledger/${acc.accountNumber}`)}
-                      style={{ background: 'none', border: 'none', color: '#0066cc', cursor: 'pointer', textDecoration: 'underline' }}
-                    >
-                      {acc.accountNumber} - {acc.accountName}
-                    </button>
+                    canOpenLedger ? (
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/admin/ledger/${acc.accountNumber}`)}
+                        style={{ background: 'none', border: 'none', color: '#0066cc', cursor: 'pointer', textDecoration: 'underline' }}
+                      >
+                        {acc.accountNumber} - {acc.accountName}
+                      </button>
+                    ) : (
+                      <span>{acc.accountNumber} - {acc.accountName}</span>
+                    )
                   ) : (
                     `Account ID: ${line.accountID}`
                   )}
