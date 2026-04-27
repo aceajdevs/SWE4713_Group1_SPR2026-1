@@ -4,9 +4,9 @@
 ~~~
 Team Lead- Sankalp Amaravadi 
 Team Scribe/ Testing- Elijah Giusto 
-Team support- Calvin Crose
-Front ened lead- Jonah Smith
-Artistic/Project Paperwork management- Christopher Stropoli
+Paperwork Management- Calvin Crose
+Technical lead- Jonah Smith
+Artistic lead- Christopher Stropoli
 ~~~
 ## Technologies Used 
 ~~~
