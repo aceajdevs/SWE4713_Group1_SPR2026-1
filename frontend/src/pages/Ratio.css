@@ -25,3 +25,59 @@
   max-width: 420px;
   box-sizing: border-box;
 }
+
+.ratio-wheel-card {
+  background: #fff;
+  border-radius: 10px;
+  border: 1px solid var(--bff-secondary);
+  padding: 16px 18px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+}
+
+.ratio-wheel-title {
+  font-size: 1.05rem;
+  margin-bottom: 12px;
+  color: var(--bff-dark-text);
+}
+
+.ratio-wheel-chart {
+  width: 100%;
+  height: 220px;
+  position: relative;
+}
+
+.ratio-wheel-meta {
+  margin-top: 8px;
+  font-size: 0.86rem;
+  color: #64748b;
+}
+
+.ratio-wheel-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+}
+
+.ratio-wheel-center-label {
+  font-size: 0.72rem;
+  color: #64748b;
+  line-height: 1.1;
+}
+
+.ratio-wheel-center-value {
+  font-size: 0.95rem;
+  color: var(--bff-dark-text);
+  line-height: 1.2;
+}
+
+.ratio-wheel-health {
+  margin-top: 4px;
+  margin-bottom: 0;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
