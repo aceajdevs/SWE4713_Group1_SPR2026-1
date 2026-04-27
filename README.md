@@ -15,7 +15,7 @@ Backend- Node.JS
 APIs- Rest
 Database- Supabase
 Testing- Vite and Playwright
-Webhosting- AWS
+Webhosting- Vercel
 ~~~
 ## Node JS Packages
 ~~~
