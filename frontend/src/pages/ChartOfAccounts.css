@@ -35,6 +35,11 @@
   align-items: center;
 }
 
+.coa-ledger-link {
+  color: var(--bff-primary);
+  text-decoration: underline;
+}
+
 .COA-no-actions .COA-name {
   width: 13%;
 }

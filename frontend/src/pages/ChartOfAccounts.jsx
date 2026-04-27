@@ -685,9 +685,15 @@ function ChartOfAccounts() {
                   title={canOpenLedger ? 'Open account ledger' : undefined}
                 >
                   <td className="COA-number">
-                    <span style={{ color: 'var(--bff-primary)', textDecoration: 'underline' }}>{account.accountNumber}</span>
+                    <span className={canOpenLedger ? 'coa-ledger-link' : undefined}>
+                      {account.accountNumber}
+                    </span>
                   </td>
-                  <td className="COA-name">{account.accountName}</td>
+                  <td className="COA-name">
+                    <span className={canOpenLedger ? 'coa-ledger-link' : undefined}>
+                      {account.accountName}
+                    </span>
+                  </td>
                   <td className="COA-description">{account.description || 'N/A'}</td>
                   <td className="COA-type">{account.subType}</td>
                   <td className="COA-normal">{account.normalSide}</td>
