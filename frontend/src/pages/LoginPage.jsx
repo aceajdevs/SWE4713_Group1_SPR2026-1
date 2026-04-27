@@ -159,6 +159,11 @@ function LoginPage() {
           console.error('Login error:', error);
         }
     }
+
+    const handleFormSubmit = async (e) => {
+      e.preventDefault();
+      await handleLogin();
+    };
   return (
     <div className="login-page">
       <PageHelpCorner topic="login" />
@@ -166,7 +171,7 @@ function LoginPage() {
       </header>
 
       <main className="login-main">
-        <form className="login-form" onSubmit={(e) => e.preventDefault()}>
+        <form className="login-form" onSubmit={handleFormSubmit}>
         <div className="logo" aria-hidden="true">
             <img src={logo} alt="App Logo" />
         </div>
@@ -197,7 +202,7 @@ function LoginPage() {
 
           <div className="button-row" role="group">
             <HelpTooltip text="Sign in with the username and password entered above.">
-              <button type="button" className="button-primary" onClick={handleLogin}>Login</button>
+              <button type="submit" className="button-primary">Login</button>
             </HelpTooltip>
             <HelpTooltip text="Return to the welcome screen without signing in.">
               <button type="button" className="button-primary" onClick={navToWelcome}>Cancel</button>
