@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { useAuth } from '../AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { HelpTooltip } from '../components/HelpTooltip';
 import {
   REPORT_TYPES,
@@ -13,7 +13,7 @@ import '../global.css';
 import './ReportTables.css';
 
 function Report() {
-  const { user } = useAuth();
+  const navigate = useNavigate();
   const [generatedAt, setGeneratedAt] = useState('');
   const [reportTitle, setReportTitle] = useState('');
   const [reportHtml, setReportHtml] = useState('');
@@ -50,6 +50,37 @@ function Report() {
       setGenerating(false);
     }
   }, [asOfDate, periodEndDate, periodStartDate]);
+
+  const navigateToLedgerAccount = useCallback(
+    (rawNumber) => {
+      const n = rawNumber != null ? String(rawNumber).trim() : '';
+      if (!n) return;
+      navigate(`/admin/ledger/${encodeURIComponent(n)}`);
+    },
+    [navigate],
+  );
+
+  const handleReportPreviewClick = useCallback(
+    (e) => {
+      const el = e.target.closest('[data-ledger-account]');
+      if (!el) return;
+      const num = el.getAttribute('data-ledger-account');
+      e.preventDefault();
+      navigateToLedgerAccount(num);
+    },
+    [navigateToLedgerAccount],
+  );
+
+  const handleReportPreviewKeyDown = useCallback(
+    (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      const el = e.target.closest('[data-ledger-account]');
+      if (!el || e.target !== el) return;
+      e.preventDefault();
+      navigateToLedgerAccount(el.getAttribute('data-ledger-account'));
+    },
+    [navigateToLedgerAccount],
+  );
 
   const handleDownload = useCallback(async () => {
     if (!reportHtml.trim()) return;
@@ -219,6 +250,9 @@ function Report() {
             <div
               className="report-html-output"
               style={{ marginTop: '12px' }}
+              onClick={handleReportPreviewClick}
+              onKeyDown={handleReportPreviewKeyDown}
+              role="presentation"
               dangerouslySetInnerHTML={{ __html: reportHtml }}
             />
           ) : null}

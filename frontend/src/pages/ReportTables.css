@@ -74,6 +74,22 @@
   padding-left: 72px;
 }
 
+.report-html-output .report-ledger-link {
+  color: var(--bff-primary);
+  text-decoration: underline;
+  cursor: pointer;
+  outline: none;
+}
+
+.report-html-output .report-ledger-link:hover {
+  opacity: 0.9;
+}
+
+.report-html-output .report-ledger-link:focus-visible {
+  outline: 2px solid var(--bff-primary);
+  outline-offset: 2px;
+}
+
 .report-html-output .statement-section {
   margin: 0 0 20px;
 }

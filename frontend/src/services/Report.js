@@ -22,6 +22,12 @@ function escapeHtml(text) {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 }
+function ledgerAccountLabelHtml(account) {
+  const name = account?.accountName != null ? String(account.accountName) : '';
+  const numRaw = account?.accountNumber != null ? String(account.accountNumber).trim() : '';
+  if (!numRaw) return escapeHtml(name);
+  return `<span class="report-ledger-link" data-ledger-account="${escapeHtml(numRaw)}" role="link" tabindex="0">${escapeHtml(name)}</span>`;
+}
 
 function formatDisplayDate(rawDate) {
   if (!rawDate) return '';
@@ -199,7 +205,8 @@ function buildTrialBalance(accounts) {
     .map((a) => {
       const { debit, credit } = splitBalanceBySide(a);
       return {
-        account: `${a.accountName}`,
+        accountNumber: a.accountNumber,
+        accountName: a.accountName,
         debit,
         credit,
       };
@@ -213,7 +220,7 @@ function buildTrialBalance(accounts) {
     .map(
       (row) =>
         `<tr>
-          <td class="label">${escapeHtml(row.account)}</td>
+          <td class="label">${ledgerAccountLabelHtml(row)}</td>
           <td class="money">${row.debit === 0 ? '' : formatMoney(row.debit)}</td>
           <td class="money">${row.credit === 0 ? '' : formatMoney(row.credit)}</td>
         </tr>`,
@@ -253,7 +260,7 @@ function buildIncomeStatement(accounts) {
     .map(
       (a) => {
         const val = signedBalance(a);
-        return `<tr><td class="label indent-1">${escapeHtml(`${a.accountName}`)}</td><td class="money">${val === 0 ? '' : formatMoney(val)}</td></tr>`;
+        return `<tr><td class="label indent-1">${ledgerAccountLabelHtml(a)}</td><td class="money">${val === 0 ? '' : formatMoney(val)}</td></tr>`;
       },
     )
     .join('');
@@ -261,7 +268,7 @@ function buildIncomeStatement(accounts) {
     .map(
       (a) => {
         const val = signedBalance(a);
-        return `<tr><td class="label indent-1">${escapeHtml(`${a.accountName}`)}</td><td class="money">${val === 0 ? '' : formatMoney(val)}</td></tr>`;
+        return `<tr><td class="label indent-1">${ledgerAccountLabelHtml(a)}</td><td class="money">${val === 0 ? '' : formatMoney(val)}</td></tr>`;
       },
     )
     .join('');
@@ -385,7 +392,7 @@ function buildBalanceSheet(accounts) {
       .map(
         (a) => {
           const val = amountGetter(a);
-          return `<tr><td class="label ${indentClass}">${escapeHtml(`${a.accountName}`)}</td><td class="money">${val === 0 ? '' : amountFormatter(val)}</td></tr>`;
+          return `<tr><td class="label ${indentClass}">${ledgerAccountLabelHtml(a)}</td><td class="money">${val === 0 ? '' : amountFormatter(val)}</td></tr>`;
         },
       )
       .join('');
