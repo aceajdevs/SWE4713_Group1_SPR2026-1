@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { HelpTooltip } from '../components/HelpTooltip';
 import {
@@ -9,12 +9,12 @@ import {
   reportFilenameBase,
 } from '../services/Report';
 import { sendReportEmail } from '../services/emailService';
+import { getEmailRecipientsByRoles } from '../services/adminService';
 import '../global.css';
 import './ReportTables.css';
 
 function Report() {
   const navigate = useNavigate();
-  const [generatedAt, setGeneratedAt] = useState('');
   const [reportTitle, setReportTitle] = useState('');
   const [reportHtml, setReportHtml] = useState('');
   const [activeType, setActiveType] = useState(null);
@@ -24,8 +24,29 @@ function Report() {
   const [asOfDate, setAsOfDate] = useState('');
   const [recipientEmail, setRecipientEmail] = useState('');
   const [recipientName, setRecipientName] = useState('');
+  const [recipientOptions, setRecipientOptions] = useState([]);
+  const [recipientLoadError, setRecipientLoadError] = useState('');
   const [sendingEmail, setSendingEmail] = useState(false);
   const [emailStatus, setEmailStatus] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        setRecipientLoadError('');
+        const users = await getEmailRecipientsByRoles(['manager', 'accountant', 'administrator']);
+        if (!cancelled) setRecipientOptions(users || []);
+      } catch (error) {
+        if (!cancelled) {
+          setRecipientOptions([]);
+          setRecipientLoadError(error?.message || 'Could not load user emails.');
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const generateReport = useCallback(async (typeKey) => {
     setGenerating(true);
@@ -39,13 +60,11 @@ function Report() {
       setReportTitle(title);
       setReportHtml(html);
       setActiveType(typeKey);
-      setGeneratedAt(new Date().toLocaleString());
     } catch (error) {
       console.error('Failed to generate report:', error);
       setReportTitle('Report');
       setReportHtml('<p>Unable to generate this report right now.</p>');
       setActiveType(typeKey);
-      setGeneratedAt(new Date().toLocaleString());
     } finally {
       setGenerating(false);
     }
@@ -129,7 +148,20 @@ function Report() {
     } finally {
       setSendingEmail(false);
     }
-  }, [activeType, generatedAt, recipientEmail, recipientName, reportHtml, reportTitle]);
+  }, [activeType, recipientEmail, recipientName, reportHtml, reportTitle]);
+
+  const handleRecipientSelect = useCallback(
+    (event) => {
+      const selectedEmail = event.target.value;
+      setRecipientEmail(selectedEmail);
+      const selectedUser = recipientOptions.find((u) => String(u.email || '').trim() === selectedEmail);
+      if (selectedUser) {
+        const fullName = [selectedUser.fName, selectedUser.lName].filter(Boolean).join(' ').trim();
+        setRecipientName(fullName || selectedUser.username || '');
+      }
+    },
+    [recipientOptions],
+  );
 
   const hasReport = Boolean(reportHtml.trim());
   const reportContentMaxWidth = '840px';
@@ -238,14 +270,7 @@ function Report() {
             <p style={{ margin: '8px 0 0', color: 'var(--bff-dark-text)' }}>
               Generated report content will display here.
             </p>
-          ) : (
-            <div style={{ marginTop: '10px', color: 'var(--bff-dark-text)' }}>
-              <h3 style={{ margin: '0 0 8px' }}>{reportTitle || 'Report'}</h3>
-              <p style={{ margin: '0 0 12px', fontSize: '0.9rem' }}>
-                Generated on: {generatedAt}
-              </p>
-            </div>
-          )}
+          ) : null}
           {hasReport && !generating ? (
             <div
               className="report-html-output"
@@ -260,6 +285,19 @@ function Report() {
       </div>
       
       <div style={{ margin: '14px auto 0', display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', maxWidth: reportContentMaxWidth }} role="group">
+        <select
+          className="input"
+          value={recipientEmail}
+          onChange={handleRecipientSelect}
+          style={{ width: '24vw' }}
+        >
+          <option value="">Select user email</option>
+          {recipientOptions.map((u) => (
+            <option key={u.userID} value={u.email}>
+              {[u.fName, u.lName].filter(Boolean).join(' ') || u.username} ({u.role}) - {u.email}
+            </option>
+          ))}
+        </select>
         <input
           type="email"
           className="input"
@@ -287,6 +325,11 @@ function Report() {
           </button>
         </HelpTooltip>
       </div>
+      {recipientLoadError ? (
+        <p style={{ margin: '8px auto 0', color: 'var(--bff-red)', maxWidth: reportContentMaxWidth, textAlign: 'center' }}>
+          {recipientLoadError}
+        </p>
+      ) : null}
       {emailStatus ? (
         <p style={{ margin: '8px auto 0', color: 'var(--bff-dark-text)', maxWidth: reportContentMaxWidth, textAlign: 'center' }}>{emailStatus}</p>
       ) : null}

@@ -111,6 +111,10 @@
   padding-top: 2px;
 }
 
+.report-html-output .statement-total-row-lined th {
+  border-top: 1px solid #000;
+}
+
 .report-html-output .statement-net-table {
   margin-top: 4px;
 }

@@ -52,10 +52,7 @@ function periodLabelForType(typeKey, options = {}) {
     if (typeKey === REPORT_TYPES.RETAINED_EARNINGS) {
       return `For the Year Ended ${endText}`;
     }
-    if (startText) {
-      return `For the Period ${startText} to ${endText}`;
-    }
-    return `For the Period Ended ${endText}`;
+    return `Period Ending on ${endText}`;
   }
 
   if (typeKey === REPORT_TYPES.BALANCE_SHEET) {
@@ -281,8 +278,8 @@ function buildIncomeStatement(accounts) {
         <table class="report-table income-statement-table">
           <tbody>
             ${revenueRows}
-            <tr class="statement-total-row">
-              <th class="label">Total Revenues</th>
+            <tr class="statement-total-row statement-total-row-lined">
+              <th class="label indent-1">Total Revenues</th>
               <th class="money amount-single-underline">${formatMoney(revenueTotal)}</th>
             </tr>
           </tbody>
@@ -294,8 +291,8 @@ function buildIncomeStatement(accounts) {
         <table class="report-table income-statement-table">
           <tbody>
             ${expenseRows}
-            <tr class="statement-total-row">
-              <th class="label">Total Expenses</th>
+            <tr class="statement-total-row statement-total-row-lined">
+              <th class="label indent-1">Total Expenses</th>
               <th class="money amount-single-underline">${formatMoney(expenseTotal)}</th>
             </tr>
           </tbody>
@@ -611,6 +608,7 @@ export function downloadHtmlReport({ title, htmlFragment, filenameBase }) {
   .statement-section { margin: 0 0 20px; }
   .statement-group-title { margin: 0 0 6px; font-size: 1.85rem; }
   .statement-total-row th { font-size: 1.9rem; font-weight: 700; padding-top: 2px; }
+  .statement-total-row-lined th { border-top: 1px solid #000; }
   .statement-net-table { margin-top: 4px; }
   .statement-net-row th { font-size: 1.9rem; font-weight: 700; }
 
@@ -741,6 +739,7 @@ function buildPrintableReportDocument({ title, htmlFragment }) {
   .statement-section { margin: 0 0 20px; }
   .statement-group-title { margin: 0 0 6px; font-size: 1.85rem; }
   .statement-total-row th { font-size: 1.9rem; font-weight: 700; padding-top: 2px; }
+  .statement-total-row-lined th { border-top: 1px solid #000; }
   .statement-net-table { margin-top: 4px; }
   .statement-net-row th { font-size: 1.9rem; font-weight: 700; }
 
@@ -873,19 +872,19 @@ async function createReportPdfBlob({ title, htmlFragment }) {
     const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
-    const imgWidth = pdfWidth;
-    const imgHeight = (canvas.height * pdfWidth) / canvas.width;
-
-    let heightLeft = imgHeight;
+    const margin = 10;
+    const printableWidth = Math.max(1, pdfWidth - margin * 2);
+    const printableHeight = (canvas.height * printableWidth) / canvas.width;
+    let heightLeft = printableHeight;
     let position = 0;
 
-    pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+    pdf.addImage(imgData, 'JPEG', margin, position, printableWidth, printableHeight);
     heightLeft -= pdfHeight;
 
     while (heightLeft > 0) {
-      position = heightLeft - imgHeight;
+      position = heightLeft - printableHeight;
       pdf.addPage();
-      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+      pdf.addImage(imgData, 'JPEG', margin, position, printableWidth, printableHeight);
       heightLeft -= pdfHeight;
     }
 

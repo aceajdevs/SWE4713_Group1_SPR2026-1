@@ -191,13 +191,66 @@ export async function uploadJournalAttachment(entryId, file) {
 }
 
 export async function getJournalAttachments(entryId) {
-  const { data, error } = await fetchFromTable('journalAttachment', {
-    filters: { journalEntryID: entryId },
-    orderBy: { column: 'uploadedAt', ascending: true },
-  });
+  const normalizedEntryId = Number(entryId);
+  const tableAttempts = [
+    { table: 'journalAttachment', fk: 'journalEntryID', order: 'uploadedAt' },
+    { table: 'jAttachment', fk: 'journalEntryID', order: 'uploadedAt' },
+    { table: 'journalAttachments', fk: 'journalEntryID', order: 'uploadedAt' },
+    { table: 'journalAttachment', fk: 'journalEntryId', order: 'uploadedAt' },
+    { table: 'journalAttachment', fk: 'journalID', order: 'uploadedAt' },
+    { table: 'jAttachment', fk: 'journalID', order: 'uploadedAt' },
+  ];
 
-  if (error) throw error;
-  return data || [];
+  let lastError = null;
+  let rows = [];
+  for (const attempt of tableAttempts) {
+    const { data, error } = await fetchFromTable(attempt.table, {
+      filters: { [attempt.fk]: normalizedEntryId },
+      orderBy: { column: attempt.order, ascending: true },
+    });
+    if (!error) {
+      rows = data || [];
+      break;
+    }
+    const msg = String(error?.message || '').toLowerCase();
+    const isMissingSchemaObj =
+      error?.code === 'PGRST205' ||
+      msg.includes('does not exist') ||
+      msg.includes('could not find') ||
+      msg.includes('schema cache');
+    if (!isMissingSchemaObj) {
+      throw error;
+    }
+    lastError = error;
+  }
+
+  if (!rows.length && lastError) throw lastError;
+
+  const withUrls = await Promise.all(
+    rows.map(async (att) => {
+      const filePath = att.filePath || att.path || att.file_path || '';
+      let fileUrl = null;
+      if (filePath) {
+        const signed = await supabase.storage
+          .from('attachments')
+          .createSignedUrl(filePath, 60 * 60);
+        if (!signed.error && signed.data?.signedUrl) {
+          fileUrl = signed.data.signedUrl;
+        } else {
+          const { data: publicData } = supabase.storage.from('attachments').getPublicUrl(filePath);
+          fileUrl = publicData?.publicUrl || null;
+        }
+      }
+      return {
+        ...att,
+        filePath,
+        fileType: att.fileType || att.file_type || 'unknown',
+        fileUrl,
+      };
+    }),
+  );
+
+  return withUrls;
 }
 
 export async function getEnrichedJournalEntries(status) {

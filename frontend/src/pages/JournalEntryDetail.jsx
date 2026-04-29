@@ -177,7 +177,18 @@ function JournalEntryDetail() {
           <ul>
             {attachments.map((att, i) => (
               <li key={att.jAttachmentID || i}>
-                {att.filePath?.split('/').pop() || 'File'} ({att.fileType || 'unknown'})
+                {att.fileUrl ? (
+                  <a
+                    href={att.fileUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {att.filePath?.split('/').pop() || 'File'}
+                  </a>
+                ) : (
+                  <span>{att.filePath?.split('/').pop() || 'File'}</span>
+                )}{' '}
+                ({att.fileType || 'unknown'})
               </li>
             ))}
           </ul>
