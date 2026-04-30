@@ -26,6 +26,7 @@ import PostedJournalEntriesPage from './pages/PostedJournalEntriesPage'
 import JournalEntryDetail from './pages/JournalEntryDetail'
 import Report from './pages/Report'
 import Ratio from './pages/Ratio'
+import ProfilePage from './pages/ProfilePage'
 
 function AppLayout() {
   const location = useLocation();
@@ -75,6 +76,7 @@ function AppLayout() {
         <Route path="/accountant-dashboard" element={<AccountantDashboard/>} />
         <Route path="/manager-dashboard" element={<ManagerDashboard/>} />
         <Route path="/help" element={<UserManualPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
         <Route path="/journal-entries" element={<JournalEntries />} />
         <Route path="/posted-journal-entries" element={<PostedJournalEntriesPage />} />
         <Route path="/journal-entry/new" element={<JournalEntryForm />} />
