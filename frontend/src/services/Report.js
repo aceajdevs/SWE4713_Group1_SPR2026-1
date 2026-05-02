@@ -258,17 +258,21 @@ function buildIncomeStatement(accounts) {
 
   const revenueRows = revenues
     .map(
-      (a) => {
+      (a, i) => {
         const val = signedBalance(a);
-        return `<tr><td class="label indent-1">${ledgerAccountLabelHtml(a)}</td><td class="money">${val === 0 ? '' : formatMoney(val)}</td></tr>`;
+        const isLast = i === revenues.length - 1;
+        const moneyClass = isLast ? 'money amount-single-underline' : 'money';
+        return `<tr><td class="label indent-1">${ledgerAccountLabelHtml(a)}</td><td class="${moneyClass}">${val === 0 ? '' : formatMoney(val)}</td></tr>`;
       },
     )
     .join('');
   const expenseRows = expenses
     .map(
-      (a) => {
+      (a, i) => {
         const val = signedBalance(a);
-        return `<tr><td class="label indent-1">${ledgerAccountLabelHtml(a)}</td><td class="money">${val === 0 ? '' : formatMoney(val)}</td></tr>`;
+        const isLast = i === expenses.length - 1;
+        const moneyClass = isLast ? 'money amount-single-underline' : 'money';
+        return `<tr><td class="label indent-1">${ledgerAccountLabelHtml(a)}</td><td class="${moneyClass}">${val === 0 ? '' : formatMoney(val)}</td></tr>`;
       },
     )
     .join('');
@@ -385,12 +389,15 @@ function buildBalanceSheet(accounts) {
     const amountGetter = options.amountGetter || signedBalance;
     const amountFormatter = options.amountFormatter || formatMoney;
     const indentClass = options.indentClass || 'indent-1';
+    const underlineLast = options.underlineLast || false;
 
     return list
       .map(
-        (a) => {
+        (a, i) => {
           const val = amountGetter(a);
-          return `<tr><td class="label ${indentClass}">${ledgerAccountLabelHtml(a)}</td><td class="money">${val === 0 ? '' : amountFormatter(val)}</td></tr>`;
+          const isLast = underlineLast && i === list.length - 1;
+          const moneyClass = isLast ? 'money amount-single-underline' : 'money';
+          return `<tr><td class="label ${indentClass}">${ledgerAccountLabelHtml(a)}</td><td class="${moneyClass}">${val === 0 ? '' : amountFormatter(val)}</td></tr>`;
         },
       )
       .join('');
@@ -421,11 +428,12 @@ function buildBalanceSheet(accounts) {
           </tr>
 
           <tr class="balance-sheet-heading-row"><th class="label indent-1">Property Plant &amp; Equipment</th><th class="money"></th></tr>
-          ${renderRows(propertyPlantEquipment, { indentClass: 'indent-2' })}
+          ${renderRows(propertyPlantEquipment, { indentClass: 'indent-2', underlineLast: true })}
           ${renderRows(contraAssets, {
             indentClass: 'indent-2',
             amountGetter: (a) => Math.abs(signedBalance(a)),
             amountFormatter: formatMoneyInParentheses,
+            underlineLast: true,
           })}
           <tr class="balance-sheet-total-row">
             <th class="label indent-1">Property Plant &amp; Equipment, Net</th>
@@ -449,6 +457,7 @@ function buildBalanceSheet(accounts) {
           ${renderRows(currentLiabilities, {
             indentClass: 'indent-2',
             amountGetter: liabilityAmount,
+            underlineLast: true,
           })}
           <tr class="balance-sheet-total-row">
             <th class="label indent-1">Total Current Liabilities</th>
@@ -457,6 +466,7 @@ function buildBalanceSheet(accounts) {
           ${renderRows(otherLiabilities, {
             indentClass: 'indent-1',
             amountGetter: liabilityAmount,
+            underlineLast: true,
           })}
           <tr class="balance-sheet-total-row">
             <th class="label">Total Liabilities</th>
@@ -466,7 +476,7 @@ function buildBalanceSheet(accounts) {
           <tr class="balance-sheet-spacer-row"><td></td><td></td></tr>
 
           <tr class="balance-sheet-heading-row"><th class="label">Stockholders&#39; Equity</th><th class="money"></th></tr>
-          ${renderRows(equityForDisplay, { indentClass: 'indent-1' })}
+          ${renderRows(equityForDisplay, { indentClass: 'indent-1', underlineLast: true })}
           <tr class="balance-sheet-total-row">
             <th class="label">Total Stockholders&#39; Equity</th>
             <th class="money amount-single-underline">${formatMoney(totalEquity)}</th>
@@ -572,47 +582,78 @@ export function getSampleReportHtml(typeKey) {
   );
 }
 
-
-// Downlaods the HTML fragment as .html file (DON'T REMOVE)
-export function downloadHtmlReport({ title, htmlFragment, filenameBase }) {
-  const safeTitle = escapeHtml(title);
-  const fullDoc = `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${safeTitle}</title>
-<style>
-  body { font-family: system-ui, "Segoe UI", sans-serif; padding: 24px; color: #111; max-width: 900px; margin: 0 auto; line-height: 1.45; }
+const REPORT_EXPORT_BASE_STYLES = `
+  body { font-family: system-ui, "Segoe UI", sans-serif; padding: 24px; color: #111; max-width: 100%; margin: 0 auto; box-sizing: border-box; line-height: 1.45; }
   .report-bw { color: #000; background: #fff; }
   .report-header-block { text-align: center; }
-  .report-company, .report-name, .report-period { margin: 0; font-weight: 700; }
+  .report-company, .report-name, .report-period {
+    margin: 0;
+    color: #000;
+    font-weight: 700;
+  }
   .report-company, .report-name { font-size: 1.35rem; }
-  .report-period { font-size: 1rem; margin-top: 4px; }
+  .report-period { margin-top: 4px; font-size: 1rem; }
   .report-header-divider { border: 0; border-top: 2px solid #000; margin: 10px 0 18px; }
 
-  .report-table { display: table; width: 100%; border-collapse: collapse; border-spacing: 0; margin: 0; }
-  .report-table tbody tr { background: #fff; }
-  .report-table td, .report-table th {
+  .report-table {
+    display: table;
+    width: 100%;
+    margin: 0;
     border: 0;
-    padding: 6px 0;
-    line-height: 1.75;
+    border-collapse: collapse;
+    border-spacing: 0;
+    border-radius: 0;
+    color: #000;
+  }
+  .report-table tbody tr,
+  .report-table tbody tr:nth-child(even),
+  .report-table tbody tr:hover {
+    background: #fff;
+    color: #000;
+  }
+  .report-table th,
+  .report-table td {
+    border: 0;
+    padding: 4px 0 6px;
+    line-height: 1.35;
     text-align: left;
     color: #000;
     background: #fff;
     font-weight: 400;
   }
+  .report-table td.money,
+  .report-table th.money {
+    width: 220px;
+    text-align: right;
+    white-space: nowrap;
+  }
   .report-table .label.indent-1 { padding-left: 44px; }
   .report-table .label.indent-2 { padding-left: 72px; }
-  .report-table td.money, .report-table th.money { text-align: right; width: 220px; white-space: nowrap; }
+
+  .report-ledger-link {
+    color: #000;
+    text-decoration: underline;
+    cursor: default;
+    outline: none;
+  }
 
   .statement-section { margin: 0 0 20px; }
-  .statement-group-title { margin: 0 0 8px; font-size: 1.85rem; line-height: 1.35; }
-  .statement-total-row th { font-size: 1.9rem; font-weight: 700; padding-top: 2px; }
+  .statement-group-title {
+    margin: 0 0 6px;
+    color: #000;
+    font-size: 1rem;
+  }
+  .statement-total-row th,
+  .statement-net-row th {
+    color: #000;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+  .statement-total-row th { padding-top: 2px; padding-bottom: 6px; }
   .statement-net-table { margin-top: 4px; }
-  .statement-net-row th { font-size: 1.9rem; font-weight: 700; }
 
-  .amount-single-underline, .amount-double-underline {
+  .amount-single-underline,
+  .amount-double-underline {
     text-decoration-line: underline;
     text-decoration-color: #000;
     text-decoration-style: solid;
@@ -629,47 +670,49 @@ export function downloadHtmlReport({ title, htmlFragment, filenameBase }) {
   .trial-balance-table tbody td,
   .trial-balance-table tfoot th {
     border: 0;
-    background: #fff;
     color: #000;
+    background: #fff;
   }
   .trial-balance-table .label { padding-left: 16px; }
   .trial-balance-table tbody tr td { border-bottom: 2px solid #000; }
   .trial-balance-table .money { width: 170px; }
   .trial-balance-table .trial-balance-column-headings th {
-    font-size: 1.9rem;
+    font-size: 1rem;
     font-weight: 700;
-    padding-bottom: 2px;
+    padding-bottom: 6px;
   }
   .trial-balance-table .trial-balance-column-headings th:first-child {
-    padding: 0;
     width: auto;
+    padding: 0;
   }
   .trial-balance-table .trial-balance-total-row th {
-    font-size: 2rem;
-    font-weight: 700;
     border: 0;
+    font-size: 1rem;
+    font-weight: 700;
     padding-top: 8px;
+    padding-bottom: 6px;
   }
 
   .balance-sheet-section { margin: 0 0 20px; }
   .balance-sheet-table { table-layout: fixed; }
   .balance-sheet-table .money { width: 190px; }
   .balance-sheet-table .balance-sheet-heading-row th {
-    font-size: 1.85rem;
+    font-size: 1rem;
     font-weight: 700;
     padding-top: 2px;
-    padding-bottom: 2px;
+    padding-bottom: 6px;
   }
   .balance-sheet-table .balance-sheet-total-row th {
-    font-size: 1.85rem;
+    font-size: 1rem;
     font-weight: 700;
     padding-top: 2px;
-    padding-bottom: 2px;
+    padding-bottom: 6px;
   }
   .balance-sheet-table .balance-sheet-grand-total-row th {
-    font-size: 1.95rem;
+    font-size: 1rem;
     font-weight: 700;
     padding-top: 4px;
+    padding-bottom: 6px;
   }
   .balance-sheet-table .balance-sheet-spacer-row td { padding: 10px 0; }
 
@@ -677,16 +720,31 @@ export function downloadHtmlReport({ title, htmlFragment, filenameBase }) {
   .retained-earnings-table { table-layout: fixed; }
   .retained-earnings-table .money { width: 190px; }
   .retained-earnings-table .retained-earnings-detail-row td {
-    font-size: 1.85rem;
+    font-size: 1rem;
     font-weight: 400;
-    padding-top: 1px;
-    padding-bottom: 1px;
+    padding-top: 2px;
+    padding-bottom: 6px;
   }
   .retained-earnings-table .retained-earnings-final-row th {
-    font-size: 1.95rem;
+    font-size: 1rem;
     font-weight: 700;
     padding-top: 2px;
+    padding-bottom: 6px;
   }
+`;
+
+
+// Downlaods the HTML fragment as .html file (DON'T REMOVE)
+export function downloadHtmlReport({ title, htmlFragment, filenameBase }) {
+  const safeTitle = escapeHtml(title);
+  const fullDoc = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${safeTitle}</title>
+<style>
+${REPORT_EXPORT_BASE_STYLES}
 </style>
 </head>
 <body>
@@ -744,108 +802,7 @@ function buildPrintableReportDocument({ title, htmlFragment }) {
   .report-bw [tabindex] {
     outline: none !important;
   }
-  .report-header-block { text-align: center; }
-  .report-company, .report-name, .report-period { margin: 0; font-weight: 700; }
-  .report-company, .report-name { font-size: 1.35rem; }
-  .report-period { font-size: 1rem; margin-top: 4px; }
-  .report-header-divider { border: 0; border-top: 2px solid #000; margin: 10px 0 18px; }
-
-  .report-table { display: table; width: 100%; border-collapse: collapse; border-spacing: 0; margin: 0; }
-  .report-table tbody tr { background: #fff; }
-  .report-table td, .report-table th {
-    border: 0;
-    padding: 6px 0;
-    line-height: 1.75;
-    text-align: left;
-    color: #000;
-    background: #fff;
-    font-weight: 400;
-  }
-  .report-table .label.indent-1 { padding-left: 44px; }
-  .report-table .label.indent-2 { padding-left: 72px; }
-  .report-table td.money, .report-table th.money { text-align: right; width: 220px; white-space: nowrap; }
-
-  .statement-section { margin: 0 0 20px; }
-  .statement-group-title { margin: 0 0 8px; font-size: 1.85rem; line-height: 1.35; }
-  .statement-total-row th { font-size: 1.9rem; font-weight: 700; padding-top: 2px; }
-  .statement-net-table { margin-top: 4px; }
-  .statement-net-row th { font-size: 1.9rem; font-weight: 700; }
-
-  .amount-single-underline, .amount-double-underline {
-    text-decoration-line: underline;
-    text-decoration-color: #000;
-    text-decoration-style: solid;
-  }
-  .amount-single-underline { text-decoration-thickness: 1px; text-underline-offset: 8px; }
-  .amount-double-underline {
-    text-decoration-thickness: 2px;
-    text-decoration-style: double;
-    text-underline-offset: 8px;
-  }
-
-  .trial-balance-table { table-layout: fixed; }
-  .trial-balance-table thead th,
-  .trial-balance-table tbody td,
-  .trial-balance-table tfoot th {
-    border: 0;
-    background: #fff;
-    color: #000;
-  }
-  .trial-balance-table .label { padding-left: 16px; }
-  .trial-balance-table tbody tr td { border-bottom: 2px solid #000; }
-  .trial-balance-table .money { width: 170px; }
-  .trial-balance-table .trial-balance-column-headings th {
-    font-size: 1.9rem;
-    font-weight: 700;
-    padding-bottom: 2px;
-  }
-  .trial-balance-table .trial-balance-column-headings th:first-child {
-    padding: 0;
-    width: auto;
-  }
-  .trial-balance-table .trial-balance-total-row th {
-    font-size: 2rem;
-    font-weight: 700;
-    border: 0;
-    padding-top: 8px;
-  }
-
-  .balance-sheet-section { margin: 0 0 20px; }
-  .balance-sheet-table { table-layout: fixed; }
-  .balance-sheet-table .money { width: 190px; }
-  .balance-sheet-table .balance-sheet-heading-row th {
-    font-size: 1.85rem;
-    font-weight: 700;
-    padding-top: 2px;
-    padding-bottom: 2px;
-  }
-  .balance-sheet-table .balance-sheet-total-row th {
-    font-size: 1.85rem;
-    font-weight: 700;
-    padding-top: 2px;
-    padding-bottom: 2px;
-  }
-  .balance-sheet-table .balance-sheet-grand-total-row th {
-    font-size: 1.95rem;
-    font-weight: 700;
-    padding-top: 4px;
-  }
-  .balance-sheet-table .balance-sheet-spacer-row td { padding: 10px 0; }
-
-  .retained-earnings-section { margin: 0 0 20px; }
-  .retained-earnings-table { table-layout: fixed; }
-  .retained-earnings-table .money { width: 190px; }
-  .retained-earnings-table .retained-earnings-detail-row td {
-    font-size: 1.85rem;
-    font-weight: 400;
-    padding-top: 1px;
-    padding-bottom: 1px;
-  }
-  .retained-earnings-table .retained-earnings-final-row th {
-    font-size: 1.95rem;
-    font-weight: 700;
-    padding-top: 2px;
-  }
+${REPORT_EXPORT_BASE_STYLES}
 </style>
 </head>
 <body>

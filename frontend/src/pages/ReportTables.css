@@ -52,7 +52,8 @@
 .report-html-output .report-table th,
 .report-html-output .report-table td {
   border: 0;
-  padding: 4px 0;
+  padding: 4px 0 6px;
+  line-height: 1.35;
   text-align: left;
   color: #000;
   background: #fff;
@@ -97,18 +98,19 @@
 .report-html-output .statement-group-title {
   margin: 0 0 6px;
   color: #000;
-  font-size: 1.85rem;
+  font-size: 1rem;
 }
 
 .report-html-output .statement-total-row th,
 .report-html-output .statement-net-row th {
   color: #000;
-  font-size: 1.9rem;
+  font-size: 1rem;
   font-weight: 700;
 }
 
 .report-html-output .statement-total-row th {
   padding-top: 2px;
+  padding-bottom: 6px;
 }
 
 .report-html-output .statement-net-table {
@@ -158,9 +160,9 @@
 }
 
 .report-html-output .trial-balance-table .trial-balance-column-headings th {
-  font-size: 1.9rem;
+  font-size: 1rem;
   font-weight: 700;
-  padding-bottom: 2px;
+  padding-bottom: 6px;
 }
 
 .report-html-output .trial-balance-table .trial-balance-column-headings th:first-child {
@@ -170,9 +172,10 @@
 
 .report-html-output .trial-balance-table .trial-balance-total-row th {
   border: 0;
-  font-size: 2rem;
+  font-size: 1rem;
   font-weight: 700;
   padding-top: 8px;
+  padding-bottom: 6px;
 }
 
 .report-html-output .balance-sheet-section {
@@ -188,23 +191,24 @@
 }
 
 .report-html-output .balance-sheet-table .balance-sheet-heading-row th {
-  font-size: 1.85rem;
+  font-size: 1rem;
   font-weight: 700;
   padding-top: 2px;
-  padding-bottom: 2px;
+  padding-bottom: 6px;
 }
 
 .report-html-output .balance-sheet-table .balance-sheet-total-row th {
-  font-size: 1.85rem;
+  font-size: 1rem;
   font-weight: 700;
   padding-top: 2px;
-  padding-bottom: 2px;
+  padding-bottom: 6px;
 }
 
 .report-html-output .balance-sheet-table .balance-sheet-grand-total-row th {
-  font-size: 1.95rem;
+  font-size: 1rem;
   font-weight: 700;
   padding-top: 4px;
+  padding-bottom: 6px;
 }
 
 .report-html-output .balance-sheet-table .balance-sheet-spacer-row td {
@@ -224,14 +228,15 @@
 }
 
 .report-html-output .retained-earnings-table .retained-earnings-detail-row td {
-  font-size: 1.85rem;
+  font-size: 1rem;
   font-weight: 400;
-  padding-top: 1px;
-  padding-bottom: 1px;
+  padding-top: 2px;
+  padding-bottom: 6px;
 }
 
 .report-html-output .retained-earnings-table .retained-earnings-final-row th {
-  font-size: 1.95rem;
+  font-size: 1rem;
   font-weight: 700;
   padding-top: 2px;
+  padding-bottom: 6px;
 }

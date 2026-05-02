@@ -285,14 +285,7 @@ function Report() {
             <p style={{ margin: '8px 0 0', color: 'var(--bff-dark-text)' }}>
               Generated report content will display here.
             </p>
-          ) : (
-            <div style={{ marginTop: '10px', color: 'var(--bff-dark-text)' }}>
-              <h3 style={{ margin: '0 0 8px' }}>{reportTitle || 'Report'}</h3>
-              <p style={{ margin: '0 0 12px', fontSize: '0.9rem' }}>
-                Generated on: {generatedAt}
-              </p>
-            </div>
-          )}
+          ) : null}
           {hasReport && !generating ? (
             <div
               className="report-html-output"
