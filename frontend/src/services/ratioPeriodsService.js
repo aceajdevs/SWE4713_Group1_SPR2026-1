@@ -1,7 +1,5 @@
 import { supabase } from '../supabaseClient';
 
-/** @typedef {{ y: number, q: number, sort: number }} QuarterKey */
-
 function parseToLocalDate(isoOrDate) {
   if (isoOrDate == null || isoOrDate === '') return null;
   const s = String(isoOrDate);
@@ -15,53 +13,43 @@ function parseToLocalDate(isoOrDate) {
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
-/**
- * @param {string|Date} isoOrDate
- * @returns {QuarterKey | null}
- */
-export function quarterKeyFromDate(isoOrDate) {
-  const d = parseToLocalDate(isoOrDate);
-  if (!d) return null;
-  const y = d.getFullYear();
-  const q = Math.floor(d.getMonth() / 3) + 1;
-  return { y, q, sort: y * 10 + q };
+function toYmd(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function startOfCurrentQuarter(anchor = new Date()) {
+  const y = anchor.getFullYear();
+  const qStartMonth = Math.floor(anchor.getMonth() / 3) * 3;
+  return new Date(y, qStartMonth, 1);
 }
 
 /**
- * @param {QuarterKey} k
- * @returns {string} e.g. Q1 '26
- */
-export function formatQuarterLabel(k) {
-  return `Q${k.q} '${String(k.y).slice(-2)}`;
-}
-
-/**
- * Last `count` calendar quarters ending at the quarter that contains `anchor`. Oldest first.
+ * Weekly period labels from start of current quarter to `anchor` (inclusive).
+ * Each label is the period end date in YYYY-MM-DD format.
  * @param {Date} [anchor]
- * @param {number} [count]
  * @returns {string[]}
  */
-export function calendarQuarterLabels(anchor = new Date(), count = 5) {
-  const end = quarterKeyFromDate(anchor);
-  if (!end) return [];
-  const keys = [];
-  let y = end.y;
-  let q = end.q;
-  for (let i = 0; i < count; i++) {
-    keys.unshift({ y, q, sort: y * 10 + q });
-    q -= 1;
-    if (q < 1) {
-      q = 4;
-      y -= 1;
-    }
-  }
-  return keys.map(formatQuarterLabel);
-}
+export function currentQuarterWeekLabels(anchor = new Date()) {
+  const today = parseToLocalDate(anchor) || new Date();
+  const quarterStart = startOfCurrentQuarter(today);
 
-function sortKeyToKey(sort) {
-  const y = Math.floor(sort / 10);
-  const q = sort % 10;
-  return { y, q, sort };
+  /** @type {string[]} */
+  const labels = [];
+  const cursor = new Date(quarterStart);
+
+  while (cursor <= today) {
+    const end = new Date(cursor);
+    end.setDate(end.getDate() + 6);
+    if (end > today) end.setTime(today.getTime());
+    labels.push(toYmd(end));
+    end.setDate(end.getDate() + 1);
+    cursor.setTime(end.getTime());
+  }
+
+  return labels;
 }
 
 async function fetchLedgerEntryDates(limit = 800) {
@@ -87,19 +75,6 @@ async function fetchLedgerEntryDates(limit = 800) {
 }
 
 /**
- * @param {string[]} isoDates
- * @returns {QuarterKey[]}
- */
-function distinctQuarterKeys(isoDates) {
-  const map = new Map();
-  for (const iso of isoDates) {
-    const k = quarterKeyFromDate(iso);
-    if (k) map.set(k.sort, k);
-  }
-  return Array.from(map.values()).sort((a, b) => a.sort - b.sort);
-}
-
-/**
  * @param {{ entryDate?: string | null }[]} rows
  * @returns {{ min: string | null, max: string | null }}
  */
@@ -110,65 +85,20 @@ export function ledgerDateBoundsFromRows(rows) {
 }
 
 /**
- * @param {{ entryDate?: string | null }[]} rows
+ * @param {{ entryDate?: string | null }[]} _rows
  * @param {Date} anchor
- * @param {{ calendarQuarterCount?: number, maxMergedLabels?: number, minLabels?: number }} [opts]
  * @returns {string[]}
  */
-export function buildRatioPeriodLabelsFromRows(
-  rows,
-  anchor = new Date(),
-  { calendarQuarterCount = 5, maxMergedLabels = 10, minLabels = 5 } = {},
-) {
-  const now = anchor;
-  const calendarKeys = /** @type {QuarterKey[]} */ (() => {
-    const end = quarterKeyFromDate(now);
-    if (!end) return [];
-    const keys = [];
-    let y = end.y;
-    let q = end.q;
-    for (let i = 0; i < calendarQuarterCount; i++) {
-      keys.unshift({ y, q, sort: y * 10 + q });
-      q -= 1;
-      if (q < 1) {
-        q = 4;
-        y -= 1;
-      }
-    }
-    return keys;
-  })();
-
-  const mergedSortSet = new Set(calendarKeys.map((k) => k.sort));
-
-  const dbKeys = distinctQuarterKeys(rows.map((r) => r.entryDate));
-  for (const k of dbKeys) {
-    mergedSortSet.add(k.sort);
-  }
-
-  let sorted = Array.from(mergedSortSet).sort((a, b) => a - b);
-
-  if (sorted.length > maxMergedLabels) {
-    sorted = sorted.slice(-maxMergedLabels);
-  }
-
-  if (sorted.length < minLabels) {
-    return calendarQuarterLabels(now, minLabels);
-  }
-
-  return sorted.map((sort) => formatQuarterLabel(sortKeyToKey(sort)));
+export function buildRatioPeriodLabelsFromRows(_rows, anchor = new Date()) {
+  return currentQuarterWeekLabels(anchor);
 }
 
 /**
- * Merges calendar quarters (from the current date) with calendar quarters that appear
- * on `Ledger` / `ledger` rows (`entryDate`). Returns sorted unique labels, newest last,
- * length between `minLabels` and `maxMergedLabels`.
- *
- * @param {{ calendarQuarterCount?: number, maxMergedLabels?: number, minLabels?: number }} [opts]
+ * Weekly labels for charts from current quarter start through present.
  * @returns {Promise<string[]>}
  */
-export async function fetchRatioChartPeriodLabels(opts) {
-  const rows = await fetchLedgerEntryDates(800);
-  return buildRatioPeriodLabelsFromRows(rows, new Date(), opts);
+export async function fetchRatioChartPeriodLabels() {
+  return currentQuarterWeekLabels(new Date());
 }
 
 /**
@@ -181,13 +111,12 @@ export async function fetchLedgerEntryDateRange() {
 }
 
 /**
- * Single Supabase round-trip: merged period labels plus ledger date bounds for the ratio page.
- * @param {{ calendarQuarterCount?: number, maxMergedLabels?: number, minLabels?: number }} [opts]
+ * Single Supabase round-trip: weekly labels plus ledger date bounds for the ratio page.
  * @returns {Promise<{ periods: string[], ledgerMin: string | null, ledgerMax: string | null }>}
  */
-export async function fetchRatioPagePeriodContext(opts) {
+export async function fetchRatioPagePeriodContext() {
   const rows = await fetchLedgerEntryDates(800);
   const { min: ledgerMin, max: ledgerMax } = ledgerDateBoundsFromRows(rows);
-  const periods = buildRatioPeriodLabelsFromRows(rows, new Date(), opts);
+  const periods = currentQuarterWeekLabels(new Date());
   return { periods, ledgerMin, ledgerMax };
 }
