@@ -233,8 +233,8 @@ function buildTrialBalance(accounts) {
         <thead>
           <tr class="trial-balance-column-headings">
             <th></th>
-            <th class="money amount-single-underline">Debit</th>
-            <th class="money amount-single-underline">Credit</th>
+            <th class="money">Debit</th>
+            <th class="money">Credit</th>
           </tr>
         </thead>
         <tbody>${bodyRows}</tbody>
@@ -261,7 +261,7 @@ function buildIncomeStatement(accounts) {
       (a, i) => {
         const val = signedBalance(a);
         const isLast = i === revenues.length - 1;
-        const moneyClass = isLast ? 'money amount-single-underline' : 'money';
+        const moneyClass = isLast ? 'money' : 'money';
         return `<tr><td class="label indent-1">${ledgerAccountLabelHtml(a)}</td><td class="${moneyClass}">${val === 0 ? '' : formatMoney(val)}</td></tr>`;
       },
     )
@@ -271,7 +271,7 @@ function buildIncomeStatement(accounts) {
       (a, i) => {
         const val = signedBalance(a);
         const isLast = i === expenses.length - 1;
-        const moneyClass = isLast ? 'money amount-single-underline' : 'money';
+        const moneyClass = isLast ? 'money' : 'money';
         return `<tr><td class="label indent-1">${ledgerAccountLabelHtml(a)}</td><td class="${moneyClass}">${val === 0 ? '' : formatMoney(val)}</td></tr>`;
       },
     )
@@ -287,12 +287,12 @@ function buildIncomeStatement(accounts) {
             ${revenueRows}
             <tr class="statement-total-row">
               <th class="label">Total Revenues</th>
-              <th class="money amount-single-underline">${formatMoney(revenueTotal)}</th>
+              <th class="money">${formatMoney(revenueTotal)}</th>
             </tr>
           </tbody>
         </table>
       </section>
-
+      <hr/>
       <section class="statement-section">
         <h3 class="statement-group-title">Expenses</h3>
         <table class="report-table income-statement-table">
@@ -300,12 +300,12 @@ function buildIncomeStatement(accounts) {
             ${expenseRows}
             <tr class="statement-total-row">
               <th class="label">Total Expenses</th>
-              <th class="money amount-single-underline">${formatMoney(expenseTotal)}</th>
+              <th class="money">${formatMoney(expenseTotal)}</th>
             </tr>
           </tbody>
         </table>
       </section>
-
+      <hr class="statement-header-divider" />
       <table class="report-table income-statement-table statement-net-table">
         <tbody>
           <tr class="statement-net-row">
@@ -396,7 +396,7 @@ function buildBalanceSheet(accounts) {
         (a, i) => {
           const val = amountGetter(a);
           const isLast = underlineLast && i === list.length - 1;
-          const moneyClass = isLast ? 'money amount-single-underline' : 'money';
+          const moneyClass = isLast ? 'money' : 'money';
           return `<tr><td class="label ${indentClass}">${ledgerAccountLabelHtml(a)}</td><td class="${moneyClass}">${val === 0 ? '' : amountFormatter(val)}</td></tr>`;
         },
       )
@@ -424,9 +424,9 @@ function buildBalanceSheet(accounts) {
           ${renderRows(currentAssets, { indentClass: 'indent-2' })}
           <tr class="balance-sheet-total-row">
             <th class="label indent-1">Total Current Assets</th>
-            <th class="money amount-single-underline">${formatMoney(currentAssetTotal)}</th>
+            <th class="money">${formatMoney(currentAssetTotal)}</th>
           </tr>
-
+          <tr class="balance-sheet-spacer-row"><td></td><td></td></tr>
           <tr class="balance-sheet-heading-row"><th class="label indent-1">Property Plant &amp; Equipment</th><th class="money"></th></tr>
           ${renderRows(propertyPlantEquipment, { indentClass: 'indent-2', underlineLast: true })}
           ${renderRows(contraAssets, {
@@ -437,7 +437,7 @@ function buildBalanceSheet(accounts) {
           })}
           <tr class="balance-sheet-total-row">
             <th class="label indent-1">Property Plant &amp; Equipment, Net</th>
-            <th class="money amount-single-underline">${formatMoney(ppeNet)}</th>
+            <th class="money">${formatMoney(ppeNet)}</th>
           </tr>
 
           <tr class="balance-sheet-grand-total-row">
@@ -447,7 +447,7 @@ function buildBalanceSheet(accounts) {
         </tbody>
       </table>
     </section>
-
+    <hr/>
     <section class="balance-sheet-section">
       <h3 class="statement-group-title">Liabilities &amp; Stockholders&#39; Equity</h3>
       <table class="report-table balance-sheet-table">
@@ -461,7 +461,7 @@ function buildBalanceSheet(accounts) {
           })}
           <tr class="balance-sheet-total-row">
             <th class="label indent-1">Total Current Liabilities</th>
-            <th class="money amount-single-underline">${formatMoney(totalCurrentLiabilities)}</th>
+            <th class="money">${formatMoney(totalCurrentLiabilities)}</th>
           </tr>
           ${renderRows(otherLiabilities, {
             indentClass: 'indent-1',
@@ -470,7 +470,7 @@ function buildBalanceSheet(accounts) {
           })}
           <tr class="balance-sheet-total-row">
             <th class="label">Total Liabilities</th>
-            <th class="money amount-single-underline">${formatMoney(totalLiabilities)}</th>
+            <th class="money">${formatMoney(totalLiabilities)}</th>
           </tr>
 
           <tr class="balance-sheet-spacer-row"><td></td><td></td></tr>
@@ -479,7 +479,7 @@ function buildBalanceSheet(accounts) {
           ${renderRows(equityForDisplay, { indentClass: 'indent-1', underlineLast: true })}
           <tr class="balance-sheet-total-row">
             <th class="label">Total Stockholders&#39; Equity</th>
-            <th class="money amount-single-underline">${formatMoney(totalEquity)}</th>
+            <th class="money">${formatMoney(totalEquity)}</th>
           </tr>
 
           <tr class="balance-sheet-grand-total-row">
@@ -523,7 +523,7 @@ function buildRetainedEarnings(accounts, options = {}) {
           </tr>
           <tr class="retained-earnings-detail-row retained-earnings-less-row">
             <td class="label indent-0">Less: Dividends</td>
-            <td class="money amount-single-underline">${formatMoney(dividendsTotal)}</td>
+            <td class="money">${formatMoney(dividendsTotal)}</td>
           </tr>
           <tr class="retained-earnings-final-row">
             <th class="label indent-0">End Retained Earnings${endLabel ? `, ${escapeHtml(endLabel)}` : ''}</th>
@@ -650,6 +650,7 @@ const REPORT_EXPORT_BASE_STYLES = `
     font-weight: 700;
   }
   .statement-total-row th { padding-top: 2px; padding-bottom: 6px; }
+  .statement-total-row th { border-top: 1px solid #000; }
   .statement-net-table { margin-top: 4px; }
 
   .amount-single-underline,
@@ -714,6 +715,10 @@ const REPORT_EXPORT_BASE_STYLES = `
     padding-top: 4px;
     padding-bottom: 6px;
   }
+  .balance-sheet-table .balance-sheet-total-row th,
+  .balance-sheet-table .balance-sheet-grand-total-row th {
+    border-top: 1px solid #000;
+  }
   .balance-sheet-table .balance-sheet-spacer-row td { padding: 10px 0; }
 
   .retained-earnings-section { margin: 0 0 20px; }
@@ -730,6 +735,9 @@ const REPORT_EXPORT_BASE_STYLES = `
     font-weight: 700;
     padding-top: 2px;
     padding-bottom: 6px;
+  }
+  .retained-earnings-table .retained-earnings-final-row th {
+    border-top: 1px solid #000;
   }
 `;
 
