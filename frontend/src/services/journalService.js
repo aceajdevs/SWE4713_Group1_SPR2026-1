@@ -1,5 +1,5 @@
 import { supabase } from '../supabaseClient';
-import { fetchFromTable, insertRecord, uploadFile } from '../supabaseUtils';
+import { fetchFromTable, insertRecord, uploadFile, createSignedUrl } from '../supabaseUtils';
 import { createAppError, ERROR_IDS, logErrorWithCode } from './errorMessages';
 import { getManagerWithLargestUserId } from './adminService';
 import { sendJournalPendingApprovalToManager } from './emailService';
@@ -72,6 +72,30 @@ entryType: parseInt(entryType, 10) || null,
   void notifyManagerJournalSubmittedForApproval(entryId, createdBy);
 
   return header;
+}
+
+export const JOURNAL_ATTACHMENT_BUCKET = 'attachments';
+
+function mimeTypeFromFilename(name) {
+  const ext = String(name || '')
+    .split('.')
+    .pop()
+    ?.toLowerCase();
+  const map = {
+    pdf: 'application/pdf',
+    png: 'image/png',
+    jpg: 'image/jpeg',
+    jpeg: 'image/jpeg',
+    gif: 'image/gif',
+    webp: 'image/webp',
+    txt: 'text/plain',
+    csv: 'text/csv',
+    doc: 'application/msword',
+    docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    xls: 'application/vnd.ms-excel',
+    xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  };
+  return map[ext] || 'application/octet-stream';
 }
 
 
@@ -171,15 +195,17 @@ export async function uploadJournalAttachment(entryId, file) {
   const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
   const path = `journal-attachments/${entryId}/${timestamp}_${safeName}`;
 
-  const { data, error } = await uploadFile('attachments', path, file);
+  const { error } = await uploadFile(JOURNAL_ATTACHMENT_BUCKET, path, file);
 
   if (error) throw createAppError(ERROR_IDS.ATTACHMENT_UPLOAD_FAILED, error);
+
+  const fileType = (file.type || '').trim() || mimeTypeFromFilename(file.name);
 
   const { error: refError } = await insertRecord('journalAttachment', {
     journalEntryID: entryId,
     filePath: path,
-    fileType: file.type,
-    uploadedAt: new Date().toISOString(),
+    fileType,
+    uploadedAt: new Date().toISOString().slice(0, 10),
   });
 
   if (refError) {
@@ -188,6 +214,11 @@ export async function uploadJournalAttachment(entryId, file) {
   }
 
   return { path };
+}
+
+export async function getJournalAttachmentSignedUrl(filePath, expiresInSec = 3600) {
+  if (!filePath || typeof filePath !== 'string') return null;
+  return createSignedUrl(JOURNAL_ATTACHMENT_BUCKET, filePath, expiresInSec);
 }
 
 export async function getJournalAttachments(entryId) {
