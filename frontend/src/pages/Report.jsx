@@ -1,16 +1,24 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { HelpTooltip } from '../components/HelpTooltip';
 import {
   REPORT_TYPES,
   generateReportHtml,
   downloadPdfReport,
-  getReportJpegBase64,
+  getReportPdfBase64,
   reportFilenameBase,
 } from '../services/Report';
 import { sendReportEmail } from '../services/emailService';
+import { getAllUsers } from '../services/adminService';
 import '../global.css';
 import './ReportTables.css';
+
+function formatUserDropdownLabel(user) {
+  const name = [user?.fName, user?.lName].filter(Boolean).join(' ').trim();
+  const display = name || user?.username || user?.email || 'User';
+  const email = String(user?.email || '').trim();
+  return `${display} - ${email}`;
+}
 
 function Report() {
   const navigate = useNavigate();
@@ -22,10 +30,44 @@ function Report() {
   const [periodStartDate, setPeriodStartDate] = useState('');
   const [periodEndDate, setPeriodEndDate] = useState('');
   const [asOfDate, setAsOfDate] = useState('');
-  const [recipientEmail, setRecipientEmail] = useState('');
-  const [recipientName, setRecipientName] = useState('');
+  const [emailUsers, setEmailUsers] = useState([]);
+  const [selectedUserId, setSelectedUserId] = useState('');
+  const [usersLoading, setUsersLoading] = useState(true);
+  const [usersError, setUsersError] = useState('');
   const [sendingEmail, setSendingEmail] = useState(false);
   const [emailStatus, setEmailStatus] = useState('');
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setUsersLoading(true);
+      setUsersError('');
+      try {
+        const raw = await getAllUsers();
+        if (cancelled) return;
+        const withEmail = (raw || []).filter((u) => u?.email && String(u.email).trim());
+        withEmail.sort((a, b) => {
+          const ln = String(a.lName || '').localeCompare(String(b.lName || ''), undefined, {
+            sensitivity: 'base',
+          });
+          if (ln !== 0) return ln;
+          return String(a.fName || '').localeCompare(String(b.fName || ''), undefined, {
+            sensitivity: 'base',
+          });
+        });
+        setEmailUsers(withEmail);
+      } catch (error) {
+        console.error('Failed to load users for email:', error);
+        if (!cancelled) setUsersError('Could not load users.');
+      } finally {
+        if (!cancelled) setUsersLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const generateReport = useCallback(async (typeKey) => {
     setGenerating(true);
@@ -84,44 +126,49 @@ function Report() {
 
   const handleDownload = useCallback(async () => {
     if (!reportHtml.trim()) return;
-    await downloadPdfReport({
-      title: reportTitle || 'Report',
-      htmlFragment: reportHtml,
-      filenameBase: reportFilenameBase(activeType),
-    });
+    setDownloadingPdf(true);
+    try {
+      await downloadPdfReport({
+        title: reportTitle || 'Report',
+        htmlFragment: reportHtml,
+        filenameBase: reportFilenameBase(activeType),
+      });
+    } catch (error) {
+      console.error('Failed to save PDF:', error);
+    } finally {
+      setDownloadingPdf(false);
+    }
   }, [reportHtml, reportTitle, activeType]);
 
   const handleSendEmail = useCallback(async () => {
     if (!reportHtml.trim()) return;
 
-    const trimmedEmail = recipientEmail.trim();
+    const selected = emailUsers.find((u) => String(u.userID) === String(selectedUserId));
+    const trimmedEmail = selected?.email != null ? String(selected.email).trim() : '';
     if (!trimmedEmail) {
-      setEmailStatus('Please enter a recipient email address.');
+      setEmailStatus('Please select a user to email.');
       return;
     }
 
     setSendingEmail(true);
     setEmailStatus('');
     try {
-      const jpegFilename = `${reportFilenameBase(activeType)}.jpg`;
-      const jpegBase64 = await getReportJpegBase64({
+      const pdfFilename = `${reportFilenameBase(activeType)}.pdf`;
+      const pdfBase64 = await getReportPdfBase64({
         title: reportTitle || 'Report',
         htmlFragment: reportHtml,
       });
       const result = await sendReportEmail({
         recipientEmail: trimmedEmail,
-        recipientName: recipientName.trim(),
-        subject: `${reportTitle || 'Report'} - Report Image`,
-        filename: jpegFilename,
-        contentType: 'image/jpeg',
-        attachmentBase64: jpegBase64,
+        subject: `${reportTitle || 'Report'} - Report PDF`,
+        filename: pdfFilename,
+        contentType: 'application/pdf',
+        attachmentBase64: pdfBase64,
       });
       if (result?.attachmentIncluded) {
-        setEmailStatus(`Report emailed successfully to ${trimmedEmail} with JPEG attachment.`);
+        setEmailStatus(`Report emailed successfully to ${trimmedEmail} with PDF attachment.`);
       } else {
-        setEmailStatus(
-          `Report emailed to ${trimmedEmail}, but the provider did not attach the JPEG.`
-        );
+        setEmailStatus(`Report emailed to ${trimmedEmail}, but the PDF may not have attached.`);
       }
     } catch (error) {
       console.error('Failed to send report email:', error);
@@ -129,7 +176,7 @@ function Report() {
     } finally {
       setSendingEmail(false);
     }
-  }, [activeType, generatedAt, recipientEmail, recipientName, reportHtml, reportTitle]);
+  }, [activeType, emailUsers, reportHtml, reportTitle, selectedUserId]);
 
   const hasReport = Boolean(reportHtml.trim());
   const reportContentMaxWidth = '840px';
@@ -259,47 +306,66 @@ function Report() {
         </div>
       </div>
       
-      <div style={{ margin: '14px auto 0', display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', maxWidth: reportContentMaxWidth }} role="group">
-        <input
-          type="email"
+      <div
+        style={{
+          margin: '14px auto 0',
+          display: 'flex',
+          gap: '10px',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'center',
+          maxWidth: reportContentMaxWidth,
+        }}
+        role="group"
+      >
+        <span style={{ alignSelf: 'center', color: 'var(--bff-dark-text)' }}>Send to:</span>
+        <select
+          id="report-email-recipient"
           className="input"
-          placeholder="Recipient email"
-          value={recipientEmail}
-          onChange={(event) => setRecipientEmail(event.target.value)}
-          style={{ width: '20vw' }}
-        />
-        <input
-          type="text"
-          className="input"
-          placeholder="Recipient name (optional)"
-          value={recipientName}
-          onChange={(event) => setRecipientName(event.target.value)}
-          style={{ width: '20vw' }}
-        />
-        <HelpTooltip text="Send the currently displayed report to the recipient by email.">
+          aria-label="Send report to user"
+          value={selectedUserId}
+          onChange={(event) => setSelectedUserId(event.target.value)}
+          style={{ minWidth: 'min(420px, 92vw)', maxWidth: '560px' }}
+          disabled={generating || sendingEmail || usersLoading || Boolean(usersError)}
+        >
+          <option value="">
+            {usersLoading ? 'Loading users…' : usersError ? 'Users unavailable' : 'Select a user…'}
+          </option>
+          {emailUsers.map((u) => (
+            <option key={u.userID} value={String(u.userID)}>
+              {formatUserDropdownLabel(u)}
+            </option>
+          ))}
+        </select>
+        <HelpTooltip text="Sends the same PDF as Save as PDF to the selected user’s email.">
           <button
             type="button"
             className="button-secondary"
             onClick={handleSendEmail}
-            disabled={!hasReport || generating || sendingEmail}
+            disabled={!hasReport || generating || sendingEmail || usersLoading || Boolean(usersError)}
           >
             {sendingEmail ? 'Sending Email...' : 'Email Report'}
           </button>
         </HelpTooltip>
       </div>
+      {usersError ? (
+        <p style={{ margin: '8px auto 0', color: 'var(--bff-red)', maxWidth: reportContentMaxWidth, textAlign: 'center', fontSize: '0.95rem' }}>
+          {usersError}
+        </p>
+      ) : null}
       {emailStatus ? (
         <p style={{ margin: '8px auto 0', color: 'var(--bff-dark-text)', maxWidth: reportContentMaxWidth, textAlign: 'center' }}>{emailStatus}</p>
       ) : null}
 
       <div style={{ maxWidth: reportContentMaxWidth, margin: '1vh auto 10vh', display: 'flex', justifyContent: 'center' }}>
-        <HelpTooltip text="Download the current report as a PDF file.">
+        <HelpTooltip text="Downloads the report as a PDF file to your computer.">
           <button
             type="button"
             className="button-secondary"
             onClick={handleDownload}
-            disabled={!hasReport || generating}
+            disabled={!hasReport || generating || downloadingPdf}
           >
-            Download PDF
+            {downloadingPdf ? 'Saving PDF…' : 'Save as PDF'}
           </button>
         </HelpTooltip>
       </div>

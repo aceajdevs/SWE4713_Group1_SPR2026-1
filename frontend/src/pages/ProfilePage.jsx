@@ -30,7 +30,6 @@ export default function ProfilePage() {
         picturePath: trimmed.length > 0 ? trimmed : null,
       });
 
-      // Keep navbar + sessionStorage in sync immediately.
       const nextPicturePath = updated?.picture_path ?? trimmed ?? null;
       updateCurrentUser({ picture_path: nextPicturePath });
 

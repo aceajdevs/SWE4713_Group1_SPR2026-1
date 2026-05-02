@@ -369,8 +369,6 @@ function buildBalanceSheet(accounts) {
   const netIncome = revenueTotal - expenseTotal;
   const endingRetained = beginningRetained + netIncome;
 
-  // Always build retained earnings inside the balance sheet logic so equity
-  // includes period earnings even if the retained earnings account is missing or stale.
   const equityWithoutRetained = equity.filter(
     (a) => String(a.subType || '').toLowerCase() !== 'retained earnings',
   );
@@ -546,7 +544,6 @@ export async function generateReportHtml(typeKey, options = {}) {
 
 
 
-// Temporary sample HTML reports for download button use REPLACE LATER
 export function getSampleReportHtml(typeKey) {
   const samples = {
     [REPORT_TYPES.TRIAL_BALANCE]: {
@@ -586,7 +583,7 @@ export function downloadHtmlReport({ title, htmlFragment, filenameBase }) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${safeTitle}</title>
 <style>
-  body { font-family: system-ui, "Segoe UI", sans-serif; padding: 24px; color: #111; max-width: 900px; margin: 0 auto; }
+  body { font-family: system-ui, "Segoe UI", sans-serif; padding: 24px; color: #111; max-width: 900px; margin: 0 auto; line-height: 1.45; }
   .report-bw { color: #000; background: #fff; }
   .report-header-block { text-align: center; }
   .report-company, .report-name, .report-period { margin: 0; font-weight: 700; }
@@ -598,7 +595,8 @@ export function downloadHtmlReport({ title, htmlFragment, filenameBase }) {
   .report-table tbody tr { background: #fff; }
   .report-table td, .report-table th {
     border: 0;
-    padding: 4px 0;
+    padding: 6px 0;
+    line-height: 1.75;
     text-align: left;
     color: #000;
     background: #fff;
@@ -609,7 +607,7 @@ export function downloadHtmlReport({ title, htmlFragment, filenameBase }) {
   .report-table td.money, .report-table th.money { text-align: right; width: 220px; white-space: nowrap; }
 
   .statement-section { margin: 0 0 20px; }
-  .statement-group-title { margin: 0 0 6px; font-size: 1.85rem; }
+  .statement-group-title { margin: 0 0 8px; font-size: 1.85rem; line-height: 1.35; }
   .statement-total-row th { font-size: 1.9rem; font-weight: 700; padding-top: 2px; }
   .statement-net-table { margin-top: 4px; }
   .statement-net-row th { font-size: 1.9rem; font-weight: 700; }
@@ -716,8 +714,36 @@ function buildPrintableReportDocument({ title, htmlFragment }) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${safeTitle}</title>
 <style>
-  body { font-family: system-ui, "Segoe UI", sans-serif; padding: 24px; color: #111; max-width: 900px; margin: 0 auto; }
-  .report-bw { color: #000; background: #fff; }
+  @page { size: A4 portrait; margin: 12mm; }
+  @media print {
+    body { padding: 0; max-width: none; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .report-bw { break-inside: avoid; }
+    table, thead, tfoot, tr, section { break-inside: avoid; }
+    thead { display: table-header-group; }
+    tfoot { display: table-footer-group; }
+  }
+  body { font-family: system-ui, "Segoe UI", sans-serif; padding: 24px; color: #111; max-width: 100%; margin: 0 auto; box-sizing: border-box; outline: none !important; line-height: 1.45; }
+  /* Isolate export from app global.css (e.g. blue borders on all tables) — preview uses ReportTables.css instead */
+  .report-bw { color: #000; background: #fff; outline: none !important; border: none !important; box-shadow: none !important; }
+  .report-bw table {
+    display: table !important;
+    width: 100%;
+    border: 0 !important;
+    border-radius: 0 !important;
+    border-style: none !important;
+    border-color: transparent !important;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+  .report-bw tbody tr:nth-child(even),
+  .report-bw tbody tr:hover {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  .report-bw [role="link"],
+  .report-bw [tabindex] {
+    outline: none !important;
+  }
   .report-header-block { text-align: center; }
   .report-company, .report-name, .report-period { margin: 0; font-weight: 700; }
   .report-company, .report-name { font-size: 1.35rem; }
@@ -728,7 +754,8 @@ function buildPrintableReportDocument({ title, htmlFragment }) {
   .report-table tbody tr { background: #fff; }
   .report-table td, .report-table th {
     border: 0;
-    padding: 4px 0;
+    padding: 6px 0;
+    line-height: 1.75;
     text-align: left;
     color: #000;
     background: #fff;
@@ -739,7 +766,7 @@ function buildPrintableReportDocument({ title, htmlFragment }) {
   .report-table td.money, .report-table th.money { text-align: right; width: 220px; white-space: nowrap; }
 
   .statement-section { margin: 0 0 20px; }
-  .statement-group-title { margin: 0 0 6px; font-size: 1.85rem; }
+  .statement-group-title { margin: 0 0 8px; font-size: 1.85rem; line-height: 1.35; }
   .statement-total-row th { font-size: 1.9rem; font-weight: 700; padding-top: 2px; }
   .statement-net-table { margin-top: 4px; }
   .statement-net-row th { font-size: 1.9rem; font-weight: 700; }
@@ -827,12 +854,97 @@ ${htmlFragment}
 </html>`;
 }
 
+function sanitizeDownloadFilename(base) {
+  const s = String(base || 'report').trim() || 'report';
+  return s.replace(/[/\\?%*:|"<>]/g, '-').replace(/\s+/g, ' ').trim();
+}
+
+const PDF_CAPTURE_WIDTH_PX = 794;
+
+const HTML2CANVAS_PDF_OPTS = {
+  scale: 2,
+  useCORS: true,
+  logging: false,
+  backgroundColor: '#ffffff',
+};
+
+function appendCanvasToPdf(pdf, sourceCanvas, marginMm, contentWidthMm, contentHeightMm) {
+  const W = sourceCanvas.width;
+  const H = sourceCanvas.height;
+  const mmPerPx = contentWidthMm / W;
+  const maxSlicePx = contentHeightMm / mmPerPx;
+
+  let yPx = 0;
+  while (yPx < H) {
+    const remaining = H - yPx;
+    const idealEnd = yPx + Math.min(maxSlicePx, remaining);
+    let endPx = idealEnd;
+
+    let sliceH = endPx - yPx;
+    if (sliceH < 1) {
+      sliceH = remaining;
+    }
+    if (sliceH < 1) {
+      break;
+    }
+
+    const sliceCanvas = document.createElement('canvas');
+    sliceCanvas.width = W;
+    sliceCanvas.height = sliceH;
+    const ctx = sliceCanvas.getContext('2d');
+    if (!ctx) break;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, W, sliceH);
+    ctx.drawImage(sourceCanvas, 0, yPx, W, sliceH, 0, 0, W, sliceH);
+
+    const imgData = sliceCanvas.toDataURL('image/jpeg', 0.92);
+    const sliceHeightMm = sliceH * mmPerPx;
+
+    if (yPx > 0) {
+      pdf.addPage();
+    }
+    pdf.addImage(imgData, 'JPEG', marginMm, marginMm, contentWidthMm, sliceHeightMm);
+
+    yPx += sliceH;
+  }
+}
+
+async function createReportPdfBlob({ title, htmlFragment }) {
+  const wrapper = document.createElement('div');
+  wrapper.style.position = 'fixed';
+  wrapper.style.left = '-10000px';
+  wrapper.style.top = '0';
+  wrapper.style.width = `${PDF_CAPTURE_WIDTH_PX}px`;
+  wrapper.style.boxSizing = 'border-box';
+  wrapper.style.background = '#fff';
+  wrapper.innerHTML = buildPrintableReportDocument({ title, htmlFragment });
+  document.body.appendChild(wrapper);
+
+  try {
+    const canvas = await html2canvas(wrapper, HTML2CANVAS_PDF_OPTS);
+
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+    const marginMm = 12;
+    const contentWidthMm = pdfWidth - 2 * marginMm;
+    const contentHeightMm = pdfHeight - 2 * marginMm;
+
+    appendCanvasToPdf(pdf, canvas, marginMm, contentWidthMm, contentHeightMm);
+
+    return pdf.output('blob');
+  } finally {
+    document.body.removeChild(wrapper);
+  }
+}
+
 async function createReportJpegDataUri({ title, htmlFragment }) {
   const wrapper = document.createElement('div');
   wrapper.style.position = 'fixed';
   wrapper.style.left = '-10000px';
   wrapper.style.top = '0';
-  wrapper.style.width = '900px';
+  wrapper.style.width = `${PDF_CAPTURE_WIDTH_PX}px`;
+  wrapper.style.boxSizing = 'border-box';
   wrapper.style.background = '#fff';
   wrapper.innerHTML = buildPrintableReportDocument({ title, htmlFragment });
   document.body.appendChild(wrapper);
@@ -851,48 +963,17 @@ async function createReportJpegDataUri({ title, htmlFragment }) {
   }
 }
 
-async function createReportPdfBlob({ title, htmlFragment }) {
-  const wrapper = document.createElement('div');
-  wrapper.style.position = 'fixed';
-  wrapper.style.left = '-10000px';
-  wrapper.style.top = '0';
-  wrapper.style.width = '900px';
-  wrapper.style.background = '#fff';
-  wrapper.innerHTML = buildPrintableReportDocument({ title, htmlFragment });
-  document.body.appendChild(wrapper);
-
-  try {
-    const canvas = await html2canvas(wrapper, {
-      scale: 1,
-      useCORS: true,
-      logging: false,
-      backgroundColor: '#ffffff',
-    });
-
-    const imgData = canvas.toDataURL('image/jpeg', 0.75);
-    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
-    const imgWidth = pdfWidth;
-    const imgHeight = (canvas.height * pdfWidth) / canvas.width;
-
-    let heightLeft = imgHeight;
-    let position = 0;
-
-    pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
-    heightLeft -= pdfHeight;
-
-    while (heightLeft > 0) {
-      position = heightLeft - imgHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pdfHeight;
-    }
-
-    return pdf.output('blob');
-  } finally {
-    document.body.removeChild(wrapper);
-  }
+export async function downloadPdfReport({ title, htmlFragment, filenameBase }) {
+  const blob = await createReportPdfBlob({ title, htmlFragment });
+  const name = `${sanitizeDownloadFilename(filenameBase)}.pdf`;
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 function blobToBase64(blob) {
@@ -906,22 +987,6 @@ function blobToBase64(blob) {
     reader.onerror = reject;
     reader.readAsDataURL(blob);
   });
-}
-
-export async function getReportPdfBlob({ title, htmlFragment }) {
-  return createReportPdfBlob({ title, htmlFragment });
-}
-
-export async function downloadPdfReport({ title, htmlFragment, filenameBase }) {
-  const blob = await createReportPdfBlob({ title, htmlFragment });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `${filenameBase}.pdf`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
 }
 
 export async function getReportPdfBase64({ title, htmlFragment }) {
