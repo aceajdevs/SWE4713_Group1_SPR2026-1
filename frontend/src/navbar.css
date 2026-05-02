@@ -258,6 +258,13 @@
   cursor: pointer;
 }
 
+.nav-user-button {
+  border: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
 .nav-user-display:hover {
   background-color: rgba(255, 255, 255, 0.15);
 }

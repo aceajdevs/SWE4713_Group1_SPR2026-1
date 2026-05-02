@@ -111,6 +111,15 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const updateCurrentUser = (patch) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev, ...(patch || {}) };
+      sessionStorage.setItem('currentUser', JSON.stringify(next));
+      return next;
+    });
+  };
+
   const logout = async () => {
     try {
       setError(null);
@@ -136,6 +145,7 @@ export function AuthProvider({ children }) {
     loginWithUserData,
     signup,
     logout,
+    updateCurrentUser,
     supabase,
   };
 

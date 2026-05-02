@@ -313,7 +313,12 @@ function Navbar() {
           </a>
           {user && (
             <div className="nav-user-section">
-              <div className="nav-user-display">
+              <button
+                type="button"
+                className="nav-user-display nav-user-button"
+                onClick={() => handleNavigation('/profile')}
+                aria-label="Open profile"
+              >
                 <div className="nav-user-avatar">
                   {user.picture_path || user.picturePath ? (
                     <img
@@ -340,7 +345,7 @@ function Navbar() {
                   <span className="nav-username">{user.username}</span>
                   <span className="nav-user-role">{user.role}</span>
                 </div>
-              </div>
+              </button>
             </div>
           )}
           <HelpTooltip text="Sign out of the application and end your session.">

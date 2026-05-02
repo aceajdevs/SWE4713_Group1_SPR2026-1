@@ -222,6 +222,24 @@ export async function updateUser({
   return data;
 }
 
+export async function updateUserPicturePath({ userId, picturePath }) {
+  if (userId == null) {
+    throw new Error('updateUserPicturePath: userId is required');
+  }
+
+  const { data, error } = await supabase.rpc('update_user_picture_path', {
+    p_userid: userId,
+    p_picture_path: picturePath ?? null,
+  });
+
+  if (error) {
+    console.error('Error updating user picture path (RPC):', error);
+    throw error;
+  }
+
+  return data;
+}
+
 
 
 export async function getPasswords(){
