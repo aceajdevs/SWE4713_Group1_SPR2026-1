@@ -3,7 +3,7 @@ import './LoginPage.css'
 import logo from '../../assets/Images/resourceDirectory/logo.png'
 import { useNavigate } from 'react-router-dom';
 import { validatePassword } from '../utils/passwordValidation';
-import { checkEmail, getUserSecurityQuestions, verifySecurityAnswers, updateUserPassword, isPasswordReused } from '../services/userService';
+import { checkEmail, getUserIdByEmailAndUsername, getUserSecurityQuestions, verifySecurityAnswers, updateUserPassword, isPasswordReused } from '../services/userService';
 import PageHelpCorner from '../components/PageHelpCorner';
 import { HelpTooltip } from '../components/HelpTooltip';
 
@@ -13,7 +13,8 @@ function ForgotPasswordPage() {
     const [step, setStep] = useState(1);
 
     const [email, setEmail] = useState('');
-    const [userId, setUserId] = useState('');
+    const [username, setUsername] = useState('');
+    const [resolvedUserId, setResolvedUserId] = useState(null);
 
     const [securityQuestion1, setSecurityQuestion1] = useState('');
     const [securityQuestion2, setSecurityQuestion2] = useState('');
@@ -35,21 +36,32 @@ function ForgotPasswordPage() {
         e.preventDefault();
         setGeneralError('');
 
-        if (!email.trim() || !userId.trim()) {
-            setGeneralError('Please enter both your email address and user ID.');
+        const normalizedEmail = email.trim();
+        const normalizedUsername = username.trim();
+        if (!normalizedEmail || !normalizedUsername) {
+            setGeneralError('Please enter both your email address and username.');
             return;
         }
         try {
-            const emailExists = await checkEmail(email);
+            const emailExists = await checkEmail(normalizedEmail);
             console.log('Email exists:', emailExists);
             if(emailExists) {
                 setLoadingQuestions(true);
                 try {
-                    const questions = await getUserSecurityQuestions(email, userId);
+                    const userIdForReset = await getUserIdByEmailAndUsername(normalizedEmail, normalizedUsername);
+                    if (!userIdForReset) {
+                        setGeneralError('Username does not match the email address provided.');
+                        return;
+                    }
+
+                    const questions = await getUserSecurityQuestions(normalizedEmail, userIdForReset);
                     if (questions && questions.question1 && questions.question2 && questions.question3) {
                         setSecurityQuestion1(questions.question1);
                         setSecurityQuestion2(questions.question2);
                         setSecurityQuestion3(questions.question3);
+                        setEmail(normalizedEmail);
+                        setUsername(normalizedUsername);
+                        setResolvedUserId(userIdForReset);
                         setStep(2);
                     } else {
                         setGeneralError('Could not retrieve security questions. Please contact support.');
@@ -82,7 +94,12 @@ function ForgotPasswordPage() {
         }
 
         try {
-            const isValid = await verifySecurityAnswers(email, userId, securityAnswer1, securityAnswer2, securityAnswer3);
+            if (!resolvedUserId) {
+                setGeneralError('Could not verify account. Please restart password reset.');
+                return;
+            }
+
+            const isValid = await verifySecurityAnswers(email, resolvedUserId, securityAnswer1, securityAnswer2, securityAnswer3);
             if (isValid) {
                 setStep(3);
             } else {
@@ -141,14 +158,19 @@ function ForgotPasswordPage() {
         }
 
         try {
-            const reused = await isPasswordReused(userId, newPassword);
+            if (!resolvedUserId) {
+                setGeneralError('Could not verify account. Please restart password reset.');
+                return;
+            }
+
+            const reused = await isPasswordReused(resolvedUserId, newPassword);
             if (reused) {
                 setGeneralError('Password used in the past cannot be used when password is reset.');
                 console.log('Password reused');
                 return;
             }
 
-            await updateUserPassword(parseInt(userId, 10), newPassword);
+            await updateUserPassword(resolvedUserId, newPassword);
             navigate('/login');
         } catch (error) {
             console.error('Error updating password:', error);
@@ -158,7 +180,8 @@ function ForgotPasswordPage() {
 
     const handleClearAll = () => {
         setEmail('');
-        setUserId('');
+        setUsername('');
+        setResolvedUserId(null);
         setSecurityQuestion1('');
         setSecurityQuestion2('');
         setSecurityQuestion3('');
@@ -205,7 +228,7 @@ function ForgotPasswordPage() {
                         <>
                             <h5>Email</h5>
                             <HelpTooltip
-                              text="Email address on file for your account. Used with user ID to load your security questions."
+                              text="Email address on file for your account. Used with username to load your security questions."
                               className="help-tooltip-block"
                             >
                                 <div class="clear-input-wrapper" role="group">
@@ -223,28 +246,28 @@ function ForgotPasswordPage() {
                                 </div>
                             </HelpTooltip>
 
-                            <h5>User ID</h5>
+                            <h5>Username</h5>
                             <HelpTooltip
-                              text="Your unique user identifier (not your display name). Must match the account tied to the email."
+                              text="Your sign-in username. Must match the account tied to the email."
                               className="help-tooltip-block"
                             >
                                 <div class="clear-input-wrapper" role="group">
                                 <input
                                 className="input"
                                 type="text"
-                                name="userId"
-                                placeholder="User ID"
-                                aria-label="user id"
-                                value={userId}
-                                onChange={(e) => setUserId(e.target.value)}
+                                name="username"
+                                placeholder="Username"
+                                aria-label="username"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
                                 required
                                 />
-                                <button type="button" className="button-clear" onClick={() => setUserId('')} aria-label="Clear user ID input">X</button>
+                                <button type="button" className="button-clear" onClick={() => setUsername('')} aria-label="Clear username input">X</button>
                                 </div>
                             </HelpTooltip>
 
                             <div className="button-row" role="group">
-                                <HelpTooltip text="Verify email and user ID, then load your security questions.">
+                                <HelpTooltip text="Verify email and username, then load your security questions.">
                                     <button type="button" className="button-secondary" onClick={handleStartReset}>Continue</button>
                                 </HelpTooltip>
                                 <HelpTooltip text="Leave password reset and return to the welcome screen.">
@@ -305,7 +328,7 @@ function ForgotPasswordPage() {
                                 <HelpTooltip text="Clear all fields on this password reset flow.">
                                   <button type="button" onClick={handleClearAll}>Clear</button>
                                 </HelpTooltip>
-                                <HelpTooltip text="Return to email and user ID step.">
+                                <HelpTooltip text="Return to email and username step.">
                                   <button type="button" onClick={() => setStep(1)}>Back</button>
                                 </HelpTooltip>
                                 <HelpTooltip text="Check your answers; if correct you can set a new password.">

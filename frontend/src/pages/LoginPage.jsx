@@ -32,6 +32,37 @@ function LoginPage() {
         navigate('/signup');
     }
 
+    const getUserField = (user, ...keys) => {
+      for (const key of keys) {
+        if (user?.[key] !== undefined && user?.[key] !== null) {
+          return user[key];
+        }
+      }
+      return null;
+    };
+
+    const applyLoginSecurityUpdate = async (userId, updates) => {
+      const { error: updateError } = await supabase
+        .from('user')
+        .update(updates)
+        .eq('userID', userId);
+
+      if (!updateError) {
+        return;
+      }
+
+      // Fallback to RPC for environments where direct table updates are restricted.
+      const { error: rpcError } = await supabase.rpc('update_user', {
+        p_userid: userId,
+        p_loginattempts: updates.loginAttempts ?? null,
+        p_suspendedtill: updates.suspendedTill ?? null,
+      });
+
+      if (rpcError) {
+        throw rpcError;
+      }
+    };
+
     const handleLogin = async () => {
         try {
           const { data: userData, error: userError } = await supabase
@@ -47,9 +78,10 @@ function LoginPage() {
 
           // Check for suspension first
           const today = new Date();
-          
-          if (userData.suspendedTill) {
-            const suspendedTillDate = new Date(userData.suspendedTill);
+
+          const currentSuspendedTill = getUserField(userData, 'suspendedTill', 'suspendedtill');
+          if (currentSuspendedTill) {
+            const suspendedTillDate = new Date(currentSuspendedTill);
             
             // Check if current time is within suspension period
             if (today <= suspendedTillDate) {
@@ -59,14 +91,11 @@ function LoginPage() {
               return;
             } else {
               // Suspension period has passed, clear it and reset attempts
-              await supabase
-                .from('user')
-                .update({ 
-                  "suspendFrom": null,
-                  "suspendedTill": null,
-                  "loginAttempts": 3
-                })
-                .eq('userID', userData.userID);
+              await applyLoginSecurityUpdate(userData.userID, {
+                suspendFrom: null,
+                suspendedTill: null,
+                loginAttempts: 3,
+              });
             }
           }
           
@@ -86,7 +115,7 @@ function LoginPage() {
           }
           
           if (!isMatch) {
-            const currentAttempts = userData.loginAttempts ?? 3;
+            const currentAttempts = getUserField(userData, 'loginAttempts', 'loginattempts') ?? 3;
             const newAttempts = Math.max(0, currentAttempts - 1);
             
             if (newAttempts === 0) {
@@ -97,22 +126,16 @@ function LoginPage() {
               const suspendFrom = now.toISOString();
               const suspendedTill = suspendedTillDate.toISOString();
               
-              await supabase
-                .from('user')
-                .update({ 
-                  "loginAttempts": 0,
-                  "suspendFrom": suspendFrom,
-                  "suspendedTill": suspendedTill
-                })
-                .eq('userID', userData.userID);
+              await applyLoginSecurityUpdate(userData.userID, {
+                loginAttempts: 0,
+                suspendFrom: suspendFrom,
+                suspendedTill: suspendedTill,
+              });
               
               alert('Too many failed login attempts. Your account has been suspended for 1 minute.');
               return;
             } else {
-              await supabase
-                .from('user')
-                .update({ "loginAttempts": newAttempts })
-                .eq('userID', userData.userID);
+              await applyLoginSecurityUpdate(userData.userID, { loginAttempts: newAttempts });
               
               const remainingAttempts = newAttempts;
               alert(`Invalid password. ${remainingAttempts} attempt${remainingAttempts !== 1 ? 's' : ''} remaining.`);
@@ -120,10 +143,7 @@ function LoginPage() {
             }
           }
 
-          await supabase
-            .from('user')
-            .update({ "loginAttempts": 3 })
-            .eq('userID', userData.userID);
+          await applyLoginSecurityUpdate(userData.userID, { loginAttempts: 3 });
 
           const { data: updatedUserData } = await supabase
             .from('user')

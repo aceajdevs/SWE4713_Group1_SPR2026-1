@@ -1,7 +1,7 @@
 import { supabase } from '../supabaseClient';
 import { hashPassword } from '../utils/passwordHash';
 import { hashSecurityAnswer } from '../utils/securityAnswerHash';
-import { sendNewAccountRequest } from './emailService';
+import { sendAdminEmail, sendNewAccountRequest } from './emailService';
 
 export async function createUser(
   email,
@@ -98,8 +98,71 @@ export async function admin_createUser(
       throw error;
     }
 
+    const recipientEmail = String(email || '').trim();
+    let accountCreationEmailSent = false;
+    if (recipientEmail) {
+      const createdRow = Array.isArray(data) ? data[0] : data;
+      const createdUserId =
+        createdRow?.userID ??
+        createdRow?.userid ??
+        createdRow?.user_id ??
+        createdRow?.id ??
+        null;
+
+      let emailRecipient = recipientEmail;
+      let username = '';
+      let displayName = `${fName || ''} ${lName || ''}`.trim() || 'User';
+
+      try {
+        let query = supabase
+          .from('user')
+          .select('email, fName, lName, username');
+
+        if (createdUserId != null) {
+          query = query.eq('userID', createdUserId);
+        } else {
+          query = query.eq('email', recipientEmail);
+        }
+
+        const { data: createdUserRecord, error: createdUserLookupError } = await query.maybeSingle();
+        if (createdUserLookupError) {
+          throw createdUserLookupError;
+        }
+
+        if (createdUserRecord) {
+          emailRecipient = String(createdUserRecord.email || recipientEmail).trim() || recipientEmail;
+          username = String(createdUserRecord.username || '').trim();
+          displayName =
+            `${createdUserRecord.fName || ''} ${createdUserRecord.lName || ''}`.trim() ||
+            username ||
+            displayName;
+        }
+      } catch (lookupError) {
+        console.error('Error looking up newly created user for notification email:', lookupError);
+      }
+
+      const subject = 'Your account has been created';
+      const message =
+        `Hello ${displayName},\n\n` +
+        `An administrator has created your Better Finance account.\n\n` +
+        `Username: ${username || '(not available)'}\n` +
+        `Email: ${emailRecipient}\n\n` +
+        'You can now sign in with your account credentials.\n\n' +
+        `If you did not expect this account, please contact your administrator.`;
+
+      try {
+        await sendAdminEmail(emailRecipient, displayName, subject, message);
+        accountCreationEmailSent = true;
+      } catch (emailError) {
+        console.error('Error sending new account created email:', emailError);
+      }
+    }
+
     console.log('Created user JSON:', data);
-    return data;
+    return {
+      user: data,
+      accountCreationEmailSent,
+    };
   } catch (err) {
     console.error('Error creating user:', err);
     throw err;
@@ -281,11 +344,43 @@ export async function checkEmail(email){
   }
 }
 
+export async function getUserIdByEmailAndUsername(email, username) {
+  try {
+    const normalizedEmail = String(email ?? '').trim();
+    const normalizedUsername = String(username ?? '').trim();
+    if (!normalizedEmail || !normalizedUsername) {
+      return null;
+    }
+
+    const { data, error } = await supabase
+      .from('user')
+      .select('userID')
+      .eq('email', normalizedEmail)
+      .eq('username', normalizedUsername)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error looking up user ID by email/username:', error);
+      throw error;
+    }
+
+    return data?.userID ?? null;
+  } catch (error) {
+    console.error('Error in getUserIdByEmailAndUsername:', error);
+    throw error;
+  }
+}
+
 export async function getUserSecurityQuestions(email, userId) {
   try {
+    const parsedUserId = parseInt(String(userId ?? '').trim(), 10);
+    if (Number.isNaN(parsedUserId)) {
+      throw new Error('Invalid user ID.');
+    }
+
     const { data, error } = await supabase.rpc('get_user_security_questions', {
-      p_email: email,
-      p_userid: parseInt(userId, 10),
+      p_email: String(email ?? '').trim(),
+      p_userid: parsedUserId,
     });
 
     if (error) {
@@ -293,7 +388,42 @@ export async function getUserSecurityQuestions(email, userId) {
       throw error;
     }
 
-    return data;
+    // RPC return shape can vary by SQL function definition/client version.
+    // Normalize to a stable shape consumed by password-reset/admin pages.
+    const row = Array.isArray(data) ? data[0] : data;
+    if (!row) {
+      return null;
+    }
+
+    return {
+      question1:
+        row.question1 ??
+        row.question_1 ??
+        row.securityquestion1 ??
+        row.securityQuestion1 ??
+        row.security_question1 ??
+        row.questiontext1 ??
+        row.question_text1 ??
+        '',
+      question2:
+        row.question2 ??
+        row.question_2 ??
+        row.securityquestion2 ??
+        row.securityQuestion2 ??
+        row.security_question2 ??
+        row.questiontext2 ??
+        row.question_text2 ??
+        '',
+      question3:
+        row.question3 ??
+        row.question_3 ??
+        row.securityquestion3 ??
+        row.securityQuestion3 ??
+        row.security_question3 ??
+        row.questiontext3 ??
+        row.question_text3 ??
+        '',
+    };
   } catch (error) {
     console.error('Error in getUserSecurityQuestions:', error);
     throw error;
@@ -361,6 +491,43 @@ export async function updateUserPassword(userId, newPassword) {
       throw error;
     }
 
+    // Send a confirmation email after a successful password reset/update.
+    try {
+      const { data: userRecord, error: userLookupError } = await supabase
+        .from('user')
+        .select('email, fName, lName, username')
+        .eq('userID', userId)
+        .maybeSingle();
+
+      if (userLookupError) {
+        throw userLookupError;
+      }
+
+      const recipientEmail = String(userRecord?.email ?? '').trim();
+      if (recipientEmail) {
+        const username = String(userRecord?.username ?? '').trim();
+        const displayName =
+          `${userRecord?.fName ?? ''} ${userRecord?.lName ?? ''}`.trim() ||
+          username ||
+          'User';
+
+        const subject = 'Your password was reset';
+        const message =
+          `Hello ${displayName},\n\n` +
+          'This is a confirmation that your Better Finance password was recently reset.\n\n' +
+          `Username: ${username || '(not available)'}\n` +
+          `Email: ${recipientEmail}\n\n` +
+          'If you made this change, no further action is required.\n' +
+          'If you did not request this change, contact your administrator immediately.';
+
+        await sendAdminEmail(recipientEmail, displayName, subject, message);
+      } else {
+        console.warn('Password reset email not sent: user email is missing.');
+      }
+    } catch (notifyError) {
+      console.error('Error sending password reset confirmation email:', notifyError);
+    }
+
     return data;
   } catch (err) {
     console.error('Error in updateUserPassword:', err);
@@ -420,7 +587,70 @@ export async function approveUserRequest(userRequestId, role, changedByUserId) {
       throw error;
     }
 
-    return data;
+    let accountCreationEmailSent = false;
+    try {
+      const approvedRow = Array.isArray(data) ? data[0] : data;
+      const approvedUserId =
+        approvedRow?.userID ??
+        approvedRow?.userid ??
+        approvedRow?.user_id ??
+        approvedRow?.approved_user_id ??
+        approvedRow?.new_user_id ??
+        approvedRow?.id ??
+        null;
+      const fallbackEmail = String(approvedRow?.email || '').trim();
+
+      let query = supabase
+        .from('user')
+        .select('email, fName, lName, username');
+
+      if (approvedUserId != null) {
+        query = query.eq('userID', approvedUserId);
+      } else if (fallbackEmail) {
+        query = query.eq('email', fallbackEmail);
+      } else {
+        query = null;
+      }
+
+      if (query) {
+        const { data: approvedUserRecord, error: approvedUserLookupError } = await query.maybeSingle();
+        if (approvedUserLookupError) {
+          throw approvedUserLookupError;
+        }
+
+        const recipientEmail = String(approvedUserRecord?.email || fallbackEmail).trim();
+        if (recipientEmail) {
+          const username = String(approvedUserRecord?.username || '').trim();
+          const displayName =
+            `${approvedUserRecord?.fName || ''} ${approvedUserRecord?.lName || ''}`.trim() ||
+            username ||
+            'User';
+
+          const subject = 'Your account request was approved';
+          const message =
+            `Hello ${displayName},\n\n` +
+            'Your Better Finance account request was approved by an administrator.\n\n' +
+            `Username: ${username || '(not available)'}\n` +
+            `Email: ${recipientEmail}\n\n` +
+            'You can now sign in with your account credentials.\n\n' +
+            'If you did not request this account, contact your administrator.';
+
+          await sendAdminEmail(recipientEmail, displayName, subject, message);
+          accountCreationEmailSent = true;
+        } else {
+          console.warn('Approval email not sent: approved user email is missing.');
+        }
+      } else {
+        console.warn('Approval email not sent: could not resolve approved user identity.');
+      }
+    } catch (notifyError) {
+      console.error('Error sending approved account email:', notifyError);
+    }
+
+    return {
+      user: data,
+      accountCreationEmailSent,
+    };
   } catch (err) {
     console.error('Error in approveUserRequest:', err);
     throw err;

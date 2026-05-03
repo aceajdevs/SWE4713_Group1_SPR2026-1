@@ -198,7 +198,7 @@ function CreateUserPage() {
                 throw new Error('Admin userID not found for audit logging.');
             }
 
-            await admin_createUser(
+            const createResult = await admin_createUser(
                 email,
                 firstName,
                 lastName,
@@ -214,8 +214,13 @@ function CreateUserPage() {
                 securityAnswer3.trim(),
                 currentUser.userID
             );
-
-            setSuccess('User created successfully! Username will be auto-generated.');
+            const emailSent = createResult?.accountCreationEmailSent !== false;
+            if (emailSent) {
+                setSuccess('User created successfully! Username will be auto-generated. A notification email was sent to the new user.');
+            } else {
+                setSuccess('User created successfully! Username will be auto-generated.');
+                setError('The account was created, but the notification email could not be delivered. Please verify EmailJS template/service settings and retry sending.');
+            }
             
             setEmail('');
             setFirstName('');

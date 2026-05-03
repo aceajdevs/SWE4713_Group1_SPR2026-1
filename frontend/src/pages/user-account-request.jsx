@@ -114,6 +114,12 @@ function UserAccountRequestPage() {
                 currentUser.userID
             );
             console.log('Approved user:', createdUser);
+            const emailSent = createdUser?.accountCreationEmailSent !== false;
+            if (emailSent) {
+                alert('User request approved. Account was created and an email was sent to the new user.');
+            } else {
+                alert('User request approved and account was created, but the approval email could not be delivered.');
+            }
 
             await fetchRequests();
         } catch (err) {
