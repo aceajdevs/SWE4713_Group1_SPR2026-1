@@ -99,7 +99,7 @@ function JournalEntries() {
   const statusColor = (status) => {
     if (status === 'approved') return 'var(--bff-green)';
     if (status === 'rejected') return 'var(--bff-red)';
-    return 'var(--bff-light-primary)';
+    return 'var(--bff-accent)';
   };
 
   if (!canView) {
@@ -283,7 +283,7 @@ function JournalEntries() {
                               <HelpTooltip text="Confirm the rejection with the reason provided.">
                                 <button
                                   onClick={() => handleReject(entry.journalEntryID)}
-                                  style={{ color: 'var(--bff-red)' }}
+                                  style={{ background: 'var(--bff-accent)' }}
                                 >
                                   Confirm Reject
                                 </button>
