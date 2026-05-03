@@ -66,7 +66,7 @@ async function fetchChartAccountByAccountNumber(accountNumber) {
 
   const { data: byString, error: errString } = await supabase
     .from('chartOfAccounts')
-    .select('accountID, accountNumber, accountName, normalSide, initBalance, active')
+    .select('accountID, accountNumber, accountName, normalSide, initBalance, active, description, comment')
     .eq('accountNumber', trimmed)
     .maybeSingle();
 
@@ -82,7 +82,7 @@ async function fetchChartAccountByAccountNumber(accountNumber) {
     if (Number.isFinite(asNumber)) {
       const { data: byNum, error: errNum } = await supabase
         .from('chartOfAccounts')
-        .select('accountID, accountNumber, accountName, normalSide, initBalance, active')
+        .select('accountID, accountNumber, accountName, normalSide, initBalance, active, description, comment')
         .eq('accountNumber', asNumber)
         .maybeSingle();
 
@@ -311,6 +311,21 @@ function Ledger() {
     return text;
   };
 
+  const formatAccountText = (value) => {
+    const text = String(value ?? '').trim();
+    return text || '-';
+  };
+
+  const formatAccountStatus = (accountData) => {
+    const statusText = String(accountData?.status ?? '').trim();
+    if (statusText) {
+      return statusText.charAt(0).toUpperCase() + statusText.slice(1);
+    }
+    if (accountData?.active === true) return 'Active';
+    if (accountData?.active === false) return 'Inactive';
+    return '-';
+  };
+
   const totalDebits = filteredEntries.reduce((sum, e) => sum + (parseFloat(e.debit) || 0), 0);
   const totalCredits = filteredEntries.reduce((sum, e) => sum + (parseFloat(e.credit) || 0), 0);
 
@@ -331,7 +346,7 @@ function Ledger() {
     <div className="container">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <h1>General Ledger</h1>
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '8px', marginLeft: '16px' }}>
           {isAccountant && (
             <button type="button" className="button-primary" onClick={() => setEmailModalOpen(true)}>Email User</button>
           )}
@@ -353,6 +368,9 @@ function Ledger() {
         <p><strong>Account Name:</strong> {account.accountName}</p>
         <p><strong>Normal Side:</strong> {account.normalSide}</p>
         <p><strong>Opening Balance:</strong> {formatCurrency(account.initBalance)}</p>
+        <p><strong>Status:</strong> {formatAccountStatus(account)}</p>
+        <p><strong>Description:</strong> {formatAccountText(account.description)}</p>
+        <p><strong>Comment:</strong> {formatAccountText(account.comment)}</p>
       </div>
 
       <div style={{ marginBottom: '20px', display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'flex-end' }}>
