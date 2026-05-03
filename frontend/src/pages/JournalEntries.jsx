@@ -261,10 +261,11 @@ function JournalEntries() {
                   {isManager && (
                     <td className="JE-actions">
                       {entry.status === 'pending' && (
-                        <div>
+                        <div className="action-buttons" style={{ display: 'flex', alignItems: 'center'}}>
                           <HelpTooltip text="Approve this journal entry and post it to the ledger.">
                             <button
                             className="button-table-action-approve"
+                            style={{ marginRight: '8px', width: '25px', height: '25px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                               onClick={() => handleApprove(entry.journalEntryID)}
                             >
                               ✓
@@ -278,12 +279,11 @@ function JournalEntries() {
                                 onChange={(e) => setRejectReason(e.target.value)}
                                 placeholder="Reason for rejection (required)"
                                 className="input"
-                                style={{ marginBottom: '4px' }}
                               />
                               <HelpTooltip text="Confirm the rejection with the reason provided.">
                                 <button
                                   onClick={() => handleReject(entry.journalEntryID)}
-                                  style={{ color: 'red' }}
+                                  style={{ color: 'var(--bff-red)' }}
                                 >
                                   Confirm Reject
                                 </button>
@@ -296,6 +296,7 @@ function JournalEntries() {
                             <HelpTooltip text="Reject this entry. You must provide a reason.">
                               <button
                                 className="button-table-action-reject"
+                                style={{ marginRight: '8px', width: '25px', height: '25px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                                 onClick={() => setRejectingId(entry.journalEntryID)}
                               >
                                 X
