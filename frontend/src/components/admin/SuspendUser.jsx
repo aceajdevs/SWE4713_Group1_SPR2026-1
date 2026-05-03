@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { suspendUser } from '../../services/adminService';
 import { supabase } from '../../supabaseClient';
 import { HelpTooltip } from '../HelpTooltip';
@@ -7,10 +7,27 @@ function SuspendUser() {
   const [userId, setUserId] = useState('')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
+  const [activeUsers, setActiveUsers] = useState([])
+
+  useEffect(() => {
+    const fetchActiveUsers = async () => {
+      const { data, error } = await supabase
+        .from('user')
+        .select('userID, fName, lName, username')
+        .eq('status', true)
+        .order('lName', { ascending: true })
+      if (error) {
+        console.error('Error fetching active users:', error)
+      } else {
+        setActiveUsers(data || [])
+      }
+    }
+    fetchActiveUsers()
+  }, [])
 
   const handleSuspend = async () => {
     // Validate all fields are filled
-    if (!userId.trim() || !startDate || !endDate) {
+    if (!userId || !startDate || !endDate) {
       alert('Please fill in all the fields before suspending a user.');
       return
     }
@@ -22,21 +39,9 @@ function SuspendUser() {
     }
 
     try {
-      // Check if user exists before suspending
-      const {data: user, error} = await supabase
-      .from('user')
-      .select('userID')
-      .eq('userID', userId.trim())
-      .single();
-
-      if (error || !user)
-      {
-        alert('User ID not found. Please enter a valid User ID.')
-        return;
-      }
-
       await suspendUser(userId, startDate, endDate)
       alert('User suspended successfully')
+      setUserId('')
     } catch (err) {
       console.error('Error suspending user:', err)
     }
@@ -53,16 +58,18 @@ function SuspendUser() {
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
           />
-        <div className="clear-input-container">
-        <input 
-          type="text"
-          placeholder="User ID"
+        <select
           className="input"
           value={userId}
           onChange={(e) => setUserId(e.target.value)}
-        />
-        <button type="button" className="button-clear" onClick={() => setUserId('')}>X</button>
-      </div>
+        >
+          <option value="">-- Select Active User --</option>
+          {activeUsers.map((u) => (
+            <option key={u.userID} value={u.userID}>
+              {u.lName}, {u.fName} ({u.username})
+            </option>
+          ))}
+        </select>
         </div>
         <div className="suspend-group-right">
           <h5>End Date</h5>
