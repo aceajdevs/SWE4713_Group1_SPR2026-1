@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from 'react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
+import { HelpTooltip } from '../components/HelpTooltip';
 import '../global.css';
 
 //this is load bearing. I have no idea why.
@@ -51,15 +52,17 @@ function SampleReport() {
     <div className="container">
       <div className="header-row" style={{ alignItems: 'center', marginBottom: '16px' }}>
         <h1 style={{ margin: 0 }}>Sample Report</h1>
-        <button
-          type="button"
-          className="button-primary"
-          onClick={exportPdf}
-          disabled={exporting}
-          style={{ marginLeft: '16px' }}
-        >
-          {exporting ? 'Generating PDF…' : 'Download PDF'}
-        </button>
+        <HelpTooltip text="Export this report as a PDF file.">
+          <button
+            type="button"
+            className="button-primary"
+            onClick={exportPdf}
+            disabled={exporting}
+            style={{ marginLeft: '16px' }}
+          >
+            {exporting ? 'Generating PDF…' : 'Download PDF'}
+          </button>
+        </HelpTooltip>
       </div>
 
       <div

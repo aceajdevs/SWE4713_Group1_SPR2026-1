@@ -144,7 +144,9 @@ function JournalEntryDetail() {
         <h1>Journal Entry #{entry.journalEntryID}</h1>
         <div style={{ display: 'flex', gap: '8px', marginLeft: '20px' }}>
           {isAccountant && (
-            <button type="button" className="button-primary" onClick={() => setEmailModalOpen(true)}>Email User</button>
+            <HelpTooltip text="Send an email to the manager or administrator regarding this journal entry.">
+              <button type="button" className="button-primary" onClick={() => setEmailModalOpen(true)}>Email User</button>
+            </HelpTooltip>
           )}
           <HelpTooltip text="Return to the journal entries list.">
             <button type="button" onClick={() => navigate('/journal-entries')} className="button-primary">
@@ -200,13 +202,15 @@ function JournalEntryDetail() {
                 <td>
                   {acc ? (
                     canOpenLedger ? (
-                      <button
-                        type="button"
-                        onClick={() => navigate(`/admin/ledger/${acc.accountNumber}`)}
-                        style={{ background: 'none', border: 'none', color: '#0066cc', cursor: 'pointer', textDecoration: 'underline' }}
-                      >
-                        {acc.accountNumber} - {acc.accountName}
-                      </button>
+                      <HelpTooltip text="Open the ledger for this account.">
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/admin/ledger/${acc.accountNumber}`)}
+                          style={{ background: 'none', border: 'none', color: '#0066cc', cursor: 'pointer', textDecoration: 'underline' }}
+                        >
+                          {acc.accountNumber} - {acc.accountName}
+                        </button>
+                      </HelpTooltip>
                     ) : (
                       <span>{acc.accountNumber} - {acc.accountName}</span>
                     )

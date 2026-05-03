@@ -99,9 +99,11 @@ export default function ProfilePage() {
           </HelpTooltip>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
-            <button type="button" className="button-secondary" onClick={handleSave} disabled={saving}>
-              {saving ? 'Saving...' : 'Save'}
-            </button>
+            <HelpTooltip text="Save changes to your profile.">
+              <button type="button" className="button-secondary" onClick={handleSave} disabled={saving}>
+                {saving ? 'Saving...' : 'Save'}
+              </button>
+            </HelpTooltip>
           </div>
         </div>
       </div>

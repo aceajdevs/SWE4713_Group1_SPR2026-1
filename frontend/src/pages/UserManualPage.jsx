@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Navbar from '../navbar';
+import { HelpTooltip } from '../components/HelpTooltip';
 import './UserManualPage.css';
 import '../global.css';
 
@@ -87,9 +88,11 @@ function UserManualPage() {
       <header className="user-manual-header">
         <div className="user-manual-header-inner">
           <h1>User manual</h1>
-          <button type="button" className="button-primary" onClick={goBack}>
-            Back
-          </button>
+          <HelpTooltip text="Return to the previous page.">
+            <button type="button" className="button-primary" onClick={goBack}>
+              Back
+            </button>
+          </HelpTooltip>
         </div>
         <p className="user-manual-lead">
           This guide describes how to use the application: signing in, roles, security expectations, administrator tools,
@@ -103,9 +106,11 @@ function UserManualPage() {
         <ul>
           {MANUAL_TOC.map(({ id, label }) => (
             <li key={id}>
-              <button type="button" className="user-manual-toc-link" onClick={() => jumpToSection(id)}>
-                {label}
-              </button>
+              <HelpTooltip text="Jump to this section in the manual.">
+                <button type="button" className="user-manual-toc-link" onClick={() => jumpToSection(id)}>
+                  {label}
+                </button>
+              </HelpTooltip>
             </li>
           ))}
         </ul>

@@ -129,7 +129,9 @@ function PostedJournalEntriesPage() {
               style={{ width: '30rem' }}
               aria-label="Search posted journals by account, amount, or date"
             />
-            <button type="button" className="button-clear" onClick={() => setSearchQuery('')} aria-label="Clear search input">X</button>
+            <HelpTooltip text="Clear the search field.">
+              <button type="button" className="button-clear" onClick={() => setSearchQuery('')} aria-label="Clear search input">X</button>
+            </HelpTooltip>
           </div>
         </div>
         <div>
@@ -168,14 +170,16 @@ function PostedJournalEntriesPage() {
               return (
                 <tr key={entry.journalEntryID}>
                   <td className="pr">
-                    <button
-                      type="button"
-                      className="link"
-                      style={{ background: 'none', border: 'none', padding: 0, font: 'inherit' }}
-                      onClick={() => navigate(`/journal-entry/${entry.journalEntryID}`)}
-                    >
-                      {entry.journalEntryID}
-                    </button>
+                    <HelpTooltip text="View the full journal entry for this post reference.">
+                      <button
+                        type="button"
+                        className="link"
+                        style={{ background: 'none', border: 'none', padding: 0, font: 'inherit' }}
+                        onClick={() => navigate(`/journal-entry/${entry.journalEntryID}`)}
+                      >
+                        {entry.journalEntryID}
+                      </button>
+                    </HelpTooltip>
                   </td>
                   <td className="PJE-created">{formatDate(entry.createdAt)}</td>
                   <td className="PJE-posted">{formatDate(entry.postedAt)}</td>
@@ -187,16 +191,17 @@ function PostedJournalEntriesPage() {
                           .filter((l) => l.accountID && l.accountName && l.accountNumber && Number(l.debit) > 0)
                           .map((line) => (
                             canOpenLedger ? (
-                              <button
-                                key={`debited-${entry.journalEntryID}-${line.accountID}`}
-                                type="button"
-                                className="link"
-                                style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
-                                onClick={() => navigate(`${ledgerBasePath}/${line.accountNumber}`)}
-                                title="Open account ledger"
-                              >
-                                {line.accountNumber} — {line.accountName}
-                              </button>
+                              <HelpTooltip key={`debited-${entry.journalEntryID}-${line.accountID}`} text="Open the ledger for this account.">
+                                <button
+                                  type="button"
+                                  className="link"
+                                  style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+                                  onClick={() => navigate(`${ledgerBasePath}/${line.accountNumber}`)}
+                                  title="Open account ledger"
+                                >
+                                  {line.accountNumber} — {line.accountName}
+                                </button>
+                              </HelpTooltip>
                             ) : (
                               <span key={`debited-${entry.journalEntryID}-${line.accountID}`}>
                                 {line.accountNumber} — {line.accountName}
@@ -215,16 +220,17 @@ function PostedJournalEntriesPage() {
                           .filter((l) => l.accountID && l.accountName && l.accountNumber && Number(l.credit) > 0)
                           .map((line) => (
                             canOpenLedger ? (
-                              <button
-                                key={`credited-${entry.journalEntryID}-${line.accountID}`}
-                                type="button"
-                                className="link"
-                                style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
-                                onClick={() => navigate(`${ledgerBasePath}/${line.accountNumber}`)}
-                                title="Open account ledger"
-                              >
-                                {line.accountNumber} — {line.accountName}
-                              </button>
+                              <HelpTooltip key={`credited-${entry.journalEntryID}-${line.accountID}`} text="Open the ledger for this account.">
+                                <button
+                                  type="button"
+                                  className="link"
+                                  style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+                                  onClick={() => navigate(`${ledgerBasePath}/${line.accountNumber}`)}
+                                  title="Open account ledger"
+                                >
+                                  {line.accountNumber} — {line.accountName}
+                                </button>
+                              </HelpTooltip>
                             ) : (
                               <span key={`credited-${entry.journalEntryID}-${line.accountID}`}>
                                 {line.accountNumber} — {line.accountName}
@@ -246,13 +252,15 @@ function PostedJournalEntriesPage() {
                     </span>
                   </td>
                   <td className="PJE-ledger">
-                    <button
-                      type="button"
-                      className="button-primary"
-                      onClick={() => navigate(`/admin/journal-entry/${entry.journalEntryID}`)}
-                    >
-                      View GL Details
-                    </button>
+                    <HelpTooltip text="View the general ledger details for this journal entry.">
+                      <button
+                        type="button"
+                        className="button-primary"
+                        onClick={() => navigate(`/admin/journal-entry/${entry.journalEntryID}`)}
+                      >
+                        View GL Details
+                      </button>
+                    </HelpTooltip>
                   </td>
                 </tr>
               );

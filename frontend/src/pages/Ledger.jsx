@@ -348,7 +348,9 @@ function Ledger() {
         <h1>General Ledger</h1>
         <div style={{ display: 'flex', gap: '8px', marginLeft: '16px' }}>
           {isAccountant && (
-            <button type="button" className="button-primary" onClick={() => setEmailModalOpen(true)}>Email User</button>
+            <HelpTooltip text="Send an email to the manager or administrator about this ledger account.">
+              <button type="button" className="button-primary" onClick={() => setEmailModalOpen(true)}>Email User</button>
+            </HelpTooltip>
           )}
           <HelpTooltip text="Return to the chart of accounts list.">
             <button type="button" onClick={() => navigate('/admin/chart-of-accounts')} className="button-primary">

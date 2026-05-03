@@ -527,7 +527,7 @@ function ChartOfAccounts() {
             )}
       </div>
       <div className="chart-of-accounts-container">
-        <div className="search-and-filter">
+        {viewMode !== 'individual' && <div className="search-and-filter">
           <div className="search-group">
             <div className="clear-input-container" role="group">
               <input className="input" type="text" placeholder="Search by account name or number..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} onKeyDown={handleKeyDown}/>
@@ -536,7 +536,7 @@ function ChartOfAccounts() {
             <HelpTooltip text="Apply the search box and current filters to narrow the account list.">
               <button className="button-secondary" style={{ height: '44px' }} onClick={handleSearch}>Search</button>
             </HelpTooltip>
-            <button className="button-primary" onClick={() => setFilterPopupVisible(!filterPopupVisible)}>Filters {filterPopupVisible ? '▲' : '▼'}</button>
+              <button className="button-primary" onClick={() => setFilterPopupVisible(!filterPopupVisible)}>Filters {filterPopupVisible ? '▲' : '▼'}</button>
           </div>
 
           {filterPopupVisible && (
@@ -641,8 +641,8 @@ function ChartOfAccounts() {
               </HelpTooltip>
             </div>
           )}
-        </div>
-        <div className="filter-tokens-container">
+        </div>}
+        {viewMode !== 'individual' && <div className="filter-tokens-container">
                 {activeTokens.length > 0 && (
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                   {activeTokens.map((token) => (
@@ -681,7 +681,7 @@ function ChartOfAccounts() {
                   ))}
                 </div>
               )}
-          </div>
+          </div>}
         {loading && <p>Loading accounts...</p>}
         {error && <p style={{ color: 'red' }}>{error}</p>}
 
@@ -902,9 +902,9 @@ function ChartOfAccounts() {
         )}
                   {!loading && !error && (
             <div style={{ marginBottom: '12px' }}>
-              <p style={{ marginBottom: '6px' }}>
+              {viewMode !== 'individual' && <p style={{ marginBottom: '6px' }}>
                 Showing {filteredAccounts.length} of {accounts.length} accounts.
-              </p>
+              </p>}
             </div>
           )}
         </div>

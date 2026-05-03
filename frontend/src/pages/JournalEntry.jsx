@@ -8,6 +8,7 @@ import {
 } from '../services/ledgerService';
 import { getErrorMessage, logErrorWithCode, ERROR_IDS } from '../services/errorMessages';
 import StaffEmailModal from '../components/StaffEmailModal';
+import { HelpTooltip } from '../components/HelpTooltip';
 import '../global.css';
 
 function JournalEntry() {
@@ -136,9 +137,13 @@ function JournalEntry() {
         <h1 style={{ margin: '0 20px' }}>Journal Entry</h1>
         <div style={{ display: 'flex', gap: '8px' }}>
           {isAccountant && (
-            <button type="button" className="button-primary" onClick={() => setEmailModalOpen(true)}>Email User</button>
+            <HelpTooltip text="Send an email to the manager or administrator regarding this journal entry.">
+              <button type="button" className="button-primary" onClick={() => setEmailModalOpen(true)}>Email User</button>
+            </HelpTooltip>
           )}
-          <button type="button" className="button-primary" onClick={() => navigate(-1)}>Back</button>
+          <HelpTooltip text="Return to the previous page.">
+            <button type="button" className="button-primary" onClick={() => navigate(-1)}>Back</button>
+          </HelpTooltip>
         </div>
       </div>
       <StaffEmailModal

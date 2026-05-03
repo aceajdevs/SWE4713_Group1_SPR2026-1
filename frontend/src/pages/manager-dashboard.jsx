@@ -6,7 +6,6 @@ function ManagerDashboard() {
   return (
     <LandingDashboard
       title="Manager Dashboard"
-      subtitle="Use the shortcuts below to review journals, monitor key ratios, and access core accounting pages."
       actions={[
         { label: 'New Journal Entry', path: '/journal-entry/new' },
         { label: 'Review Journal Entries', path: '/journal-entries' },
