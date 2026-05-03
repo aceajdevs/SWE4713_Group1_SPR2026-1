@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
-import { getJournalEntryWithLines, getJournalAttachments } from '../services/journalService';
+import {
+  getJournalEntryWithLines,
+  getJournalAttachments,
+  getJournalAttachmentSignedUrl,
+} from '../services/journalService';
 import { fetchFromTable } from '../supabaseUtils';
 import { HelpTooltip } from '../components/HelpTooltip';
 import { getJournalEntryTypeLabel } from '../utils/journalEntryTypes';
@@ -17,6 +21,7 @@ function JournalEntryDetail() {
   const [entry, setEntry] = useState(null);
   const [lines, setLines] = useState([]);
   const [attachments, setAttachments] = useState([]);
+  const [attachmentRows, setAttachmentRows] = useState([]);
   const [accountMap, setAccountMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -28,6 +33,7 @@ function JournalEntryDetail() {
   const loadEntry = async () => {
     setLoading(true);
     setError(null);
+    setAttachmentRows([]);
 
     try {
       const { entry: entryData, lines: lineData } = await getJournalEntryWithLines(parseInt(id, 10));
@@ -61,6 +67,45 @@ function JournalEntryDetail() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!attachments.length) {
+        setAttachmentRows([]);
+        return;
+      }
+      const rows = await Promise.all(
+        attachments.map(async (att) => {
+          const name = att.filePath?.split('/').pop() || 'attachment';
+          try {
+            const url = await getJournalAttachmentSignedUrl(att.filePath, 3600);
+            return {
+              id: att.jAttachmentID,
+              name,
+              url,
+              fileType: att.fileType || '',
+              uploadedAt: att.uploadedAt,
+              error: !url,
+            };
+          } catch {
+            return {
+              id: att.jAttachmentID,
+              name,
+              url: null,
+              fileType: att.fileType || '',
+              uploadedAt: att.uploadedAt,
+              error: true,
+            };
+          }
+        }),
+      );
+      if (!cancelled) setAttachmentRows(rows);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [attachments]);
 
   const formatCurrency = (value) => {
     if (!value && value !== 0) return '-';
@@ -171,28 +216,67 @@ function JournalEntryDetail() {
         </tfoot>
       </table>
 
-      {attachments.length > 0 && (
-        <>
-          <h2 style={{ marginTop: '24px' }}>Attachments</h2>
-          <ul>
-            {attachments.map((att, i) => (
-              <li key={att.jAttachmentID || i}>
-                {att.fileUrl ? (
-                  <a
-                    href={att.fileUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    {att.filePath?.split('/').pop() || 'File'}
-                  </a>
+      <h2 style={{ marginTop: '28px' }}>Attachments</h2>
+      {attachments.length === 0 ? (
+        <p style={{ color: 'var(--bff-dark-text)' }}>No files attached to this entry.</p>
+      ) : attachmentRows.length !== attachments.length ? (
+        <p style={{ color: 'var(--bff-dark-text)' }}>Loading attachment links…</p>
+      ) : (
+        <ul style={{ listStyle: 'none', padding: 0, margin: 0, maxWidth: '720px' }}>
+          {attachmentRows.map((row) => {
+            const isImage = /^image\//i.test(row.fileType);
+            return (
+              <li
+                key={row.id}
+                style={{
+                  border: '1px solid var(--bff-secondary, #D1D5DB)',
+                  borderRadius: '8px',
+                  padding: '12px 14px',
+                  marginBottom: '12px',
+                  background: 'var(--bff-light-text, #fff)',
+                }}
+              >
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px' }}>
+                  <strong>{row.name}</strong>
+                  {row.fileType ? (
+                    <span style={{ fontSize: '0.9rem', color: 'var(--bff-dark-text)' }}>{row.fileType}</span>
+                  ) : null}
+                  {row.uploadedAt ? (
+                    <span style={{ fontSize: '0.85rem', color: 'var(--bff-dark-text)' }}>
+                      Uploaded: {row.uploadedAt}
+                    </span>
+                  ) : null}
+                </div>
+                {row.error || !row.url ? (
+                  <p style={{ margin: '8px 0 0', color: 'var(--bff-red)', fontSize: '0.9rem' }}>
+                    Could not create a download link. Check that the file exists in Storage and policies allow read access.
+                  </p>
                 ) : (
-                  <span>{att.filePath?.split('/').pop() || 'File'}</span>
-                )}{' '}
-                ({att.fileType || 'unknown'})
+                  <>
+                    <a
+                      href={row.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="link"
+                      style={{ display: 'inline-block', marginTop: '8px' }}
+                    >
+                      Open / download
+                    </a>
+                    {isImage ? (
+                      <div style={{ marginTop: '10px' }}>
+                        <img
+                          src={row.url}
+                          alt={row.name}
+                          style={{ maxWidth: '100%', maxHeight: '320px', objectFit: 'contain', borderRadius: '4px' }}
+                        />
+                      </div>
+                    ) : null}
+                  </>
+                )}
               </li>
-            ))}
-          </ul>
-        </>
+            );
+          })}
+        </ul>
       )}
     </div>
   );

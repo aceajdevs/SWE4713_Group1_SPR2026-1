@@ -52,7 +52,10 @@ function periodLabelForType(typeKey, options = {}) {
     if (typeKey === REPORT_TYPES.RETAINED_EARNINGS) {
       return `For the Year Ended ${endText}`;
     }
-    return `Period Ending on ${endText}`;
+    if (startText) {
+      return `For the Period ${startText} to ${endText}`;
+    }
+    return `For the Period Ended ${endText}`;
   }
 
   if (typeKey === REPORT_TYPES.BALANCE_SHEET) {
@@ -230,8 +233,8 @@ function buildTrialBalance(accounts) {
         <thead>
           <tr class="trial-balance-column-headings">
             <th></th>
-            <th class="money amount-single-underline">Debit</th>
-            <th class="money amount-single-underline">Credit</th>
+            <th class="money">Debit</th>
+            <th class="money">Credit</th>
           </tr>
         </thead>
         <tbody>${bodyRows}</tbody>
@@ -255,17 +258,21 @@ function buildIncomeStatement(accounts) {
 
   const revenueRows = revenues
     .map(
-      (a) => {
+      (a, i) => {
         const val = signedBalance(a);
-        return `<tr><td class="label indent-1">${ledgerAccountLabelHtml(a)}</td><td class="money">${val === 0 ? '' : formatMoney(val)}</td></tr>`;
+        const isLast = i === revenues.length - 1;
+        const moneyClass = isLast ? 'money' : 'money';
+        return `<tr><td class="label indent-1">${ledgerAccountLabelHtml(a)}</td><td class="${moneyClass}">${val === 0 ? '' : formatMoney(val)}</td></tr>`;
       },
     )
     .join('');
   const expenseRows = expenses
     .map(
-      (a) => {
+      (a, i) => {
         const val = signedBalance(a);
-        return `<tr><td class="label indent-1">${ledgerAccountLabelHtml(a)}</td><td class="money">${val === 0 ? '' : formatMoney(val)}</td></tr>`;
+        const isLast = i === expenses.length - 1;
+        const moneyClass = isLast ? 'money' : 'money';
+        return `<tr><td class="label indent-1">${ledgerAccountLabelHtml(a)}</td><td class="${moneyClass}">${val === 0 ? '' : formatMoney(val)}</td></tr>`;
       },
     )
     .join('');
@@ -278,27 +285,27 @@ function buildIncomeStatement(accounts) {
         <table class="report-table income-statement-table">
           <tbody>
             ${revenueRows}
-            <tr class="statement-total-row statement-total-row-lined">
-              <th class="label indent-1">Total Revenues</th>
-              <th class="money amount-single-underline">${formatMoney(revenueTotal)}</th>
+            <tr class="statement-total-row">
+              <th class="label">Total Revenues</th>
+              <th class="money">${formatMoney(revenueTotal)}</th>
             </tr>
           </tbody>
         </table>
       </section>
-
+      <hr/>
       <section class="statement-section">
         <h3 class="statement-group-title">Expenses</h3>
         <table class="report-table income-statement-table">
           <tbody>
             ${expenseRows}
-            <tr class="statement-total-row statement-total-row-lined">
-              <th class="label indent-1">Total Expenses</th>
-              <th class="money amount-single-underline">${formatMoney(expenseTotal)}</th>
+            <tr class="statement-total-row">
+              <th class="label">Total Expenses</th>
+              <th class="money">${formatMoney(expenseTotal)}</th>
             </tr>
           </tbody>
         </table>
       </section>
-
+      <hr class="statement-header-divider" />
       <table class="report-table income-statement-table statement-net-table">
         <tbody>
           <tr class="statement-net-row">
@@ -366,8 +373,6 @@ function buildBalanceSheet(accounts) {
   const netIncome = revenueTotal - expenseTotal;
   const endingRetained = beginningRetained + netIncome;
 
-  // Always build retained earnings inside the balance sheet logic so equity
-  // includes period earnings even if the retained earnings account is missing or stale.
   const equityWithoutRetained = equity.filter(
     (a) => String(a.subType || '').toLowerCase() !== 'retained earnings',
   );
@@ -384,12 +389,15 @@ function buildBalanceSheet(accounts) {
     const amountGetter = options.amountGetter || signedBalance;
     const amountFormatter = options.amountFormatter || formatMoney;
     const indentClass = options.indentClass || 'indent-1';
+    const underlineLast = options.underlineLast || false;
 
     return list
       .map(
-        (a) => {
+        (a, i) => {
           const val = amountGetter(a);
-          return `<tr><td class="label ${indentClass}">${ledgerAccountLabelHtml(a)}</td><td class="money">${val === 0 ? '' : amountFormatter(val)}</td></tr>`;
+          const isLast = underlineLast && i === list.length - 1;
+          const moneyClass = isLast ? 'money' : 'money';
+          return `<tr><td class="label ${indentClass}">${ledgerAccountLabelHtml(a)}</td><td class="${moneyClass}">${val === 0 ? '' : amountFormatter(val)}</td></tr>`;
         },
       )
       .join('');
@@ -416,19 +424,20 @@ function buildBalanceSheet(accounts) {
           ${renderRows(currentAssets, { indentClass: 'indent-2' })}
           <tr class="balance-sheet-total-row">
             <th class="label indent-1">Total Current Assets</th>
-            <th class="money amount-single-underline">${formatMoney(currentAssetTotal)}</th>
+            <th class="money">${formatMoney(currentAssetTotal)}</th>
           </tr>
-
+          <tr class="balance-sheet-spacer-row"><td></td><td></td></tr>
           <tr class="balance-sheet-heading-row"><th class="label indent-1">Property Plant &amp; Equipment</th><th class="money"></th></tr>
-          ${renderRows(propertyPlantEquipment, { indentClass: 'indent-2' })}
+          ${renderRows(propertyPlantEquipment, { indentClass: 'indent-2', underlineLast: true })}
           ${renderRows(contraAssets, {
             indentClass: 'indent-2',
             amountGetter: (a) => Math.abs(signedBalance(a)),
             amountFormatter: formatMoneyInParentheses,
+            underlineLast: true,
           })}
           <tr class="balance-sheet-total-row">
             <th class="label indent-1">Property Plant &amp; Equipment, Net</th>
-            <th class="money amount-single-underline">${formatMoney(ppeNet)}</th>
+            <th class="money">${formatMoney(ppeNet)}</th>
           </tr>
 
           <tr class="balance-sheet-grand-total-row">
@@ -438,7 +447,7 @@ function buildBalanceSheet(accounts) {
         </tbody>
       </table>
     </section>
-
+    <hr/>
     <section class="balance-sheet-section">
       <h3 class="statement-group-title">Liabilities &amp; Stockholders&#39; Equity</h3>
       <table class="report-table balance-sheet-table">
@@ -448,27 +457,29 @@ function buildBalanceSheet(accounts) {
           ${renderRows(currentLiabilities, {
             indentClass: 'indent-2',
             amountGetter: liabilityAmount,
+            underlineLast: true,
           })}
           <tr class="balance-sheet-total-row">
             <th class="label indent-1">Total Current Liabilities</th>
-            <th class="money amount-single-underline">${formatMoney(totalCurrentLiabilities)}</th>
+            <th class="money">${formatMoney(totalCurrentLiabilities)}</th>
           </tr>
           ${renderRows(otherLiabilities, {
             indentClass: 'indent-1',
             amountGetter: liabilityAmount,
+            underlineLast: true,
           })}
           <tr class="balance-sheet-total-row">
             <th class="label">Total Liabilities</th>
-            <th class="money amount-single-underline">${formatMoney(totalLiabilities)}</th>
+            <th class="money">${formatMoney(totalLiabilities)}</th>
           </tr>
 
           <tr class="balance-sheet-spacer-row"><td></td><td></td></tr>
 
           <tr class="balance-sheet-heading-row"><th class="label">Stockholders&#39; Equity</th><th class="money"></th></tr>
-          ${renderRows(equityForDisplay, { indentClass: 'indent-1' })}
+          ${renderRows(equityForDisplay, { indentClass: 'indent-1', underlineLast: true })}
           <tr class="balance-sheet-total-row">
             <th class="label">Total Stockholders&#39; Equity</th>
-            <th class="money amount-single-underline">${formatMoney(totalEquity)}</th>
+            <th class="money">${formatMoney(totalEquity)}</th>
           </tr>
 
           <tr class="balance-sheet-grand-total-row">
@@ -512,7 +523,7 @@ function buildRetainedEarnings(accounts, options = {}) {
           </tr>
           <tr class="retained-earnings-detail-row retained-earnings-less-row">
             <td class="label indent-0">Less: Dividends</td>
-            <td class="money amount-single-underline">${formatMoney(dividendsTotal)}</td>
+            <td class="money">${formatMoney(dividendsTotal)}</td>
           </tr>
           <tr class="retained-earnings-final-row">
             <th class="label indent-0">End Retained Earnings${endLabel ? `, ${escapeHtml(endLabel)}` : ''}</th>
@@ -543,7 +554,6 @@ export async function generateReportHtml(typeKey, options = {}) {
 
 
 
-// Temporary sample HTML reports for download button use REPLACE LATER
 export function getSampleReportHtml(typeKey) {
   const samples = {
     [REPORT_TYPES.TRIAL_BALANCE]: {
@@ -572,47 +582,79 @@ export function getSampleReportHtml(typeKey) {
   );
 }
 
-
-// Downlaods the HTML fragment as .html file (DON'T REMOVE)
-export function downloadHtmlReport({ title, htmlFragment, filenameBase }) {
-  const safeTitle = escapeHtml(title);
-  const fullDoc = `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${safeTitle}</title>
-<style>
-  body { font-family: system-ui, "Segoe UI", sans-serif; padding: 24px; color: #111; max-width: 900px; margin: 0 auto; }
+const REPORT_EXPORT_BASE_STYLES = `
+  body { font-family: system-ui, "Segoe UI", sans-serif; padding: 24px; color: #111; max-width: 100%; margin: 0 auto; box-sizing: border-box; line-height: 1.45; }
   .report-bw { color: #000; background: #fff; }
   .report-header-block { text-align: center; }
-  .report-company, .report-name, .report-period { margin: 0; font-weight: 700; }
+  .report-company, .report-name, .report-period {
+    margin: 0;
+    color: #000;
+    font-weight: 700;
+  }
   .report-company, .report-name { font-size: 1.35rem; }
-  .report-period { font-size: 1rem; margin-top: 4px; }
+  .report-period { margin-top: 4px; font-size: 1rem; }
   .report-header-divider { border: 0; border-top: 2px solid #000; margin: 10px 0 18px; }
 
-  .report-table { display: table; width: 100%; border-collapse: collapse; border-spacing: 0; margin: 0; }
-  .report-table tbody tr { background: #fff; }
-  .report-table td, .report-table th {
+  .report-table {
+    display: table;
+    width: 100%;
+    margin: 0;
     border: 0;
-    padding: 4px 0;
+    border-collapse: collapse;
+    border-spacing: 0;
+    border-radius: 0;
+    color: #000;
+  }
+  .report-table tbody tr,
+  .report-table tbody tr:nth-child(even),
+  .report-table tbody tr:hover {
+    background: #fff;
+    color: #000;
+  }
+  .report-table th,
+  .report-table td {
+    border: 0;
+    padding: 4px 0 6px;
+    line-height: 1.35;
     text-align: left;
     color: #000;
     background: #fff;
     font-weight: 400;
   }
+  .report-table td.money,
+  .report-table th.money {
+    width: 220px;
+    text-align: right;
+    white-space: nowrap;
+  }
   .report-table .label.indent-1 { padding-left: 44px; }
   .report-table .label.indent-2 { padding-left: 72px; }
-  .report-table td.money, .report-table th.money { text-align: right; width: 220px; white-space: nowrap; }
+
+  .report-ledger-link {
+    color: #000;
+    text-decoration: underline;
+    cursor: default;
+    outline: none;
+  }
 
   .statement-section { margin: 0 0 20px; }
-  .statement-group-title { margin: 0 0 6px; font-size: 1.85rem; }
-  .statement-total-row th { font-size: 1.9rem; font-weight: 700; padding-top: 2px; }
-  .statement-total-row-lined th { border-top: 1px solid #000; }
+  .statement-group-title {
+    margin: 0 0 6px;
+    color: #000;
+    font-size: 1rem;
+  }
+  .statement-total-row th,
+  .statement-net-row th {
+    color: #000;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+  .statement-total-row th { padding-top: 2px; padding-bottom: 6px; }
+  .statement-total-row th { border-top: 1px solid #000; }
   .statement-net-table { margin-top: 4px; }
-  .statement-net-row th { font-size: 1.9rem; font-weight: 700; }
 
-  .amount-single-underline, .amount-double-underline {
+  .amount-single-underline,
+  .amount-double-underline {
     text-decoration-line: underline;
     text-decoration-color: #000;
     text-decoration-style: solid;
@@ -629,47 +671,53 @@ export function downloadHtmlReport({ title, htmlFragment, filenameBase }) {
   .trial-balance-table tbody td,
   .trial-balance-table tfoot th {
     border: 0;
-    background: #fff;
     color: #000;
+    background: #fff;
   }
   .trial-balance-table .label { padding-left: 16px; }
   .trial-balance-table tbody tr td { border-bottom: 2px solid #000; }
   .trial-balance-table .money { width: 170px; }
   .trial-balance-table .trial-balance-column-headings th {
-    font-size: 1.9rem;
+    font-size: 1rem;
     font-weight: 700;
-    padding-bottom: 2px;
+    padding-bottom: 6px;
   }
   .trial-balance-table .trial-balance-column-headings th:first-child {
-    padding: 0;
     width: auto;
+    padding: 0;
   }
   .trial-balance-table .trial-balance-total-row th {
-    font-size: 2rem;
-    font-weight: 700;
     border: 0;
+    font-size: 1rem;
+    font-weight: 700;
     padding-top: 8px;
+    padding-bottom: 6px;
   }
 
   .balance-sheet-section { margin: 0 0 20px; }
   .balance-sheet-table { table-layout: fixed; }
   .balance-sheet-table .money { width: 190px; }
   .balance-sheet-table .balance-sheet-heading-row th {
-    font-size: 1.85rem;
+    font-size: 1rem;
     font-weight: 700;
     padding-top: 2px;
-    padding-bottom: 2px;
+    padding-bottom: 6px;
   }
   .balance-sheet-table .balance-sheet-total-row th {
-    font-size: 1.85rem;
+    font-size: 1rem;
     font-weight: 700;
     padding-top: 2px;
-    padding-bottom: 2px;
+    padding-bottom: 6px;
   }
   .balance-sheet-table .balance-sheet-grand-total-row th {
-    font-size: 1.95rem;
+    font-size: 1rem;
     font-weight: 700;
     padding-top: 4px;
+    padding-bottom: 6px;
+  }
+  .balance-sheet-table .balance-sheet-total-row th,
+  .balance-sheet-table .balance-sheet-grand-total-row th {
+    border-top: 1px solid #000;
   }
   .balance-sheet-table .balance-sheet-spacer-row td { padding: 10px 0; }
 
@@ -677,16 +725,34 @@ export function downloadHtmlReport({ title, htmlFragment, filenameBase }) {
   .retained-earnings-table { table-layout: fixed; }
   .retained-earnings-table .money { width: 190px; }
   .retained-earnings-table .retained-earnings-detail-row td {
-    font-size: 1.85rem;
+    font-size: 1rem;
     font-weight: 400;
-    padding-top: 1px;
-    padding-bottom: 1px;
+    padding-top: 2px;
+    padding-bottom: 6px;
   }
   .retained-earnings-table .retained-earnings-final-row th {
-    font-size: 1.95rem;
+    font-size: 1rem;
     font-weight: 700;
     padding-top: 2px;
+    padding-bottom: 6px;
   }
+  .retained-earnings-table .retained-earnings-final-row th {
+    border-top: 1px solid #000;
+  }
+`;
+
+
+// Downlaods the HTML fragment as .html file (DON'T REMOVE)
+export function downloadHtmlReport({ title, htmlFragment, filenameBase }) {
+  const safeTitle = escapeHtml(title);
+  const fullDoc = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${safeTitle}</title>
+<style>
+${REPORT_EXPORT_BASE_STYLES}
 </style>
 </head>
 <body>
@@ -714,110 +780,37 @@ function buildPrintableReportDocument({ title, htmlFragment }) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${safeTitle}</title>
 <style>
-  body { font-family: system-ui, "Segoe UI", sans-serif; padding: 24px; color: #111; max-width: 900px; margin: 0 auto; }
-  .report-bw { color: #000; background: #fff; }
-  .report-header-block { text-align: center; }
-  .report-company, .report-name, .report-period { margin: 0; font-weight: 700; }
-  .report-company, .report-name { font-size: 1.35rem; }
-  .report-period { font-size: 1rem; margin-top: 4px; }
-  .report-header-divider { border: 0; border-top: 2px solid #000; margin: 10px 0 18px; }
-
-  .report-table { display: table; width: 100%; border-collapse: collapse; border-spacing: 0; margin: 0; }
-  .report-table tbody tr { background: #fff; }
-  .report-table td, .report-table th {
-    border: 0;
-    padding: 4px 0;
-    text-align: left;
-    color: #000;
-    background: #fff;
-    font-weight: 400;
+  @page { size: A4 portrait; margin: 12mm; }
+  @media print {
+    body { padding: 0; max-width: none; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .report-bw { break-inside: avoid; }
+    table, thead, tfoot, tr, section { break-inside: avoid; }
+    thead { display: table-header-group; }
+    tfoot { display: table-footer-group; }
   }
-  .report-table .label.indent-1 { padding-left: 44px; }
-  .report-table .label.indent-2 { padding-left: 72px; }
-  .report-table td.money, .report-table th.money { text-align: right; width: 220px; white-space: nowrap; }
-
-  .statement-section { margin: 0 0 20px; }
-  .statement-group-title { margin: 0 0 6px; font-size: 1.85rem; }
-  .statement-total-row th { font-size: 1.9rem; font-weight: 700; padding-top: 2px; }
-  .statement-total-row-lined th { border-top: 1px solid #000; }
-  .statement-net-table { margin-top: 4px; }
-  .statement-net-row th { font-size: 1.9rem; font-weight: 700; }
-
-  .amount-single-underline, .amount-double-underline {
-    text-decoration-line: underline;
-    text-decoration-color: #000;
-    text-decoration-style: solid;
+  body { font-family: system-ui, "Segoe UI", sans-serif; padding: 24px; color: #111; max-width: 100%; margin: 0 auto; box-sizing: border-box; outline: none !important; line-height: 1.45; }
+  /* Isolate export from app global.css (e.g. blue borders on all tables) — preview uses ReportTables.css instead */
+  .report-bw { color: #000; background: #fff; outline: none !important; border: none !important; box-shadow: none !important; }
+  .report-bw table {
+    display: table !important;
+    width: 100%;
+    border: 0 !important;
+    border-radius: 0 !important;
+    border-style: none !important;
+    border-color: transparent !important;
+    outline: none !important;
+    box-shadow: none !important;
   }
-  .amount-single-underline { text-decoration-thickness: 1px; text-underline-offset: 8px; }
-  .amount-double-underline {
-    text-decoration-thickness: 2px;
-    text-decoration-style: double;
-    text-underline-offset: 8px;
+  .report-bw tbody tr:nth-child(even),
+  .report-bw tbody tr:hover {
+    background: #fff !important;
+    color: #000 !important;
   }
-
-  .trial-balance-table { table-layout: fixed; }
-  .trial-balance-table thead th,
-  .trial-balance-table tbody td,
-  .trial-balance-table tfoot th {
-    border: 0;
-    background: #fff;
-    color: #000;
+  .report-bw [role="link"],
+  .report-bw [tabindex] {
+    outline: none !important;
   }
-  .trial-balance-table .label { padding-left: 16px; }
-  .trial-balance-table tbody tr td { border-bottom: 2px solid #000; }
-  .trial-balance-table .money { width: 170px; }
-  .trial-balance-table .trial-balance-column-headings th {
-    font-size: 1.9rem;
-    font-weight: 700;
-    padding-bottom: 2px;
-  }
-  .trial-balance-table .trial-balance-column-headings th:first-child {
-    padding: 0;
-    width: auto;
-  }
-  .trial-balance-table .trial-balance-total-row th {
-    font-size: 2rem;
-    font-weight: 700;
-    border: 0;
-    padding-top: 8px;
-  }
-
-  .balance-sheet-section { margin: 0 0 20px; }
-  .balance-sheet-table { table-layout: fixed; }
-  .balance-sheet-table .money { width: 190px; }
-  .balance-sheet-table .balance-sheet-heading-row th {
-    font-size: 1.85rem;
-    font-weight: 700;
-    padding-top: 2px;
-    padding-bottom: 2px;
-  }
-  .balance-sheet-table .balance-sheet-total-row th {
-    font-size: 1.85rem;
-    font-weight: 700;
-    padding-top: 2px;
-    padding-bottom: 2px;
-  }
-  .balance-sheet-table .balance-sheet-grand-total-row th {
-    font-size: 1.95rem;
-    font-weight: 700;
-    padding-top: 4px;
-  }
-  .balance-sheet-table .balance-sheet-spacer-row td { padding: 10px 0; }
-
-  .retained-earnings-section { margin: 0 0 20px; }
-  .retained-earnings-table { table-layout: fixed; }
-  .retained-earnings-table .money { width: 190px; }
-  .retained-earnings-table .retained-earnings-detail-row td {
-    font-size: 1.85rem;
-    font-weight: 400;
-    padding-top: 1px;
-    padding-bottom: 1px;
-  }
-  .retained-earnings-table .retained-earnings-final-row th {
-    font-size: 1.95rem;
-    font-weight: 700;
-    padding-top: 2px;
-  }
+${REPORT_EXPORT_BASE_STYLES}
 </style>
 </head>
 <body>
@@ -826,12 +819,97 @@ ${htmlFragment}
 </html>`;
 }
 
+function sanitizeDownloadFilename(base) {
+  const s = String(base || 'report').trim() || 'report';
+  return s.replace(/[/\\?%*:|"<>]/g, '-').replace(/\s+/g, ' ').trim();
+}
+
+const PDF_CAPTURE_WIDTH_PX = 794;
+
+const HTML2CANVAS_PDF_OPTS = {
+  scale: 2,
+  useCORS: true,
+  logging: false,
+  backgroundColor: '#ffffff',
+};
+
+function appendCanvasToPdf(pdf, sourceCanvas, marginMm, contentWidthMm, contentHeightMm) {
+  const W = sourceCanvas.width;
+  const H = sourceCanvas.height;
+  const mmPerPx = contentWidthMm / W;
+  const maxSlicePx = contentHeightMm / mmPerPx;
+
+  let yPx = 0;
+  while (yPx < H) {
+    const remaining = H - yPx;
+    const idealEnd = yPx + Math.min(maxSlicePx, remaining);
+    let endPx = idealEnd;
+
+    let sliceH = endPx - yPx;
+    if (sliceH < 1) {
+      sliceH = remaining;
+    }
+    if (sliceH < 1) {
+      break;
+    }
+
+    const sliceCanvas = document.createElement('canvas');
+    sliceCanvas.width = W;
+    sliceCanvas.height = sliceH;
+    const ctx = sliceCanvas.getContext('2d');
+    if (!ctx) break;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, W, sliceH);
+    ctx.drawImage(sourceCanvas, 0, yPx, W, sliceH, 0, 0, W, sliceH);
+
+    const imgData = sliceCanvas.toDataURL('image/jpeg', 0.92);
+    const sliceHeightMm = sliceH * mmPerPx;
+
+    if (yPx > 0) {
+      pdf.addPage();
+    }
+    pdf.addImage(imgData, 'JPEG', marginMm, marginMm, contentWidthMm, sliceHeightMm);
+
+    yPx += sliceH;
+  }
+}
+
+async function createReportPdfBlob({ title, htmlFragment }) {
+  const wrapper = document.createElement('div');
+  wrapper.style.position = 'fixed';
+  wrapper.style.left = '-10000px';
+  wrapper.style.top = '0';
+  wrapper.style.width = `${PDF_CAPTURE_WIDTH_PX}px`;
+  wrapper.style.boxSizing = 'border-box';
+  wrapper.style.background = '#fff';
+  wrapper.innerHTML = buildPrintableReportDocument({ title, htmlFragment });
+  document.body.appendChild(wrapper);
+
+  try {
+    const canvas = await html2canvas(wrapper, HTML2CANVAS_PDF_OPTS);
+
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+    const marginMm = 12;
+    const contentWidthMm = pdfWidth - 2 * marginMm;
+    const contentHeightMm = pdfHeight - 2 * marginMm;
+
+    appendCanvasToPdf(pdf, canvas, marginMm, contentWidthMm, contentHeightMm);
+
+    return pdf.output('blob');
+  } finally {
+    document.body.removeChild(wrapper);
+  }
+}
+
 async function createReportJpegDataUri({ title, htmlFragment }) {
   const wrapper = document.createElement('div');
   wrapper.style.position = 'fixed';
   wrapper.style.left = '-10000px';
   wrapper.style.top = '0';
-  wrapper.style.width = '900px';
+  wrapper.style.width = `${PDF_CAPTURE_WIDTH_PX}px`;
+  wrapper.style.boxSizing = 'border-box';
   wrapper.style.background = '#fff';
   wrapper.innerHTML = buildPrintableReportDocument({ title, htmlFragment });
   document.body.appendChild(wrapper);
@@ -850,48 +928,17 @@ async function createReportJpegDataUri({ title, htmlFragment }) {
   }
 }
 
-async function createReportPdfBlob({ title, htmlFragment }) {
-  const wrapper = document.createElement('div');
-  wrapper.style.position = 'fixed';
-  wrapper.style.left = '-10000px';
-  wrapper.style.top = '0';
-  wrapper.style.width = '900px';
-  wrapper.style.background = '#fff';
-  wrapper.innerHTML = buildPrintableReportDocument({ title, htmlFragment });
-  document.body.appendChild(wrapper);
-
-  try {
-    const canvas = await html2canvas(wrapper, {
-      scale: 1,
-      useCORS: true,
-      logging: false,
-      backgroundColor: '#ffffff',
-    });
-
-    const imgData = canvas.toDataURL('image/jpeg', 0.75);
-    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
-    const margin = 10;
-    const printableWidth = Math.max(1, pdfWidth - margin * 2);
-    const printableHeight = (canvas.height * printableWidth) / canvas.width;
-    let heightLeft = printableHeight;
-    let position = 0;
-
-    pdf.addImage(imgData, 'JPEG', margin, position, printableWidth, printableHeight);
-    heightLeft -= pdfHeight;
-
-    while (heightLeft > 0) {
-      position = heightLeft - printableHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, 'JPEG', margin, position, printableWidth, printableHeight);
-      heightLeft -= pdfHeight;
-    }
-
-    return pdf.output('blob');
-  } finally {
-    document.body.removeChild(wrapper);
-  }
+export async function downloadPdfReport({ title, htmlFragment, filenameBase }) {
+  const blob = await createReportPdfBlob({ title, htmlFragment });
+  const name = `${sanitizeDownloadFilename(filenameBase)}.pdf`;
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 function blobToBase64(blob) {
@@ -905,22 +952,6 @@ function blobToBase64(blob) {
     reader.onerror = reject;
     reader.readAsDataURL(blob);
   });
-}
-
-export async function getReportPdfBlob({ title, htmlFragment }) {
-  return createReportPdfBlob({ title, htmlFragment });
-}
-
-export async function downloadPdfReport({ title, htmlFragment, filenameBase }) {
-  const blob = await createReportPdfBlob({ title, htmlFragment });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `${filenameBase}.pdf`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
 }
 
 export async function getReportPdfBase64({ title, htmlFragment }) {

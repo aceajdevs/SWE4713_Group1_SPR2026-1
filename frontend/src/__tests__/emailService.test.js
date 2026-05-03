@@ -153,7 +153,7 @@ describe('emailService', () => {
           contentType: 'image/jpeg',
           attachmentBase64: '   ',
         })
-      ).rejects.toThrow('Unable to generate the JPEG attachment.');
+      ).rejects.toThrow('Unable to generate the attachment.');
     });
   });
 });

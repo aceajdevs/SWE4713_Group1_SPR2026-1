@@ -112,9 +112,11 @@ export async function deleteRecord(tableName, id, idColumn = 'id') {
  */
 export async function uploadFile(bucket, path, file) {
   try {
-    const { data, error } = await supabase.storage
-      .from(bucket)
-      .upload(path, file, { upsert: true });
+    const contentType = file?.type || 'application/octet-stream';
+    const { data, error } = await supabase.storage.from(bucket).upload(path, file, {
+      upsert: true,
+      contentType,
+    });
     if (error) throw error;
     return { data, error: null };
   } catch (error) {
@@ -123,24 +125,19 @@ export async function uploadFile(bucket, path, file) {
   }
 }
 
-/**
- * Get public URL for a file in Supabase Storage
- * @param {string} bucket - Storage bucket name
- * @param {string} path - File path in bucket
- * @returns {string} - Public URL
- */
 export function getFileUrl(bucket, path) {
   const { data } = supabase.storage.from(bucket).getPublicUrl(path);
   return data?.publicUrl || null;
 }
 
-/**
- * Subscribe to real-time changes on a table
- * @param {string} tableName - Name of the table
- * @param {string} filter - Filter for changes (e.g., 'event=INSERT')
- * @param {function} callback - Callback function for changes
- * @returns {function} - Unsubscribe function
- */
+export async function createSignedUrl(bucket, path, expiresInSec = 3600) {
+  const { data, error } = await supabase.storage
+    .from(bucket)
+    .createSignedUrl(path, expiresInSec);
+  if (error) throw error;
+  return data?.signedUrl || null;
+}
+
 export function subscribeToTable(tableName, callback) {
   const subscription = supabase
     .channel(`public:${tableName}`)

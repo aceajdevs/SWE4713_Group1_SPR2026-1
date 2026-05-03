@@ -52,6 +52,29 @@
   color: #64748b;
 }
 
+.ratio-point-legend {
+  margin-top: 6px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  color: #475569;
+  font-size: 0.78rem;
+}
+
+.ratio-point-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ratio-point-legend i {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.3);
+}
+
 .ratio-wheel-center {
   position: absolute;
   left: 50%;

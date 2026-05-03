@@ -83,7 +83,7 @@ export async function sendReportEmail({
     }
 
     const attachment = String(attachmentBase64 || '').trim();
-    if (!attachment) throw new Error('Unable to generate the JPEG attachment.');
+    if (!attachment) throw new Error('Unable to generate the attachment.');
 
     const response = await fetch('/api/send-pdf', {
         method: 'POST',

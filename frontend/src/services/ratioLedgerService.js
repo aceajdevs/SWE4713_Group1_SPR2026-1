@@ -16,30 +16,24 @@ function shouldTryLowercaseLedgerTable(error) {
 }
 
 /**
- * @param {string} label e.g. Q1 '26
- * @returns {{ y: number, q: number } | null}
+ * @param {string} label e.g. 2026-05-02 (week ending)
+ * @returns {string | null}
  */
-export function parseQuarterLabel(label) {
-  const m = /^Q([1-4])\s+'(\d{2})$/i.exec(String(label).trim());
+export function parsePeriodEndLabel(label) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(label).trim());
   if (!m) return null;
-  const q = Number(m[1]);
-  const yy = Number(m[2]);
-  const y = yy <= 50 ? 2000 + yy : 1900 + yy;
-  if (!Number.isFinite(q) || !Number.isFinite(y)) return null;
-  return { y, q };
+  return `${m[1]}-${m[2]}-${m[3]}`;
 }
 
-function quarterEndYmd(y, q) {
-  const m = q * 3;
-  const last = new Date(y, m, 0);
-  const mm = String(last.getMonth() + 1).padStart(2, '0');
-  const dd = String(last.getDate()).padStart(2, '0');
-  return `${last.getFullYear()}-${mm}-${dd}`;
-}
-
-function quarterStartYmd(y, q) {
-  const m = (q - 1) * 3 + 1;
-  return `${y}-${String(m).padStart(2, '0')}-01`;
+function shiftYmd(ymd, deltaDays) {
+  const [y, m, d] = String(ymd).split('-').map(Number);
+  if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) return '';
+  const dt = new Date(y, m - 1, d);
+  dt.setDate(dt.getDate() + deltaDays);
+  const yy = dt.getFullYear();
+  const mm = String(dt.getMonth() + 1).padStart(2, '0');
+  const dd = String(dt.getDate()).padStart(2, '0');
+  return `${yy}-${mm}-${dd}`;
 }
 
 function isCreditNormal(account) {
@@ -58,8 +52,16 @@ function absAmount(account, debit, credit) {
 }
 
 const COGS_NAME_RE = /cost\s+of\s+goods|cost\s+of\s+sales|\bcogs\b/i;
+const SALES_NAME_RE = /\bsales\b|service\s+revenue|\brevenue\b/i;
+const COGS_SUBTYPE_RE = /cost\s+of\s+goods|cost\s+of\s+sales|cost\s+of\s+revenue/i;
+const INTEREST_CHARGE_NAME_RE = /\binterest\b|finance\s*charge|borrowing\s*cost|loan\s*cost|debt\s*service/i;
+const FINANCIAL_SUBTYPE_RE = /financial\s+expenses?|financing\s+expenses?/i;
 const AR_NAME_RE = /receivable|a\/r|accounts\s+receivable/i;
-const INV_NAME_RE = /inventory|merchandise/i;
+const INV_NAME_RE = /inventory|merchandise|finished\s*goods|supplies/i;
+const FIXED_ASSET_NAME_RE = /equipment|machinery|building|land|vehicle|furniture|fixture|plant/i;
+const CONTRA_ASSET_RE = /accumulated\s+depreciation|allowance/i;
+const LEASE_NAME_RE = /lease|rent/i;
+const TAX_NAME_RE = /tax|income\s+tax/i;
 
 function classifyAccount(a) {
   const type = String(a.type || '').toLowerCase();
@@ -68,17 +70,33 @@ function classifyAccount(a) {
   return {
     isRevenue: type === 'revenue',
     isExpense: type === 'expenses',
+    isSales: type === 'revenue' && SALES_NAME_RE.test(a.accountName || ''),
     isAsset: type === 'assets',
     isLiability: type === 'liabilities',
     isEquity: type === 'equity',
-    isCurrentAsset: type === 'assets' && sub === 'current assets',
+    isCurrentAsset: type === 'assets' && sub.includes('current asset'),
     isCurrentLiab: type === 'liabilities' && sub === 'current liabilities',
     isLongTermLiab: type === 'liabilities' && sub === 'long-term liabilities',
-    isFixedAsset: type === 'assets' && sub === 'fixed assets',
-    isFinancialExpense: type === 'expenses' && sub === 'financial expenses',
-    isCogs: type === 'expenses' && COGS_NAME_RE.test(a.accountName || ''),
-    isInventory: type === 'assets' && sub === 'current assets' && INV_NAME_RE.test(name),
-    isReceivable: type === 'assets' && sub === 'current assets' && AR_NAME_RE.test(a.accountName || ''),
+    isFixedAsset:
+      type === 'assets' &&
+      !sub.includes('current asset') &&
+      !CONTRA_ASSET_RE.test(a.accountName || '') &&
+      (sub.includes('fixed asset') || FIXED_ASSET_NAME_RE.test(a.accountName || '')),
+    isFinancialExpense: type === 'expenses' && FINANCIAL_SUBTYPE_RE.test(a.subType || ''),
+    isInterestCharge:
+      type === 'expenses' &&
+      (INTEREST_CHARGE_NAME_RE.test(a.accountName || '') || INTEREST_CHARGE_NAME_RE.test(a.subType || '')),
+    isLeaseObligation:
+      (type === 'expenses' || type === 'liabilities') &&
+      (LEASE_NAME_RE.test(a.accountName || '') || LEASE_NAME_RE.test(a.subType || '')),
+    isTaxExpense:
+      type === 'expenses' &&
+      (TAX_NAME_RE.test(a.accountName || '') || TAX_NAME_RE.test(a.subType || '')),
+    isCogs:
+      type === 'expenses' &&
+      (COGS_NAME_RE.test(a.accountName || '') || COGS_SUBTYPE_RE.test(a.subType || '')),
+    isInventory: type === 'assets' && sub.includes('current asset') && INV_NAME_RE.test(name),
+    isReceivable: type === 'assets' && sub.includes('current asset') && AR_NAME_RE.test(a.accountName || ''),
   };
 }
 
@@ -116,19 +134,18 @@ async function fetchAllLedgerRows() {
 }
 
 /**
- * Per-account ending balances after each quarter end, in order of `quarters`.
+ * Per-account ending balances after each period end, in order of `periodEnds`.
  * @param {object} account
  * @param {object[]} entriesSorted — ascending by date for this account
- * @param {{ y: number, q: number }[]} quarters
+ * @param {string[]} periodEnds - YYYY-MM-DD period end labels
  */
-function endingBalancesForQuarters(account, entriesSorted, quarters) {
+function endingBalancesForPeriods(account, entriesSorted, periodEnds) {
   let balance = Number(account.initBalance) || 0;
   let ei = 0;
   const out = [];
   const credit = isCreditNormal(account);
 
-  for (const { y, q } of quarters) {
-    const endStr = quarterEndYmd(y, q);
+  for (const endStr of periodEnds) {
     while (ei < entriesSorted.length) {
       const e = entriesSorted[ei];
       const dStr = e.entryDate ? String(e.entryDate).slice(0, 10) : '';
@@ -144,13 +161,13 @@ function endingBalancesForQuarters(account, entriesSorted, quarters) {
 }
 
 /** @returns {Record<string, number[]>} accountID -> balance at each quarter end */
-function computeEndingBalancesByQuarter(accounts, entriesByAccount, quarters) {
+function computeEndingBalancesByPeriod(accounts, entriesByAccount, periodEnds) {
   /** @type {Record<string, number[]>} */
   const map = {};
   for (const account of accounts) {
     const id = account.accountID;
     const entries = entriesByAccount.get(id) || [];
-    map[id] = endingBalancesForQuarters(account, entries, quarters);
+    map[id] = endingBalancesForPeriods(account, entries, periodEnds);
   }
   return map;
 }
@@ -169,8 +186,8 @@ function absBalanceAtIndex(balanceArrays, account, quarterIndex) {
  * }>}
  */
 export async function fetchRatioSeriesFromLedger(periodLabels) {
-  const quarters = periodLabels.map(parseQuarterLabel).filter(Boolean);
-  if (!quarters.length) {
+  const periodEnds = periodLabels.map(parsePeriodEndLabel).filter(Boolean);
+  if (!periodEnds.length) {
     return { error: null, series: {} };
   }
 
@@ -196,14 +213,17 @@ export async function fetchRatioSeriesFromLedger(periodLabels) {
       });
     }
 
-    const balanceAt = computeEndingBalancesByQuarter(accounts, entriesByAccount, quarters);
+    const balanceAt = computeEndingBalancesByPeriod(accounts, entriesByAccount, periodEnds);
 
-    const n = quarters.length;
+    const n = periodEnds.length;
     const z = () => Array(n).fill(null);
 
     const revenue = [...z()];
+    const sales = [...z()];
     const cogs = [...z()];
     const interestExp = [...z()];
+    const leaseObligations = [...z()];
+    const taxExp = [...z()];
 
     const totalAssets = [...z()];
     const totalLiab = [...z()];
@@ -218,34 +238,48 @@ export async function fetchRatioSeriesFromLedger(periodLabels) {
     const netIncome = [...z()];
 
     for (let i = 0; i < n; i++) {
-      const { y, q } = quarters[i];
+      const end = periodEnds[i];
+      const start = shiftYmd(end, -6);
 
       let rev = 0;
+      let salesQ = 0;
       let exp = 0;
       let cogsQ = 0;
-      let intQ = 0;
+      let intByNameQ = 0;
+      let intFinancialQ = 0;
+      let leaseQ = 0;
+      let taxQ = 0;
 
       for (const e of ledgerRows) {
         const dStr = e.entryDate ? String(e.entryDate).slice(0, 10) : '';
-        const start = quarterStartYmd(y, q);
-        const end = quarterEndYmd(y, q);
         if (!dStr || dStr < start || dStr > end) continue;
         const acct = accountsById.get(e.accountID);
         if (!acct) continue;
         const c = classifyAccount(acct);
-        if (c.isRevenue) rev += absAmount(acct, e.debit, e.credit);
+        const amt = absAmount(acct, e.debit, e.credit);
+        if (c.isRevenue) {
+          rev += amt;
+          if (c.isSales) salesQ += amt;
+        }
         if (c.isExpense) {
-          exp += absAmount(acct, e.debit, e.credit);
-          if (c.isCogs) cogsQ += absAmount(acct, e.debit, e.credit);
-          if (c.isFinancialExpense || /interest/i.test(acct.accountName || '')) {
-            intQ += absAmount(acct, e.debit, e.credit);
-          }
+          exp += amt;
+          if (c.isCogs) cogsQ += amt;
+          if (c.isInterestCharge) intByNameQ += amt;
+          if (c.isFinancialExpense) intFinancialQ += amt;
+          if (c.isTaxExpense) taxQ += amt;
+        }
+        if (c.isLeaseObligation) {
+          leaseQ += amt;
         }
       }
 
       revenue[i] = rev;
+      sales[i] = salesQ > 0 ? salesQ : rev;
       cogs[i] = cogsQ;
+      const intQ = intByNameQ > 0 ? intByNameQ : intFinancialQ;
       interestExp[i] = intQ;
+      leaseObligations[i] = leaseQ;
+      taxExp[i] = taxQ;
       netIncome[i] = rev - exp;
 
       let ta = 0;
@@ -305,9 +339,11 @@ export async function fetchRatioSeriesFromLedger(periodLabels) {
     const collectionDays = z();
 
     for (let i = 0; i < n; i++) {
-      const rev = revenue[i] || 0;
+      const rev = sales[i] || 0;
       const cogsQ = cogs[i] || 0;
       const intQ = interestExp[i] || 0;
+      const leaseQ = leaseObligations[i] || 0;
+      const taxQ = taxExp[i] || 0;
       const ni = netIncome[i] ?? 0;
       const ta = totalAssets[i] || 0;
       const teq = totalEquity[i] || 0;
@@ -319,9 +355,9 @@ export async function fetchRatioSeriesFromLedger(periodLabels) {
       const arV = ar[i] || 0;
       const lt = longTermLiab[i] || 0;
 
-      grossMargin[i] = rev > 0 && cogsQ > 0 ? (rev - cogsQ) / rev : null;
+      grossMargin[i] = rev > 0 ? (rev - cogsQ) / rev : null;
 
-      const ebitProxy = ni + intQ;
+      const ebitProxy = ni + intQ + taxQ;
       operatingMargin[i] = rev > 0 ? ebitProxy / rev : null;
       netMargin[i] = rev > 0 ? ni / rev : null;
 
@@ -341,21 +377,17 @@ export async function fetchRatioSeriesFromLedger(periodLabels) {
       ltDebtToEquity[i] = teq > 0 ? lt / teq : null;
 
       tie[i] = intQ > 0 ? ebitProxy / intQ : null;
-      fixedCharge[i] = intQ > 0 ? ebitProxy / intQ : null;
+      fixedCharge[i] = (intQ + leaseQ) > 0 ? (ebitProxy + leaseQ) / (intQ + leaseQ) : null;
 
-      const prevInv = i > 0 ? inventory[i - 1] || 0 : null;
-      const avgInv =
-        prevInv !== null && inv + prevInv > 0 ? (inv + prevInv) / 2 : inv > 0 ? inv : null;
-      invTurnover[i] = avgInv && cogsQ > 0 ? cogsQ / avgInv : null;
+      invTurnover[i] = inv > 0 ? rev / inv : null;
 
       faturn[i] = fa > 0 ? rev / fa : null;
       taturn[i] = ta > 0 ? rev / ta : null;
 
-      const prevAr = i > 0 ? ar[i - 1] || 0 : null;
-      const avgAr = prevAr !== null && arV + prevAr > 0 ? (arV + prevAr) / 2 : arV > 0 ? arV : null;
-      arTurnover[i] = avgAr && rev > 0 ? rev / avgAr : null;
-      collectionDays[i] =
-        arTurnover[i] && arTurnover[i] > 0 ? 365 / arTurnover[i] : null;
+      const annualCreditSales = rev * 52;
+      arTurnover[i] = arV > 0 && annualCreditSales > 0 ? annualCreditSales / arV : null;
+      const avgDailySales = annualCreditSales > 0 ? annualCreditSales / 365 : 0;
+      collectionDays[i] = arV > 0 && avgDailySales > 0 ? arV / avgDailySales : null;
     }
 
     return {
