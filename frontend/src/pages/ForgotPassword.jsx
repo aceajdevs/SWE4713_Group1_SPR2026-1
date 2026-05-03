@@ -326,13 +326,13 @@ function ForgotPasswordPage() {
 
                             <div className="button-row" role="group">
                                 <HelpTooltip text="Clear all fields on this password reset flow.">
-                                  <button type="button" onClick={handleClearAll}>Clear</button>
+                                  <button type="button" className="button-primary"onClick={handleClearAll}>Clear</button>
                                 </HelpTooltip>
-                                <HelpTooltip text="Return to email and username step.">
-                                  <button type="button" onClick={() => setStep(1)}>Back</button>
+                                <HelpTooltip text="Return to email and user ID step.">
+                                  <button type="button" className="button-primary" onClick={() => setStep(1)}>Back</button>
                                 </HelpTooltip>
                                 <HelpTooltip text="Check your answers; if correct you can set a new password.">
-                                  <button type="button" className="login-button" onClick={handleSecurityQuestionsSubmit}>
+                                  <button type="button" className="button-secondary" onClick={handleSecurityQuestionsSubmit}>
                                     Continue
                                   </button>
                                 </HelpTooltip>
@@ -384,13 +384,13 @@ function ForgotPasswordPage() {
 
                             <div className="button-row" role="group">
                                 <HelpTooltip text="Clear all fields on this password reset flow.">
-                                  <button type="button" onClick={handleClearAll}>Clear</button>
+                                  <button type="button" className="button-primary" onClick={handleClearAll}>Clear</button>
                                 </HelpTooltip>
                                 <HelpTooltip text="Return to the security questions step.">
-                                  <button type="button" onClick={() => setStep(2)}>Back</button>
+                                  <button type="button" className="button-primary" onClick={() => setStep(2)}>Back</button>
                                 </HelpTooltip>
                                 <HelpTooltip text="Save your new password and return to sign in when successful.">
-                                  <button type="button" className="login-button" onClick={handleNewPasswordSubmit}>
+                                  <button type="button" className="button-secondary" onClick={handleNewPasswordSubmit}>
                                     Save New Password
                                   </button>
                                 </HelpTooltip>

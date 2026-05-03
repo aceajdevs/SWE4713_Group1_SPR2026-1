@@ -424,7 +424,7 @@ Normal Side: ${accountData.normalSide}`;
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
         <HelpTooltip text="Open a popup to email a manager or administrator about this account.">
           <button type="button" className="button-primary" onClick={() => setStaffEmailModalOpen(true)}>
-            Email manager/admin
+            Email Manager / Administrator
           </button>
         </HelpTooltip>
       </div>
@@ -645,6 +645,18 @@ Normal Side: ${accountData.normalSide}`;
           <button type="button" className="button-clear" onClick={() => setFormData(prev => ({ ...prev, initBalance: 0 }))} aria-label="Clear initial balance input">X</button>
           </div>
         </div>
+        <div>
+          <label>Comment:</label>
+          <div className="clear-input-container" role="group">
+          <textarea
+            name="comment"
+            value={formData.comment || ''}
+            onChange={handleChange}
+            className="input"
+          />
+          <button type="button" className="button-clear" onClick={() => setFormData(prev => ({ ...prev, comment: '' }))} aria-label="Clear comment input">X</button>
+          </div>
+        </div>
         <div className="span-2">
           <HelpTooltip
             text={
@@ -653,7 +665,7 @@ Normal Side: ${accountData.normalSide}`;
                 : 'Add this new account to the chart of accounts.'
             }
           >
-            <button type="submit" className="button-primary" disabled={loading}>
+            <button type="submit" className="button-secondary" disabled={loading}>
               {loading ? 'Saving...' : 'Save Account'}
             </button>
           </HelpTooltip>
