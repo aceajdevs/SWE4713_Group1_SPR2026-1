@@ -254,7 +254,7 @@ function AdminEditUserPage() {
           {error && (
             <div
               style={{
-                color: '#dc2626',
+                color: 'var(--bff-red)',
                 fontSize: '14px',
                 marginBottom: '12px',
                 padding: '8px',
@@ -269,7 +269,7 @@ function AdminEditUserPage() {
           {success && (
             <div
               style={{
-                color: '#059669',
+                color: 'var(--bff-green)',
                 fontSize: '14px',
                 marginBottom: '12px',
                 padding: '8px',
@@ -307,19 +307,23 @@ function AdminEditUserPage() {
             <>
               <div className="form-field">
                 <h5>Email</h5>
-                <input
-                  className="input"
-                  type="email"
-                  name="email"
-                  placeholder="Email"
-                  aria-label="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
+                <div className="clear-input-container" role="group">
+                  <input
+                    className="input"
+                    type="email"
+                    name="email"
+                    placeholder="Email"
+                    aria-label="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                  <button type="button" className="button-clear" onClick={() => setEmail('')} aria-label="Clear email input">X</button>
+                </div>
               </div>
 
               <div className="form-field">
                 <h5>Username</h5>
+                <div className="clear-input-container" role="group">
                 <input
                   className="input"
                   type="text"
@@ -329,11 +333,14 @@ function AdminEditUserPage() {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                 />
+                <button type="button" className="button-clear" onClick={() => setUsername('')} aria-label="Clear username input">X</button>
+                </div>
               </div>
 
               <div className="form-grid-2">
                 <div className="form-field">
                   <h5>First Name</h5>
+                  <div className="clear-input-container" role="group">
                   <input
                     className="input"
                     type="text"
@@ -343,10 +350,13 @@ function AdminEditUserPage() {
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
                   />
+                  <button type="button" className="button-clear" onClick={() => setFirstName('')} aria-label="Clear first name input">X</button>
+                  </div>
                 </div>
 
                 <div className="form-field">
                   <h5>Last Name</h5>
+                  <div className="clear-input-container" role="group">
                   <input
                     className="input"
                     type="text"
@@ -356,11 +366,14 @@ function AdminEditUserPage() {
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                   />
+                  <button type="button" className="button-clear" onClick={() => setLastName('')} aria-label="Clear last name input">X</button>
+                  </div>
                 </div>
               </div>
 
               <div className="form-field">
                 <h5>Address</h5>
+                <div className="clear-input-container" role="group">
                 <input
                   className="input"
                   type="text"
@@ -370,6 +383,8 @@ function AdminEditUserPage() {
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                 />
+                <button type="button" className="button-clear" onClick={() => setAddress('')} aria-label="Clear address input">X</button>
+                </div>
               </div>
 
               <div className="form-grid-2">
@@ -426,6 +441,7 @@ function AdminEditUserPage() {
                   {secQuestion1 && (
                     <div className="form-field">
                       <h5>{secQuestion1}</h5>
+                      <div className="clear-input-container" role="group">
                       <input
                         className="input"
                         type="text"
@@ -435,12 +451,15 @@ function AdminEditUserPage() {
                         value={secAnswer1}
                         onChange={(e) => setSecAnswer1(e.target.value)}
                       />
+                      <button type="button" className="button-clear" onClick={() => setSecAnswer1('')} aria-label="Clear security answer 1 input">X</button>
+                      </div>
                     </div>
                   )}
 
                   {secQuestion2 && (
                     <div className="form-field">
                       <h5>{secQuestion2}</h5>
+                      <div className="clear-input-container" role="group">
                       <input
                         className="input"
                         type="text"
@@ -450,12 +469,15 @@ function AdminEditUserPage() {
                         value={secAnswer2}
                         onChange={(e) => setSecAnswer2(e.target.value)}
                       />
+                      <button type="button" className="button-clear" onClick={() => setSecAnswer2('')} aria-label="Clear security answer 2 input">X</button>
+                      </div>
                     </div>
                   )}
 
                   {secQuestion3 && (
                     <div className="form-field">
                       <h5>{secQuestion3}</h5>
+                      <div className="clear-input-container" role="group">
                       <input
                         className="input"
                         type="text"
@@ -465,6 +487,8 @@ function AdminEditUserPage() {
                         value={secAnswer3}
                         onChange={(e) => setSecAnswer3(e.target.value)}
                       />
+                      <button type="button" className="button-clear" onClick={() => setSecAnswer3('')} aria-label="Clear security answer 3 input">X</button>
+                      </div>
                     </div>
                   )}
 
@@ -474,6 +498,7 @@ function AdminEditUserPage() {
 
               <div className="form-field">
                 <h5>New Password (optional)</h5>
+                <div className="clear-input-container" role="group">
                 <input
                   className={`input ${showPasswordErrors && passwordErrors.length > 0 ? 'input-error' : ''}`}
                   type="password"
@@ -483,7 +508,8 @@ function AdminEditUserPage() {
                   value={newPassword}
                   onChange={handleNewPasswordChange}
                 />
-
+                <button type="button" className="button-clear" onClick={() => setNewPassword('')} aria-label="Clear new password input">X</button>
+                </div>
                 {showPasswordErrors && passwordErrors.length > 0 && (
                   <div className="error-messages" role="alert">
                     <ul>
@@ -497,6 +523,7 @@ function AdminEditUserPage() {
 
               <div className="form-field">
                 <h5>Confirm New Password</h5>
+                <div className="clear-input-container" role="group">
                 <input
                   className={`input ${confirmPasswordError ? 'input-error' : ''}`}
                   type="password"
@@ -506,6 +533,8 @@ function AdminEditUserPage() {
                   value={confirmNewPassword}
                   onChange={handleConfirmNewPasswordChange}
                 />
+                <button type="button" className="button-clear" onClick={() => setConfirmNewPassword('')} aria-label="Clear confirm new password input">X</button>
+                </div>
 
                 {confirmPasswordError && (
                   <div className="error-messages" role="alert">
@@ -518,27 +547,17 @@ function AdminEditUserPage() {
 
           <div className="button-row" role="group">
             <HelpTooltip text="Save profile, password, and security answers for the selected user.">
-              <button type="submit" disabled={saving || !loadedUserId}>
+              <button className="button-secondary"type="submit" disabled={saving || !loadedUserId}>
                 {saving ? 'Saving...' : 'Save Changes'}
               </button>
             </HelpTooltip>
             <HelpTooltip text="Reset all fields on this form to their last loaded values.">
-              <button type="button" onClick={handleClear} disabled={saving}>
+              <button className="button-primary" type="button" onClick={handleClear} disabled={saving}>
                 Clear
               </button>
             </HelpTooltip>
-          </div>
-
-          <div className="cancel-wrap">
             <HelpTooltip text="Leave user editing and return to the administrator dashboard.">
-              <button
-                type="button"
-                className="cancel-button"
-                onClick={() => navigate('/admin-dashboard')}
-                disabled={saving}
-              >
-                Cancel
-              </button>
+              <button className="button-primary" type="button" onClick={() => navigate('/admin-dashboard')} disabled={saving} >Cancel</button>
             </HelpTooltip>
           </div>
         </form>

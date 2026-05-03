@@ -245,10 +245,10 @@ function ForgotPasswordPage() {
 
                             <div className="button-row" role="group">
                                 <HelpTooltip text="Verify email and user ID, then load your security questions.">
-                                    <button type="button" className="button-primary" onClick={handleStartReset}>Continue</button>
+                                    <button type="button" className="button-secondary" onClick={handleStartReset}>Continue</button>
                                 </HelpTooltip>
                                 <HelpTooltip text="Leave password reset and return to the welcome screen.">
-                                    <button type="button" className="button-secondary" onClick={navToWelcome}>Cancel</button>
+                                    <button type="button" className="button-primary" onClick={navToWelcome}>Cancel</button>
                                 </HelpTooltip>
                             </div>
                         </>

@@ -420,7 +420,7 @@ function SignUpPage() {
 
                             <div className="button-row" role="group">
                                 <HelpTooltip text="Continue to security questions with the profile and password entered above.">
-                                  <button type="submit" className="button-primary">Submit</button>
+                                  <button type="submit" className="button-secondary">Submit</button>
                                 </HelpTooltip>
                                 <div className="cancel-wrap">
                                     <HelpTooltip text="Leave sign-up and return to the welcome screen.">
@@ -428,7 +428,7 @@ function SignUpPage() {
                                     </HelpTooltip>
                                 </div>
                                 <HelpTooltip text="Reset all fields on this sign-up form.">
-                                  <button type="button" className="button-secondary" onClick={handleClear}>Clear All</button>
+                                  <button type="button" className="button-primary" onClick={handleClear}>Clear All</button>
                                 </HelpTooltip>
                             </div>
                         </>
@@ -553,10 +553,10 @@ function SignUpPage() {
 
                             <div className="button-row" role="group">
                                 <HelpTooltip text="Return to profile and password step.">
-                                  <button type="button" className="button-secondary" onClick={() => { setSecurityQuestionsError(''); setStep(1); }}>Back</button>
+                                  <button type="button" className="button-primary" onClick={() => { setSecurityQuestionsError(''); setStep(1); }}>Back</button>
                                 </HelpTooltip>
                                 <HelpTooltip text="Send your account request to administrators for approval.">
-                                  <button type="submit" className="button-primary">Finish Signup</button>
+                                  <button type="submit" className="button-secondary">Finish Signup</button>
                                 </HelpTooltip>
                                 <HelpTooltip text="Reset all fields on this sign-up form.">
                                   <button type="button" className="button-primary" onClick={handleClear}>Clear</button>

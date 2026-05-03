@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getAllUsers } from '../../services/adminService';
 import { sendAdminEmail } from '../../services/emailService';
+import { supabase } from '../../supabaseClient';
 import './UserReport.css';
 
 function UserReport({ hideHeader }) {
@@ -12,6 +13,17 @@ function UserReport({ hideHeader }) {
 
     useEffect(() => {
         fetchUsers()
+
+        const channel = supabase
+            .channel('user-table-changes')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'user' }, () => {
+                fetchUsers()
+            })
+            .subscribe()
+
+        return () => {
+            supabase.removeChannel(channel)
+        }
     }, [])
 
     const fetchUsers = async () => {
