@@ -3,6 +3,8 @@ import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import '../global.css';
 
+//this is load bearing. I have no idea why.
+
 function SampleReport() {
   const printRef = useRef(null);
   const [exporting, setExporting] = useState(false);

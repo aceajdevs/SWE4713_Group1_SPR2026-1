@@ -1,10 +1,10 @@
 import { supabase } from './supabaseClient';
 
 /**
- * Fetch all records from a table
- * @param {string} tableName - Name of the table
- * @param {object} options - Query options (select, filters, sorting, etc.)
- * @returns {Promise} - Array of records or error
+ * Fetch all records
+ * @param {string} tableName
+ * @param {object} options
+ * @returns {Promise} - Array or error
  */
 export async function fetchFromTable(tableName, options = {}) {
   try {
@@ -16,14 +16,12 @@ export async function fetchFromTable(tableName, options = {}) {
       });
     }
 
-    // Add sorting
     if (options.orderBy) {
       query = query.order(options.orderBy.column, {
         ascending: options.orderBy.ascending !== false,
       });
     }
 
-    // Add limit
     if (options.limit) {
       query = query.limit(options.limit);
     }
@@ -44,10 +42,10 @@ export async function fetchFromTable(tableName, options = {}) {
 }
 
 /**
- * Insert a new record into a table
- * @param {string} tableName - Name of the table
- * @param {object} record - Record to insert
- * @returns {Promise} - Inserted record or error
+ * Insert
+ * @param {string} tableName
+ * @param {object} record
+ * @returns {Promise} - Inserted item or error
  */
 export async function insertRecord(tableName, record) {
   try {
@@ -61,11 +59,11 @@ export async function insertRecord(tableName, record) {
 }
 
 /**
- * Update a record in a table
- * @param {string} tableName - Name of the table
- * @param {number|string} id - Record ID
- * @param {object} updates - Fields to update
- * @param {string} idColumn - Column name for the ID (default: 'id')
+ * Update
+ * @param {string} tableName
+ * @param {number|string} id
+ * @param {object} updates
+ * @param {string} idColumn
  * @returns {Promise} - Updated record or error
  */
 export async function updateRecord(tableName, id, updates, idColumn = 'id') {
@@ -85,11 +83,11 @@ export async function updateRecord(tableName, id, updates, idColumn = 'id') {
 }
 
 /**
- * Delete a record from a table
- * @param {string} tableName - Name of the table
- * @param {number|string} id - Record ID
- * @param {string} idColumn - Column name for the ID (default: 'id')
- * @returns {Promise} - Success status or error
+ * Delete
+ * @param {string} tableName
+ * @param {number|string} id
+ * @param {string} idColumn
+ * @returns {Promise} - Success or error
  */
 export async function deleteRecord(tableName, id, idColumn = 'id') {
   try {
@@ -104,10 +102,10 @@ export async function deleteRecord(tableName, id, idColumn = 'id') {
 }
 
 /**
- * Upload a file to Supabase Storage
- * @param {string} bucket - Storage bucket name
- * @param {string} path - File path in bucket
- * @param {File} file - File to upload
+ * Upload
+ * @param {string} bucket
+ * @param {string} path
+ * @param {File} file
  * @returns {Promise} - File data or error
  */
 export async function uploadFile(bucket, path, file) {

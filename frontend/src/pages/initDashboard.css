@@ -9,7 +9,6 @@
   color: #0f172a;
 }
 
-/* Reuse header/logo sizing for consistency */
 .login-header {
   height: 96px;
   display: flex;
@@ -110,7 +109,7 @@
   border-radius: 8px;
   font-size: 15px;
   cursor: pointer;
-  background: #042069; /* unified primary color */
+  background: #042069;
   color: white;
   box-shadow: 0 6px 16px rgba(4,32,105,0.18);
 }
@@ -120,7 +119,6 @@
   box-shadow: 0 0 0 3px rgba(4,32,105,0.24);
 }
 
-/* Responsive: stack tiles on narrower screens */
 @media (max-width: 820px) {
   .dashboard-card {
     width: 100%;

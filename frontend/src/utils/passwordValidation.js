@@ -1,8 +1,3 @@
-/*
-These errors will need to be stored and retrieved from the database in the future.
-*/
-
-
 export function validatePassword(password) {
     const errors = [];
 

@@ -79,7 +79,6 @@ function JournalEntryForm() {
         fieldMap[err.field] = true;
       }
       if (err?.field === 'line') {
-        // line-level markers apply to every line input
         for (let i = 0; i < lines.length; i += 1) {
           fieldMap[`line-${i}-accountID`] = true;
           fieldMap[`line-${i}-debit`] = true;
@@ -324,8 +323,6 @@ function JournalEntryForm() {
                     <option value="">Select account</option>
                     {accounts
                     .filter((acc) => {
-                      // Keep this account if it's the one already selected on this line,
-                      // or if no other line has selected it
                       const selectedByOtherLine = lines.some(
                         (l, i) => i !== index && String(l.accountID) === String(acc.accountID)
                       );

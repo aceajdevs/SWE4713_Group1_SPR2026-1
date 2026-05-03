@@ -2,10 +2,6 @@ import { useNavigate } from 'react-router-dom';
 import { HelpTooltip } from './HelpTooltip';
 import './PageHelpCorner.css';
 
-/**
- * Microsoft-style entry to the user manual from pages that do not show the main navbar.
- * Optional `topic` scrolls that section on the manual (must match a section id there).
- */
 export default function PageHelpCorner({ topic }) {
   const navigate = useNavigate();
 

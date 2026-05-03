@@ -274,7 +274,6 @@ body {
   margin: 2px 0;
 }
 
-
 .link{
   color: var(--bff-primary);
   text-decoration: underline;
@@ -284,7 +283,6 @@ body {
   color: var(--bff-dark-primary);
 }
 
-/* images */
 img {
   display: block;
   max-width: 100%;
@@ -294,7 +292,6 @@ img {
   object-fit: contain;
 }
 
-/* Accessibility improvements */
 :focus-visible {
   outline: 2px solid var(--bff-primary);
   outline-offset: 2px;
@@ -320,7 +317,6 @@ table th, table td {
   text-align: left;
 }
 
-/* Right-align monetary columns (those with dollar signs) */
 table th.money, table td.money {
   text-align: right;
 }
@@ -344,7 +340,6 @@ table button {
   transition: background-color 0.3s ease;
 }
 
-/* Posted journal entries report: wider cell padding */
 table.posted-journal-entries-table th,
 table.posted-journal-entries-table td {
   padding: 12px 20px;

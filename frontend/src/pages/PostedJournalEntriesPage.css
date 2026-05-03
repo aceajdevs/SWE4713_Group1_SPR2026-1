@@ -13,7 +13,7 @@
   white-space: normal;
 }
 
-/* Adjusting Column Widths */
+/* Widths */
 .user-report-table th.PJE-pr,
 .user-report-table td.PJE-pr { width: 3%; }
 .user-report-table th.PJE-created,
@@ -29,8 +29,6 @@
   width: 20.5%;
   min-width: 120px;
 }
-
-/* When there is no actions column, expand both debited and credited columns */
 .user-report-table.no-actions th.PJE-debited,
 .user-report-table.no-actions td.PJE-debited,
 .user-report-table.no-actions th.PJE-credited,

@@ -51,7 +51,7 @@ function LoginPage() {
         return;
       }
 
-      // Fallback to RPC for environments where direct table updates are restricted.
+      // Fallback
       const { error: rpcError } = await supabase.rpc('update_user', {
         p_userid: userId,
         p_loginattempts: updates.loginAttempts ?? null,
@@ -104,7 +104,7 @@ function LoginPage() {
             alert('Please enter a password.');
             return;
           }
-          //Both are SHA-256 hex strings.
+          //SHA-256 hex strings.
           const enteredHash = await hashPassword(password);
           const isMatch = enteredHash === userData.password_hash;
           

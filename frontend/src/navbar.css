@@ -1,4 +1,4 @@
-/* Navbar Container */
+/* Container */
 .navbar {
   background: var(--bff-primary);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
@@ -60,7 +60,7 @@
   white-space: nowrap;
 }
 
-/* Calendar Wrapper */
+/* Calendar */
 .calendar-wrapper {
   position: relative;
   display: flex;
@@ -221,7 +221,7 @@
   border-bottom-color: #ffffff;
 }
 
-/* Navigation Links */
+/* Nav Links */
 .nav-link {
   color: white;
   text-decoration: none;
@@ -241,7 +241,7 @@
   transform: scale(1.1);
 }
 
-/* User Display Section */
+/* User Display */
 .nav-user-section {
   display: flex;
   align-items: center;

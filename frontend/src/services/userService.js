@@ -32,7 +32,7 @@ export async function createUser(
       p_address:     address,
       p_dob:         dob,
       p_password:    hashedPassword,
-      p_role:        role,  // REQUIRED: pass 'administrator' | 'manager' | 'accountant'
+      p_role:        role,
       p_questionid1: questionId1,
       p_secanswer1:  hashedAnswer1,
       p_questionid2: questionId2,
@@ -83,7 +83,7 @@ export async function admin_createUser(
       p_address:     address,
       p_dob:         dob,
       p_password:    hashedPassword,
-      p_role:        role,  // REQUIRED: pass 'administrator' | 'manager' | 'accountant'
+      p_role:        role,
       p_questionid1: questionId1,
       p_secanswer1:  hashedAnswer1,
       p_questionid2: questionId2,
@@ -388,8 +388,7 @@ export async function getUserSecurityQuestions(email, userId) {
       throw error;
     }
 
-    // RPC return shape can vary by SQL function definition/client version.
-    // Normalize to a stable shape consumed by password-reset/admin pages.
+    // Normalize
     const row = Array.isArray(data) ? data[0] : data;
     if (!row) {
       return null;
@@ -491,7 +490,6 @@ export async function updateUserPassword(userId, newPassword) {
       throw error;
     }
 
-    // Send a confirmation email after a successful password reset/update.
     try {
       const { data: userRecord, error: userLookupError } = await supabase
         .from('user')

@@ -26,13 +26,10 @@ function SuspendUser() {
   }, [])
 
   const handleSuspend = async () => {
-    // Validate all fields are filled
     if (!userId || !startDate || !endDate) {
       alert('Please fill in all the fields before suspending a user.');
       return
     }
-
-    // Validate end date comes after start date.
     if (new Date(endDate) <= new Date(startDate)) {
       alert('End date must be after the start date.');
       return

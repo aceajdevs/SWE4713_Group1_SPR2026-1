@@ -34,7 +34,6 @@
   margin-bottom: 8px;
 }
 
-/* Login and Cancel buttons */
 .button-row {
   display: flex;
   gap: 12px;
@@ -45,7 +44,6 @@
   align-items: center;
 }
 
-/* create new account and forgot password links */
 .subpage-links {
   display: flex;
   text-align: center;

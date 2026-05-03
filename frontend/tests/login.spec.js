@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Login flow from welcome', () => {
   test.beforeEach(async ({ page }) => {
-    // Make sure your vite dev server is running at http://localhost:5173 before running these tests
+    // double check you're at http://localhost:5173 before running these tests
     await page.goto('http://localhost:5173/');
   });
 
@@ -13,7 +13,7 @@ test.describe('Login flow from welcome', () => {
 
     await gotoBtn.click();
 
-    // After navigation, the login page elements should be visible
+    // make things visible for the login page
     await expect(page.locator('.logo-placeholder')).toBeVisible();
     await expect(page.getByLabel('username')).toBeVisible();
     await expect(page.getByLabel('password')).toBeVisible();

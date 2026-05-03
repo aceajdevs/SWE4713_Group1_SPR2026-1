@@ -46,10 +46,8 @@ function AppLayout() {
       }
     };
 
-    // Run once immediately
+    // Run once then every 30min
     runCheck();
-
-    // Then every 30 minutes
     const intervalId = setInterval(runCheck, 30 * 60 * 1000);
 
     return () => clearInterval(intervalId);

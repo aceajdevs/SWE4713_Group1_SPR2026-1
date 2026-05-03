@@ -233,7 +233,6 @@ function Navbar() {
           </div>
         </div>
 
-        {/* Center Section */}
         <div className={`navbar-center ${isMenuOpen ? 'active' : ''}`}>
           {isAdmin && (
             <>
@@ -302,7 +301,6 @@ function Navbar() {
           )}
         </div>
 
-        {/* Right Section */}
         <div className="navbar-right">
           <a
             href="#/help"

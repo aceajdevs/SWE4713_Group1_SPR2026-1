@@ -69,7 +69,6 @@
   margin-top: 8px;
 }
 
-/* Small screens: reduce card padding and width */
 @media (max-width: 480px) {
   .welcome-card {
     width: 100%;

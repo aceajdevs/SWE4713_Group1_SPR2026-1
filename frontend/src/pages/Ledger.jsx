@@ -29,7 +29,7 @@ function shouldTryLowercaseLedgerTable(error) {
   );
 }
 
-/** Map DB/API row to the shape the table expects; supports camelCase or snake_case. */
+/** Dont Touch, API breaks without this. */
 function normalizeLedgerRow(row) {
   if (!row || typeof row !== 'object') return row;
   return {
@@ -520,8 +520,7 @@ function Ledger() {
             </tr>
           ) : null}
           {filteredEntries.map((entry, idx) => {
-            // For all rows after the first (idx >= 0, since opening balance is not in filteredEntries),
-            // display '-' for 0 or $0.00 in debit, credit, and balance cells
+            // get rid of 0.00 and show -
             const showDash = (val) => {
               const n = parseFloat(val);
               return n === 0 || val === 0 || val === '$0.00' || val === 0.0;

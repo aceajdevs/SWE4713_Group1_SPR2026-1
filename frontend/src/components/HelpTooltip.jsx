@@ -1,9 +1,6 @@
 import { cloneElement, isValidElement, useId, useEffect, useRef, useState } from 'react';
 import './HelpTooltip.css';
 
-/**
- * children = (input, button, select).
- */
 export function HelpTooltip({ text, children, className = '' }) {
   const tipId = useId();
   const hoverDelayMs = 1200;
@@ -87,12 +84,10 @@ export function HelpTooltip({ text, children, className = '' }) {
   };
 
   const handleMouseEnter = () => {
-    // Delay only for mouse hover, to match typical product help behavior.
     startHoverTimer();
   };
 
   const handleMouseLeave = () => {
-    // If a child is focused (keyboard navigation), keep the tooltip visible.
     if (wrapperRef.current && wrapperRef.current.contains(document.activeElement)) {
       clearTimer();
       return;
@@ -102,11 +97,10 @@ export function HelpTooltip({ text, children, className = '' }) {
 
   const handleFocusCapture = () => {
     clearTimer();
-    show(); // Show immediately when focused for accessibility.
+    show();
   };
 
   const handleBlurCapture = (e) => {
-    // If focus moved to another element inside this wrapper, don't hide.
     const next = e.relatedTarget;
     if (wrapperRef.current && next && wrapperRef.current.contains(next)) {
       return;

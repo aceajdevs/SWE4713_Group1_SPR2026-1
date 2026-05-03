@@ -344,12 +344,12 @@ function AccountForm() {
           const subject = `Account ${isEditing ? 'Updated' : 'Added'}: ${accountData.accountName}`;
           const message = `The following account has been ${isEditing ? 'updated' : 'added'} by ${user.fName} ${user.lName}:
 
-Name: ${accountData.accountName}
-Number: ${accountData.accountNumber}
-Category: ${accountData.type}
-Subcategory: ${accountData.subType}
-Initial Balance: $${accountData.initBalance}
-Normal Side: ${accountData.normalSide}`;
+        Name: ${accountData.accountName}
+        Number: ${accountData.accountNumber}
+        Category: ${accountData.type}
+        Subcategory: ${accountData.subType}
+        Initial Balance: $${accountData.initBalance}
+        Normal Side: ${accountData.normalSide}`;
           for (const admin of admins) {
             await sendAdminEmail(admin.email, `${admin.fName} ${admin.lName}`, subject, message);
           }

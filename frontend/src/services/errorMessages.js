@@ -1,9 +1,5 @@
 import { supabase } from '../supabaseClient';
 
-/**
- * Fallback copy — keep in sync with database/seed_public_Error.sql when IDs overlap.
- * Used when the Error table cannot be read (offline, RLS, network).
- */
 export const ERROR_FALLBACK = {
   1001: 'No account selected.',
   1002: 'Account is inactive or does not exist.',

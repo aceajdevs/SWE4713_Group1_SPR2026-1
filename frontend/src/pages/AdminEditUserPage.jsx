@@ -90,7 +90,6 @@ function AdminEditUserPage() {
       setRole(user.role ?? 'accountant');
       setStatus(user.status ?? true);
 
-      // Load security questions (texts only; answers remain hidden)
       try {
         const qs = await getUserSecurityQuestions(user.email, user.userID);
         setSecQuestion1(qs?.question1 ?? '');
@@ -103,7 +102,7 @@ function AdminEditUserPage() {
         setSecQuestion3('');
       }
 
-      // Clear password and security answer fields
+      // Clear fields don't touch
       setNewPassword('');
       setConfirmNewPassword('');
       setPasswordErrors([]);
@@ -162,7 +161,6 @@ function AdminEditUserPage() {
       return;
     }
 
-    // Optional password change validation
     if (newPassword || confirmNewPassword) {
       const validation = validatePassword(newPassword);
       setPasswordErrors(validation.errors);
@@ -199,12 +197,10 @@ function AdminEditUserPage() {
         changedBy: user?.userID || null,
       });
 
-      // If a new password was provided, update it separately
       if (newPassword) {
         await updateUserPassword(loadedUserId, newPassword);
       }
 
-      // If any new security answers were provided, update them
       if (secAnswer1 || secAnswer2 || secAnswer3) {
         await adminUpdateUserSecurityAnswers(loadedUserId, secAnswer1, secAnswer2, secAnswer3);
       }

@@ -12,7 +12,6 @@ const ALLOWED_ATTACHMENT_TYPES = [
 const ALLOWED_EXTENSIONS = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'csv', 'jpg', 'jpeg', 'png'];
 
 /**
- * Validate that every line references a real account from the chart of accounts.
  * @param {Array} lines 
  * @param {Array} accounts 
  * @returns {{ valid: boolean, errors: string[] }}
@@ -71,16 +70,16 @@ export function validateHasDebitAndCredit(lines) {
 }
 
 
-// Validate that total debits equal total credits.
+// Validate total debits = total credits.
 
 export function validateDebitsEqualCredits(lines) {
   const totalDebits = lines.reduce((sum, l) => sum + (parseFloat(l.debit) || 0), 0);
   const totalCredits = lines.reduce((sum, l) => sum + (parseFloat(l.credit) || 0), 0);
 
-  // Round to 2 decimal places to avoid floating point issues
+  // Round to 2 decimal places
   const diff = Math.abs(Math.round(totalDebits * 100) - Math.round(totalCredits * 100));
 
-  /* "Total debits must equal total credits" error with details on the amounts and difference. */
+  /* "Total debits must equal total credits" */
   if (diff !== 0) {
     return {
       valid: false,
@@ -106,7 +105,7 @@ export function validateDebitsEqualCredits(lines) {
 }
 
 
-// Validate that each line has either a debit OR a credit, not both and not neither.
+// Validate a debit OR a credit, not both and not neither.
 
 export function validateLineAmounts(lines) {
   const errors = [];
@@ -137,7 +136,7 @@ export function validateLineAmounts(lines) {
 }
 
 
-// Validate that debits come before credits in the line ordering.
+// debits come before credits.
 
 export function validateDebitBeforeCredit(lines) {
   let foundCredit = false;
@@ -166,7 +165,7 @@ export function validateDebitBeforeCredit(lines) {
 }
 
 
-// Validate attached file type is allowed.
+// validate file type.
 
 export function validateAttachmentType(file) {
   const ext = file.name.split('.').pop().toLowerCase();
@@ -187,7 +186,6 @@ export function validateAttachmentType(file) {
 }
 
 /**
- * Run all journal entry validations at once.
  * @param {Array} lines 
  * @param {Array} accounts 
  * @returns {{ valid: boolean, errors: string[] }}

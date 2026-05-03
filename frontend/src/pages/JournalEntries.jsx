@@ -381,24 +381,9 @@ function JournalEntries() {
               autoFocus
             />
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '14px' }}>
-              <button
-                type="button"
-                className="button-primary"
-                onClick={() => {
-                  setRejectingId(null);
-                  setRejectReason('');
-                }}
-              >
-                Cancel
-              </button>
+              <button type="button" className="button-primary" onClick={() => { setRejectingId(null); setRejectReason(''); }} >Cancel</button>
               <HelpTooltip text="Confirm the rejection with the reason provided.">
-                <button
-                  type="button"
-                  className="button-secondary"
-                  onClick={() => handleReject(rejectingId)}
-                >
-                  Confirm Reject
-                </button>
+                <button type="button" className="button-secondary" onClick={() => handleReject(rejectingId)}>Confirm Reject</button>
               </HelpTooltip>
             </div>
           </div>

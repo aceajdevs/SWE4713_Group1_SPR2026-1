@@ -16,7 +16,7 @@ function shouldTryLowercaseLedgerTable(error) {
 }
 
 /**
- * @param {string} label e.g. 2026-05-02 (week ending)
+ * @param {string} label
  * @returns {string | null}
  */
 export function parsePeriodEndLabel(label) {
@@ -46,7 +46,6 @@ function netMovement(account, debit, credit) {
   return isCreditNormal(account) ? c - d : d - c;
 }
 
-/** Absolute amount for income-statement style display (matches Report.js spirit). */
 function absAmount(account, debit, credit) {
   return Math.abs(netMovement(account, debit, credit));
 }
@@ -134,10 +133,9 @@ async function fetchAllLedgerRows() {
 }
 
 /**
- * Per-account ending balances after each period end, in order of `periodEnds`.
  * @param {object} account
- * @param {object[]} entriesSorted — ascending by date for this account
- * @param {string[]} periodEnds - YYYY-MM-DD period end labels
+ * @param {object[]} entriesSorted — ascending by date
+ * @param {string[]} periodEnds - YYYY-MM-DD
  */
 function endingBalancesForPeriods(account, entriesSorted, periodEnds) {
   let balance = Number(account.initBalance) || 0;
@@ -160,7 +158,7 @@ function endingBalancesForPeriods(account, entriesSorted, periodEnds) {
   return out;
 }
 
-/** @returns {Record<string, number[]>} accountID -> balance at each quarter end */
+/** @returns {Record<string, number[]>} accountID -> balance at each quarter */
 function computeEndingBalancesByPeriod(accounts, entriesByAccount, periodEnds) {
   /** @type {Record<string, number[]>} */
   const map = {};
@@ -179,7 +177,7 @@ function absBalanceAtIndex(balanceArrays, account, quarterIndex) {
 }
 
 /**
- * @param {string[]} periodLabels — oldest first (same order as charts)
+ * @param {string[]} periodLabels — old first
  * @returns {Promise<{
  *   error: Error | null,
  *   series: Record<string, (number|null)[]>

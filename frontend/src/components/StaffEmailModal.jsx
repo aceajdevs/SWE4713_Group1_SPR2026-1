@@ -4,13 +4,6 @@ import { sendAdminEmail } from '../services/emailService';
 import { HelpTooltip } from './HelpTooltip';
 import './StaffEmailModal.css';
 
-/**
- * A self-contained modal for sending an email to an administrator or manager.
- * Props:
- *   isOpen        {boolean}  – whether the modal is visible
- *   onClose       {function} – called when the modal should close
- *   defaultSubject {string}  – optional pre-filled subject line
- */
 function StaffEmailModal({ isOpen, onClose, defaultSubject = '' }) {
   const [recipients, setRecipients] = useState([]);
   const [loadError, setLoadError] = useState(null);
@@ -19,7 +12,6 @@ function StaffEmailModal({ isOpen, onClose, defaultSubject = '' }) {
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
 
-  // Fetch admin + manager recipients whenever the modal opens
   useEffect(() => {
     if (!isOpen) return;
     let cancelled = false;
@@ -35,7 +27,6 @@ function StaffEmailModal({ isOpen, onClose, defaultSubject = '' }) {
     return () => { cancelled = true; };
   }, [isOpen]);
 
-  // Reset fields when modal opens
   useEffect(() => {
     if (isOpen) {
       setSelectedId('');
@@ -45,7 +36,6 @@ function StaffEmailModal({ isOpen, onClose, defaultSubject = '' }) {
     }
   }, [isOpen, defaultSubject]);
 
-  // Close on Escape
   useEffect(() => {
     if (!isOpen) return;
     const onKey = (e) => {

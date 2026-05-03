@@ -742,7 +742,7 @@ const REPORT_EXPORT_BASE_STYLES = `
 `;
 
 
-// Downlaods the HTML fragment as .html file (DON'T REMOVE)
+// DON'T REMOVE
 export function downloadHtmlReport({ title, htmlFragment, filenameBase }) {
   const safeTitle = escapeHtml(title);
   const fullDoc = `<!DOCTYPE html>

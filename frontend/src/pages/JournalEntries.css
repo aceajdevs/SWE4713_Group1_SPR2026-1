@@ -12,7 +12,6 @@
   overflow-wrap: break-word;
   white-space: normal;
 }
-/* All non-Accounts columns shrink to fit their content */
 .user-report-table th.JE-id,
 .user-report-table td.JE-id,
 .user-report-table th.JE-date,
@@ -30,7 +29,6 @@
   white-space: nowrap;
   width: 1%;
 }
-/* Accounts column absorbs all remaining width */
 .user-report-table th.JE-accounts,
 .user-report-table td.JE-accounts {
   width: auto;

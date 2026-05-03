@@ -16,9 +16,6 @@ const COLUMN_STYLE = {
   alignItems: 'flex-start',
 };
 
-/**
- * One table cell: debits listed in a column, then credits in a column below (indented).
- */
 export function JournalStackedAccountsCell({
   lines,
   journalEntryId,

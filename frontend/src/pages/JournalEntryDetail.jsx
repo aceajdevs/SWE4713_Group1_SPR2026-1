@@ -43,7 +43,6 @@ function JournalEntryDetail() {
       setEntry(entryData);
       setLines(lineData);
 
-      // Load account names for all lines
       const accountIds = [...new Set(lineData.map((l) => l.accountID))];
       if (accountIds.length > 0) {
         const { data: accounts } = await fetchFromTable('chartOfAccounts', {
@@ -56,7 +55,7 @@ function JournalEntryDetail() {
         }
       }
 
-      // Load attachments
+      // attachments
       try {
         const attachData = await getJournalAttachments(parseInt(id, 10));
         setAttachments(attachData);
@@ -265,7 +264,7 @@ function JournalEntryDetail() {
                 </div>
                 {row.error || !row.url ? (
                   <p style={{ margin: '8px 0 0', color: 'var(--bff-red)', fontSize: '0.9rem' }}>
-                    Could not create a download link. Check that the file exists in Storage and policies allow read access.
+                    Could not create a download link. Check that the file exists in Storage.
                   </p>
                 ) : (
                   <>

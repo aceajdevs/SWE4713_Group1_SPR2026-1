@@ -77,7 +77,6 @@ async function fetchLedgerMovementByAccount() {
 function ChartOfAccounts() {
     const [deactivateTooltip, setDeactivateTooltip] = useState({});
 
-    // Wrapper for deactivate button click
     const tryDeactivateAccount = (account) => {
       if (Number(account.currentBalance) !== 0) {
         setDeactivateTooltip((prev) => ({ ...prev, [account.accountID]: true }));
@@ -180,7 +179,7 @@ function ChartOfAccounts() {
               lastModifiedByAccountId.set(account.accountID, latest);
             }
           } catch {
-            // Keep loading account rows even if one event-log lookup fails.
+            // silent catch that lets it keep loading. 
           }
         })
       );

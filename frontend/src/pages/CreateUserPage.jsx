@@ -82,7 +82,7 @@ function CreateUserPage() {
             return;
         }
 
-        // Check if email already exists
+        // does the email exist?
         try {
             const emailExists = await checkEmail(value);
             if (emailExists) {
@@ -158,7 +158,6 @@ function CreateUserPage() {
             return;
         }
 
-        // Validate security questions
         setSecurityQuestionsError('');
         if (
             !securityQuestion1 ||
@@ -178,7 +177,6 @@ function CreateUserPage() {
             return;
         }
 
-        // Check email again before submitting
         try {
             const emailExists = await checkEmail(email);
             if (emailExists) {
@@ -242,7 +240,7 @@ function CreateUserPage() {
             setShowEmailError(false);
             setDobError('');
 
-            // delays navigation to admin dashboard so it can load -- replace with proper wait function later
+            // timer to briefly show the loading screen so the client sees that it exists.
             setTimeout(() => {
                 navigate('/admin-dashboard');
             }, 2000);

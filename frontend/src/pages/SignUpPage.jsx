@@ -62,8 +62,6 @@ function SignUpPage() {
     };
 
     const todayDateString = getTodayLocalDateString();
-
-
     
     const handleEmailChange = (e) => {
         const value = e.target.value;

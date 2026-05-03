@@ -27,8 +27,6 @@ function startOfCurrentQuarter(anchor = new Date()) {
 }
 
 /**
- * Weekly period labels from start of current quarter to `anchor` (inclusive).
- * Each label is the period end date in YYYY-MM-DD format.
  * @param {Date} [anchor]
  * @returns {string[]}
  */
@@ -94,7 +92,6 @@ export function buildRatioPeriodLabelsFromRows(_rows, anchor = new Date()) {
 }
 
 /**
- * Weekly labels for charts from current quarter start through present.
  * @returns {Promise<string[]>}
  */
 export async function fetchRatioChartPeriodLabels() {
@@ -102,7 +99,7 @@ export async function fetchRatioChartPeriodLabels() {
 }
 
 /**
- * Earliest and latest `entryDate` from the same ledger query (for UI).
+ * Earliest and latest.
  * @returns {Promise<{ min: string | null, max: string | null }>}
  */
 export async function fetchLedgerEntryDateRange() {
@@ -111,7 +108,6 @@ export async function fetchLedgerEntryDateRange() {
 }
 
 /**
- * Single Supabase round-trip: weekly labels plus ledger date bounds for the ratio page.
  * @returns {Promise<{ periods: string[], ledgerMin: string | null, ledgerMax: string | null }>}
  */
 export async function fetchRatioPagePeriodContext() {
