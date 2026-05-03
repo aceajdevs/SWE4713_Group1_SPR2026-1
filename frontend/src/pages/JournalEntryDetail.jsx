@@ -10,6 +10,7 @@ import { fetchFromTable } from '../supabaseUtils';
 import { HelpTooltip } from '../components/HelpTooltip';
 import { getJournalEntryTypeLabel } from '../utils/journalEntryTypes';
 import { getErrorMessage, logErrorWithCode, ERROR_IDS } from '../services/errorMessages';
+import StaffEmailModal from '../components/StaffEmailModal';
 import '../global.css';
 
 function JournalEntryDetail() {
@@ -25,6 +26,8 @@ function JournalEntryDetail() {
   const [accountMap, setAccountMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [emailModalOpen, setEmailModalOpen] = useState(false);
+  const isAccountant = user?.role === 'accountant';
 
   useEffect(() => {
     loadEntry();
@@ -140,12 +143,22 @@ function JournalEntryDetail() {
     <div className="container">
       <div className="header-row">
         <h1>Journal Entry #{entry.journalEntryID}</h1>
-        <HelpTooltip text="Return to the journal entries list.">
-          <button type="button" onClick={() => navigate('/journal-entries')} className="button-primary" style={{ marginLeft: '16px' }}>
-            Back to Journal Entries
-          </button>
-        </HelpTooltip>
+        <div style={{ display: 'flex', gap: '8px', marginLeft: '20px' }}>
+          {isAccountant && (
+            <button type="button" className="button-primary" onClick={() => setEmailModalOpen(true)}>Email User</button>
+          )}
+          <HelpTooltip text="Return to the journal entries list.">
+            <button type="button" onClick={() => navigate('/journal-entries')} className="button-primary">
+              Back to Journal Entries
+            </button>
+          </HelpTooltip>
+        </div>
       </div>
+      <StaffEmailModal
+        isOpen={emailModalOpen}
+        onClose={() => setEmailModalOpen(false)}
+        defaultSubject={`Question about Journal Entry #${entry.journalEntryID}`}
+      />
 
       <div style={{ marginBottom: '24px', lineHeight: '1.8' }}>
         <p><strong>Entry Type:</strong> {getJournalEntryTypeLabel(entry.entryType, { emptyLabel: 'N/A' })}</p>
@@ -174,6 +187,7 @@ function JournalEntryDetail() {
           <tr>
             <th>#</th>
             <th>Account</th>
+            <th>Description</th>
             <th className='money'>Debit</th>
             <th className='money'>Credit</th>
           </tr>
@@ -201,6 +215,7 @@ function JournalEntryDetail() {
                     `Account ID: ${line.accountID}`
                   )}
                 </td>
+                <td>{line.description || '-'}</td>
                 <td className='money'>{Number(line.debit) > 0 ? formatCurrency(line.debit) : '-'}</td>
                 <td className='money'>{Number(line.credit) > 0 ? formatCurrency(line.credit) : '-'}</td>
               </tr>
@@ -210,6 +225,7 @@ function JournalEntryDetail() {
         <tfoot>
           <tr style={{ fontWeight: 'bold', borderTop: '2px solid #333' }}>
             <td colSpan={2}>Totals</td>
+            <td></td>
             <td className='money'>{formatCurrency(totalDebits)}</td>
             <td className='money'>{formatCurrency(totalCredits)}</td>
           </tr>

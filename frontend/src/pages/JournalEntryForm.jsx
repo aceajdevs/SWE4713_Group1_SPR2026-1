@@ -495,9 +495,9 @@ function JournalEntryForm() {
             type="button"
             onClick={handleSubmit}
             disabled={submitting}
-            className="button-primary"
+            className="button-secondary"
           >
-            {submitting ? 'Submitting...' : 'Submit Journal Entry'}
+            {submitting ? 'Submitting...' : 'Submit'}
           </button>
         </HelpTooltip>
         <HelpTooltip text="Clear all fields and start over. This will not delete a submitted entry.">
@@ -507,7 +507,7 @@ function JournalEntryForm() {
         </HelpTooltip>
         <HelpTooltip text="View all journal entries and their approval status.">
           <button type="button" onClick={() => navigate('/journal-entries')} className="button-primary">
-            Back to View Journal Entries
+            Back
           </button>
         </HelpTooltip>
       </div>

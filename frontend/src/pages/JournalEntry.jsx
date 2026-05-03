@@ -7,6 +7,7 @@ import {
   fetchLedgerEntriesByJournalEntryId,
 } from '../services/ledgerService';
 import { getErrorMessage, logErrorWithCode, ERROR_IDS } from '../services/errorMessages';
+import StaffEmailModal from '../components/StaffEmailModal';
 import '../global.css';
 
 function JournalEntry() {
@@ -19,6 +20,8 @@ function JournalEntry() {
   const [entries, setEntries] = useState([]);
   const [accountsById, setAccountsById] = useState({});
   const [accountLedgerRowsById, setAccountLedgerRowsById] = useState({});
+  const [emailModalOpen, setEmailModalOpen] = useState(false);
+  const isAccountant = user?.role === 'accountant';
 
   const pr = useMemo(() => {
     if (journalEntryID === undefined || journalEntryID === null || journalEntryID === '') return null;
@@ -111,6 +114,13 @@ function JournalEntry() {
     return new Date(value).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' });
   };
 
+  const formatDescription = (value) => {
+    const text = String(value ?? '').trim();
+    if (!text) return '-';
+    if (/^journal\s+entry\s*#?\s*\d+$/i.test(text)) return '-';
+    return text;
+  };
+
   const totalDebits = entries.reduce((sum, e) => sum + (parseFloat(e.debit) || 0), 0);
   const totalCredits = entries.reduce((sum, e) => sum + (parseFloat(e.credit) || 0), 0);
 
@@ -124,8 +134,18 @@ function JournalEntry() {
     <div className="container">
       <div className="header-row">
         <h1 style={{ margin: '0 20px' }}>Journal Entry</h1>
-        <button type="button" className="button-primary" onClick={() => navigate(-1)}>Back</button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          {isAccountant && (
+            <button type="button" className="button-primary" onClick={() => setEmailModalOpen(true)}>Email User</button>
+          )}
+          <button type="button" className="button-primary" onClick={() => navigate(-1)}>Back</button>
+        </div>
       </div>
+      <StaffEmailModal
+        isOpen={emailModalOpen}
+        onClose={() => setEmailModalOpen(false)}
+        defaultSubject={`Question about Journal Entry ${pr}`}
+      />
       <div style={{ marginBottom: '24px', lineHeight: '1.8' }}>
         <p><strong>Post Reference (PR):</strong> {pr}</p>
         <p><strong>Date:</strong> {formatDate(headerEntryDate)}</p>
@@ -163,7 +183,7 @@ function JournalEntry() {
               return (
                 <tr key={entry.ledgerID} style={hiddenInactive ? { display: 'none' } : undefined}>
                   <td>{accountLabel}</td>
-                  <td>{entry.description?.trim() ? entry.description : ''}</td>
+                  <td>{formatDescription(entry.description)}</td>
                   <td className='money'>{formatDebitCreditCell(entry.debit)}</td>
                   <td className='money'>{formatDebitCreditCell(entry.credit)}</td>
                   <td className='money'>{rowBalance !== undefined && rowBalance !== null ? formatCurrency(rowBalance) : '-'}</td>

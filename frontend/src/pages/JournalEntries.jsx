@@ -39,6 +39,18 @@ function JournalEntries() {
     loadEntries();
   }, [statusFilter]);
 
+  useEffect(() => {
+    if (rejectingId === null) return undefined;
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setRejectingId(null);
+        setRejectReason('');
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [rejectingId]);
+
   const loadEntries = async () => {
     setLoading(true);
     setErrors([]);
@@ -99,7 +111,7 @@ function JournalEntries() {
   const statusColor = (status) => {
     if (status === 'approved') return 'var(--bff-green)';
     if (status === 'rejected') return 'var(--bff-red)';
-    return 'var(--bff-light-primary)';
+    return 'var(--bff-accent)';
   };
 
   if (!canView) {
@@ -118,18 +130,11 @@ function JournalEntries() {
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '16px', alignItems: 'flex-end' }}>
-        {(isAccountant || isManager) && (
-          <HelpTooltip text="Create a new journal entry with debits and credits.">
-            <button onClick={() => navigate('/journal-entry/new')} className="button-primary">
-              New Journal Entry
-            </button>
-          </HelpTooltip>
-        )}
-        <div>
-          <h5 className='h5'>Search:</h5>
-          <div className="clear-input-container" role="group">
-            <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '10px', margin: '0 auto 16px auto', width: '90vw', maxWidth: '90vw', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+          <div>
+            <h5 className='h5'>Search:</h5>
+            <div className="clear-input-container" role="group">
               <HelpTooltip text="Search by account name, amount, or date.">
                 <input
                   type="text"
@@ -140,50 +145,58 @@ function JournalEntries() {
                   style={{ width: '400px' }}
                 />
               </HelpTooltip>
+              <button type="button" className="button-clear" onClick={() => setSearchQuery('')} aria-label="Clear search input">X</button>
             </div>
-          <button type="button" className="button-clear" onClick={() => setSearchQuery('')} aria-label="Clear search input">X</button>
+          </div>
+
+          <div>
+            <h5 className='h5'>Status:</h5>
+            <HelpTooltip text="Filter entries by their approval status.">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="input"
+              >
+                <option value="">All</option>
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </HelpTooltip>
+          </div>
+
+          <div>
+            <h5 className='h5'>From:</h5>
+            <HelpTooltip text="Show entries created on or after this date.">
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="input"
+              />
+            </HelpTooltip>
+          </div>
+
+          <div>
+            <h5 className='h5'>To:</h5>
+            <HelpTooltip text="Show entries created on or before this date.">
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="input"
+              />
+            </HelpTooltip>
           </div>
         </div>
 
-        <div>
-          <h5 className='h5'>Status:</h5>
-          <HelpTooltip text="Filter entries by their approval status.">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="input"
-            >
-              <option value="">All</option>
-              <option value="pending">Pending</option>
-              <option value="approved">Approved</option>
-              <option value="rejected">Rejected</option>
-            </select>
+        {(isAccountant || isManager) && (
+          <HelpTooltip text="Create a new journal entry with debits and credits.">
+            <button onClick={() => navigate('/journal-entry/new')} className="button-primary">
+              New Journal Entry
+            </button>
           </HelpTooltip>
-        </div>
-
-        <div>
-          <h5 className='h5'>From:</h5>
-          <HelpTooltip text="Show entries created on or after this date.">
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="input"
-            />
-          </HelpTooltip>
-        </div>
-
-        <div>
-          <h5 className='h5'>To:</h5>
-          <HelpTooltip text="Show entries created on or before this date.">
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="input"
-            />
-          </HelpTooltip>
-        </div>
+        )}
       </div>
 
       {loading ? (
@@ -191,7 +204,7 @@ function JournalEntries() {
       ) : displayed.length === 0 ? (
         <p>No journal entries found.</p>
       ) : (
-        <table className={`user-report-table${isManager ? ' has-actions' : ''}`}> 
+        <table style={{ width: '90vw', borderCollapse: 'collapse' }} className={`table user-report-table${isManager ? ' has-actions' : ''}`}> 
           <thead>
             <tr>
               <th className="JE-id">ID</th>
@@ -222,33 +235,59 @@ function JournalEntries() {
                   <td className="JE-type">{getJournalEntryTypeLabel(entry.entryType, { emptyLabel: '-' })}</td>
                   <td className="JE-accounts">
                     {(entry.lines || []).length > 0 ? (
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                        {(entry.lines || [])
-                          .filter((l) => l.accountID && l.accountName && l.accountNumber)
-                          .filter((line, index, all) => all.findIndex((x) => x.accountID === line.accountID) === index)
-                          .map((line) => (
-                            canOpenLedger ? (
-                              <button
-                                key={`${entry.journalEntryID}-${line.accountID}`}
-                                type="button"
-                                onClick={() => navigate(`${ledgerBasePath}/${line.accountNumber}`)}
-                                style={{ background: 'none', border: 'none', color: '#0066cc', cursor: 'pointer', textDecoration: 'underline', padding: 0 }}
-                                title="Open account ledger"
-                              >
-                                {line.accountNumber} - {line.accountName}
-                              </button>
-                            ) : (
-                              <span key={`${entry.journalEntryID}-${line.accountID}`}>
-                                {line.accountNumber} - {line.accountName}
-                              </span>
-                            )
-                          ))}
-                      </div>
+                      <>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                          {(entry.lines || [])
+                            .filter((l) => l.accountID && l.accountName && l.accountNumber && Number(l.debit) > 0)
+                            .filter((line, index, all) => all.findIndex((x) => x.accountID === line.accountID) === index)
+                            .map((line) => (
+                              canOpenLedger ? (
+                                <button
+                                  key={`debit-${entry.journalEntryID}-${line.accountID}`}
+                                  type="button"
+                                  onClick={() => navigate(`${ledgerBasePath}/${line.accountNumber}`)}
+                                  style={{ background: 'none', border: 'none', color: '#0066cc', cursor: 'pointer', textDecoration: 'underline', padding: 0, display: 'block', textAlign: 'left' }}
+                                  title="Open account ledger"
+                                >
+                                  {line.accountNumber} - {line.accountName}
+                                </button>
+                              ) : (
+                                <span key={`debit-${entry.journalEntryID}-${line.accountID}`} style={{ display: 'block' }}>
+                                  {line.accountNumber} - {line.accountName}
+                                </span>
+                              )
+                            ))}
+                          {(entry.lines || []).filter((l) => l.accountID && l.accountName && l.accountNumber && Number(l.debit) > 0).length === 0 && '-'}
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '18px', marginTop: '4px' }}>
+                          {(entry.lines || [])
+                            .filter((l) => l.accountID && l.accountName && l.accountNumber && Number(l.credit) > 0)
+                            .filter((line, index, all) => all.findIndex((x) => x.accountID === line.accountID) === index)
+                            .map((line) => (
+                              canOpenLedger ? (
+                                <button
+                                  key={`credit-${entry.journalEntryID}-${line.accountID}`}
+                                  type="button"
+                                  onClick={() => navigate(`${ledgerBasePath}/${line.accountNumber}`)}
+                                  style={{ background: 'none', border: 'none', color: '#0066cc', cursor: 'pointer', textDecoration: 'underline', padding: 0, display: 'block', textAlign: 'left' }}
+                                  title="Open account ledger"
+                                >
+                                  {line.accountNumber} - {line.accountName}
+                                </button>
+                              ) : (
+                                <span key={`credit-${entry.journalEntryID}-${line.accountID}`} style={{ display: 'block' }}>
+                                  {line.accountNumber} - {line.accountName}
+                                </span>
+                              )
+                            ))}
+                          {(entry.lines || []).filter((l) => l.accountID && l.accountName && l.accountNumber && Number(l.credit) > 0).length === 0 && '-'}
+                        </div>
+                      </>
                     ) : (
                       '-'
                     )}
                   </td>
-                  <td className="JE-money">${totalDebit.toFixed(2)}</td>
+                  <td className="JE-money money">${totalDebit.toFixed(2)}</td>
                   <td className="JE-status" style={{ color: statusColor(entry.status), fontWeight: 'bold' }}>
                     {entry.status}
                     {entry.status === 'rejected' && entry.rejectReason && (
@@ -261,47 +300,28 @@ function JournalEntries() {
                   {isManager && (
                     <td className="JE-actions">
                       {entry.status === 'pending' && (
-                        <div>
+                        <div className="action-buttons" style={{ display: 'flex', alignItems: 'center'}}>
                           <HelpTooltip text="Approve this journal entry and post it to the ledger.">
                             <button
                             className="button-table-action-approve"
+                            style={{ marginRight: '8px', width: '25px', height: '25px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                               onClick={() => handleApprove(entry.journalEntryID)}
                             >
                               ✓
                             </button>
                           </HelpTooltip>
-                          {rejectingId === entry.journalEntryID ? (
-                            <div>
-                              <input
-                                type="text"
-                                value={rejectReason}
-                                onChange={(e) => setRejectReason(e.target.value)}
-                                placeholder="Reason for rejection (required)"
-                                className="input"
-                                style={{ marginBottom: '4px' }}
-                              />
-                              <HelpTooltip text="Confirm the rejection with the reason provided.">
-                                <button
-                                  onClick={() => handleReject(entry.journalEntryID)}
-                                  style={{ color: 'red' }}
-                                >
-                                  Confirm Reject
-                                </button>
-                              </HelpTooltip>
-                              <button onClick={() => { setRejectingId(null); setRejectReason(''); }}>
-                                Cancel
-                              </button>
-                            </div>
-                          ) : (
-                            <HelpTooltip text="Reject this entry. You must provide a reason.">
-                              <button
-                                className="button-table-action-reject"
-                                onClick={() => setRejectingId(entry.journalEntryID)}
-                              >
-                                X
-                              </button>
-                            </HelpTooltip>
-                          )}
+                          <HelpTooltip text="Reject this entry. You must provide a reason.">
+                            <button
+                              className="button-table-action-reject"
+                              style={{ marginRight: '8px', width: '25px', height: '25px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                              onClick={() => {
+                                setRejectingId(entry.journalEntryID);
+                                setRejectReason('');
+                              }}
+                            >
+                              X
+                            </button>
+                          </HelpTooltip>
                         </div>
                       )}
                       {entry.status !== 'pending' && <span>-</span>}
@@ -312,6 +332,77 @@ function JournalEntries() {
             })}
           </tbody>
         </table>
+      )}
+      
+      /* Reject Modal * /
+      {isManager && rejectingId !== null && (
+        <div
+          role="presentation"
+          onClick={() => {
+            setRejectingId(null);
+            setRejectReason('');
+          }}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 3000,
+            background: 'rgba(15, 23, 42, 0.45)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '16px',
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={`${formId}-reject-title`}
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: '100%',
+              maxWidth: '520px',
+              background: 'var(--bff-light-text)',
+              borderRadius: '12px',
+              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.25)',
+              padding: '20px',
+            }}
+          >
+            <h3 id={`${formId}-reject-title`} style={{ marginBottom: '10px' }}>Reject Journal Entry #{rejectingId}</h3>
+            <p style={{ marginBottom: '10px', fontSize: '0.95rem' }}>
+              Enter a rejection reason. This note will be visible in the journal entries report.
+            </p>
+            <textarea
+              id={`${formId}-reject-reason`}
+              className="input"
+              style={{ minHeight: '110px', resize: 'vertical' }}
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="Reason for rejection (required)"
+              autoFocus
+            />
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '14px' }}>
+              <button
+                type="button"
+                className="button-primary"
+                onClick={() => {
+                  setRejectingId(null);
+                  setRejectReason('');
+                }}
+              >
+                Cancel
+              </button>
+              <HelpTooltip text="Confirm the rejection with the reason provided.">
+                <button
+                  type="button"
+                  className="button-secondary"
+                  onClick={() => handleReject(rejectingId)}
+                >
+                  Confirm Reject
+                </button>
+              </HelpTooltip>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

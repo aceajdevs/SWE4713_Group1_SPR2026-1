@@ -210,6 +210,7 @@ function AdminEditUserPage() {
       }
 
       setSuccess('User updated successfully.');
+      navigate('/admin-dashboard');
     } catch (err) {
       console.error('Error updating user:', err);
       setError(err.message || 'Failed to update user. Please try again.');

@@ -371,15 +371,18 @@ function ChartOfAccounts() {
               onClick={() => setStaffEmailModalOpen(true)}
               className="button-primary"
             >
-              Email User
+              Send an Email
             </button>
           </HelpTooltip>
-          <HelpTooltip text="Show all accounts in a single table report.">
-            <button className="button-primary" onClick={() => setViewMode('report')}>All Accounts</button>
-          </HelpTooltip>
-          <HelpTooltip text="Pick one account from a list to view its details.">
-            <button className="button-primary" onClick={() => setViewMode('individual')}>Individual Account</button>
-          </HelpTooltip>
+          {viewMode === 'individual' ? (
+            <HelpTooltip text="Show all accounts in a single table report.">
+              <button className="button-primary" onClick={() => setViewMode('report')}>All Accounts</button>
+            </HelpTooltip>
+          ) : (
+            <HelpTooltip text="Pick one account from a list to view its details.">
+              <button className="button-primary" onClick={() => setViewMode('individual')}>Individual Account</button>
+            </HelpTooltip>
+          )}
         </div>
       {staffEmailModalOpen && (
               <div
@@ -396,7 +399,7 @@ function ChartOfAccounts() {
                 >
                   <div className="coa-email-modal-header">
                     <h2 id="coa-email-modal-title" className="coa-email-modal-title">
-                      Email a manager or accountant
+                      Email Manager / Accountant
                     </h2>
                     <button
                       type="button"
@@ -408,9 +411,6 @@ function ChartOfAccounts() {
                       X
                     </button>
                   </div>
-                  <p className="coa-email-modal-lead">
-                    Send a message about the chart of accounts using the same email integration as other admin notifications.
-                  </p>
                   {staffLoadError && (
                     <p style={{ color: 'var(--bff-red)', fontSize: '0.9rem' }} role="alert">
                       Could not load recipients: {staffLoadError}
@@ -418,7 +418,7 @@ function ChartOfAccounts() {
                   )}
                   {!staffLoadError && staffRecipients.length === 0 && (
                     <p style={{ color: 'var(--bff-dark-text)', fontSize: '0.9rem' }}>
-                  No active managers, accountants, or administrators with an email address were found.
+                  No active managers or accountants with an email address were found.
                     </p>
                   )}
                   <form onSubmit={handleSendStaffEmail} className="coa-email-staff-form">
@@ -433,7 +433,7 @@ function ChartOfAccounts() {
                         onChange={(e) => setSelectedStaffId(e.target.value)}
                         disabled={staffRecipients.length === 0}
                       >
-                        <option value="">— Select manager, accountant, or administrator —</option>
+                        <option value="">— Select manager / accountant —</option>
                         {staffRecipients.map((u) => (
                           <option key={u.userID} value={u.userID}>
                             {[u.fName, u.lName].filter(Boolean).join(' ') || u.username} ({u.role}) — {u.email}
@@ -464,7 +464,7 @@ function ChartOfAccounts() {
                       </label>
                       <textarea
                         id="coa-staff-message"
-                        className="input coa-email-staff-text-area"
+                        className="input coa-email-staff-textarea"
                         rows={4}
                         value={staffEmailMessage}
                         onChange={(e) => setStaffEmailMessage(e.target.value)}

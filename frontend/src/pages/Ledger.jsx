@@ -8,6 +8,7 @@ import {
 } from '../services/ledgerService';
 import { supabase } from '../supabaseClient';
 import { HelpTooltip } from '../components/HelpTooltip';
+import StaffEmailModal from '../components/StaffEmailModal';
 import '../global.css';
 
 const LEDGER_SELECT =
@@ -149,10 +150,12 @@ function Ledger() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const isAdmin = user?.role === 'administrator';
+  const isAccountant = user?.role === 'accountant';
   const [account, setAccount] = useState(null);
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [amountSearch, setAmountSearch] = useState('');
@@ -301,6 +304,13 @@ function Ledger() {
     return new Date(value).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' });
   };
 
+  const formatDescription = (value) => {
+    const text = String(value ?? '').trim();
+    if (!text) return '-';
+    if (/^journal\s+entry\s*#?\s*\d+$/i.test(text)) return '-';
+    return text;
+  };
+
   const totalDebits = filteredEntries.reduce((sum, e) => sum + (parseFloat(e.debit) || 0), 0);
   const totalCredits = filteredEntries.reduce((sum, e) => sum + (parseFloat(e.credit) || 0), 0);
 
@@ -321,12 +331,22 @@ function Ledger() {
     <div className="container">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <h1>General Ledger</h1>
-        <HelpTooltip text="Return to the chart of accounts list.">
-          <button type="button" onClick={() => navigate('/admin/chart-of-accounts')} className="button-primary" style={{ marginLeft: '12px' }}>
-            Back to Chart of Accounts
-          </button>
-        </HelpTooltip>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          {isAccountant && (
+            <button type="button" className="button-primary" onClick={() => setEmailModalOpen(true)}>Email User</button>
+          )}
+          <HelpTooltip text="Return to the chart of accounts list.">
+            <button type="button" onClick={() => navigate('/admin/chart-of-accounts')} className="button-primary">
+              Back to Chart of Accounts
+            </button>
+          </HelpTooltip>
+        </div>
       </div>
+      <StaffEmailModal
+        isOpen={emailModalOpen}
+        onClose={() => setEmailModalOpen(false)}
+        defaultSubject={account ? `Question about account ${account.accountNumber} — ${account.accountName}` : 'Question about ledger account'}
+      />
 
       <div style={{ marginBottom: '24px', lineHeight: '1.8' }}>
         <p><strong>Account Number:</strong> {account.accountNumber}</p>
@@ -509,7 +529,7 @@ function Ledger() {
                     '-'
                   )}
                 </td>
-                <td>{entry.description?.trim() ? entry.description : ''}</td>
+                <td>{formatDescription(entry.description)}</td>
                 <td className='money'>{debitCell}</td>
                 <td className='money'>{creditCell}</td>
                 <td className='money'>{balanceCell}</td>
