@@ -54,6 +54,7 @@ function AccountForm() {
     accountName: '',
     accountNumber: '',
     description: '',
+    comment: '',
     normalSide: 'Debit',
     type: '',
     subType: '',
@@ -312,6 +313,7 @@ function AccountForm() {
       accountName: formData.accountName,
       accountNumber: parseInt(resolvedAccountNumber, 10),
       description: formData.description,
+      comment: formData.comment,
       normalSide: formData.normalSide,
       type: formData.type,
       subType: formData.subType,
@@ -424,7 +426,7 @@ Normal Side: ${accountData.normalSide}`;
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
         <HelpTooltip text="Open a popup to email a manager or administrator about this account.">
           <button type="button" className="button-primary" onClick={() => setStaffEmailModalOpen(true)}>
-            Email manager/admin
+            Email Manager / Admin
           </button>
         </HelpTooltip>
       </div>
@@ -448,12 +450,12 @@ Normal Side: ${accountData.normalSide}`;
               </h2>
               <button
                 type="button"
-                className="account-email-modal-close"
+                className="button-primary account-email-modal-close"
                 aria-label="Close"
                 disabled={staffEmailSending}
                 onClick={() => setStaffEmailModalOpen(false)}
               >
-                ×
+                X
               </button>
             </div>
 
@@ -476,7 +478,7 @@ Normal Side: ${accountData.normalSide}`;
                 </label>
                 <select
                   id="account-email-recipient"
-                  className="input"
+                  className="input account-email-select"
                   value={selectedStaffId}
                   onChange={(e) => setSelectedStaffId(e.target.value)}
                   disabled={staffRecipients.length === 0}
@@ -510,38 +512,24 @@ Normal Side: ${accountData.normalSide}`;
                 </div>
               </div>
 
-              <div className="account-email-row">
+              <div className="account-email-row account-email-row-grow">
                 <label htmlFor="account-email-message" className="account-email-label">
                   Message
                 </label>
-                <div className="clear-input-container" role="group">
                 <textarea
                   id="account-email-message"
-                  className="input"
+                  className="input account-email-textarea"
                   rows={4}
                   value={staffEmailMessage}
                   onChange={(e) => setStaffEmailMessage(e.target.value)}
                   placeholder="Your message…"
                 />
-                <button className="button" type="button" onClick={() => setStaffEmailMessage('')} aria-label="Clear message">
-                  X
-                </button>
-                </div>
               </div>
 
               <div className="account-email-actions">
-                <button
-                  type="button"
-                  className="button-primary"
-                  style={{ marginRight: '8px', background: '#6b7280' }}
-                  disabled={staffEmailSending}
-                  onClick={() => setStaffEmailModalOpen(false)}
-                >
-                  Cancel
-                </button>
                 <HelpTooltip text="Send this message using the configured EmailJS admin template.">
-                  <button type="submit" className="button-primary" disabled={staffEmailSending || staffRecipients.length === 0}>
-                    {staffEmailSending ? 'Sending…' : 'Send email'}
+                  <button type="submit" className="button-secondary" disabled={staffEmailSending || staffRecipients.length === 0}>
+                    {staffEmailSending ? 'Sending…' : 'Send Email'}
                   </button>
                 </HelpTooltip>
               </div>
@@ -645,6 +633,25 @@ Normal Side: ${accountData.normalSide}`;
           <button type="button" className="button-clear" onClick={() => setFormData(prev => ({ ...prev, initBalance: 0 }))} aria-label="Clear initial balance input">X</button>
           </div>
         </div>
+        <div className="span-1">
+          <label>Comment:</label>
+          <div className="clear-input-container" role="group">
+            <textarea
+              name="comment"
+              value={formData.comment ?? ''}
+              onChange={handleChange}
+              className="input"
+            />
+            <button
+              type="button"
+              className="button-clear"
+              onClick={() => setFormData(prev => ({ ...prev, comment: '' }))}
+              aria-label="Clear comment input"
+            >
+              X
+            </button>
+          </div>
+        </div>
         <div className="span-2">
           <HelpTooltip
             text={
@@ -653,7 +660,7 @@ Normal Side: ${accountData.normalSide}`;
                 : 'Add this new account to the chart of accounts.'
             }
           >
-            <button type="submit" className="button-primary" disabled={loading}>
+            <button type="submit" className="button-secondary" disabled={loading}>
               {loading ? 'Saving...' : 'Save Account'}
             </button>
           </HelpTooltip>

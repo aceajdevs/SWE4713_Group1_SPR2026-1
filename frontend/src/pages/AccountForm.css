@@ -79,8 +79,9 @@
   width: 100%;
   max-width: 520px;
   max-height: min(90vh, 640px);
-  overflow: auto;
-  padding: 18px 20px 20px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 20px;
   border-radius: 12px;
   background: #fff;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
@@ -104,19 +105,17 @@
 
 .account-email-modal-close {
   flex-shrink: 0;
-  width: 36px;
-  height: 36px;
   border: none;
   border-radius: 8px;
-  background: #f3f4f6;
-  color: #374151;
+  background: white;
+  color: var(--bff-dark-text);
   font-size: 22px;
   line-height: 1;
   cursor: pointer;
 }
 
 .account-email-modal-close:hover:not(:disabled) {
-  background: #e5e7eb;
+  background: var(--bff-light-secondary);
 }
 
 .account-email-modal-close:disabled {
@@ -128,7 +127,6 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  margin-top: 10px;
 }
 
 .account-email-row {
@@ -137,14 +135,53 @@
   gap: 4px;
 }
 
+@media (min-width: 640px) {
+  .account-email-row:not(.account-email-row-grow) {
+    flex-direction: row;
+    align-items: center;
+  }
+  .account-email-row:not(.account-email-row-grow) .account-email-label {
+    flex: 0 0 100px;
+  }
+  .account-email-row .clear-input-container,
+  .account-email-row .input,
+  .account-email-select {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
 .account-email-label {
   font-size: 0.875rem;
   font-weight: 500;
-  color: #374151;
+  color: var(--bff-dark-text);
+}
+
+.account-email-select {
+  max-width: 100%;
+}
+
+.account-email-textarea {
+  resize: vertical;
+  min-height: 96px;
+  width: 100%;
+  font-family: inherit;
 }
 
 .account-email-actions {
   display: flex;
   justify-content: flex-end;
   margin-top: 4px;
+}
+
+.account-email-actions button {
+  padding: 8px 16px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: white;
+  background-color: var(--bff-primary);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
 }

@@ -50,7 +50,7 @@ export default function PasswordExpiryNotifyPanel() {
   return (
     <div className="password-expiry-notify-panel">
       <h2>Expired Password Emails</h2>
-      <HelpTooltip text="Send reminder emails for accounts in the 3-day expiry window that do not yet have passwordExpiryWarningSentAt set.">
+      <HelpTooltip text="Send reminder emails for users who need to change their password in 3 days or less.">
         <button type="button" className="button-primary" disabled={loading} onClick={handleSend}>
           {loading ? 'Sending…' : 'Send Reminder Emails'}
         </button>

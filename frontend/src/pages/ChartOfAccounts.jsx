@@ -5,7 +5,7 @@ import { fetchFromTable } from '../supabaseUtils';
 import { supabase } from '../supabaseClient';
 import { sendAdminEmail } from '../services/emailService';
 import { getEmailRecipientsByRoles } from '../services/adminService';
-import { setChartAccountActiveWithActor } from '../services/chartOfAccountsService';
+import { fetchChartAccountEventLog, setChartAccountActiveWithActor } from '../services/chartOfAccountsService';
 import { HelpTooltip } from '../components/HelpTooltip';
 import editIcon from '../../assets/Images/resourceDirectory/Edit.png';
 import deactivateIcon from '../../assets/Images/resourceDirectory/X.png';
@@ -36,6 +36,30 @@ function shouldTryLowercaseLedgerTable(error) {
       message.includes('does not exist') ||
       (message.includes('could not find') && message.includes('table')))
   );
+}
+
+function getEventTimestamp(row) {
+  if (!row || typeof row !== 'object') return null;
+  return row.changedAt ?? row.changedat ?? row.updatedAt ?? row.updatedat ?? null;
+}
+
+function getLatestEventTimestamp(rows) {
+  const list = Array.isArray(rows) ? rows : [];
+  let latestIso = null;
+  let latestMs = Number.NEGATIVE_INFINITY;
+
+  for (const row of list) {
+    const ts = getEventTimestamp(row);
+    if (!ts) continue;
+    const ms = new Date(ts).getTime();
+    if (!Number.isFinite(ms)) continue;
+    if (ms > latestMs) {
+      latestMs = ms;
+      latestIso = ts;
+    }
+  }
+
+  return latestIso;
 }
 
 async function fetchLedgerMovementByAccount() {
@@ -146,6 +170,21 @@ function ChartOfAccounts() {
         return;
       }
 
+      const lastModifiedByAccountId = new Map();
+      await Promise.all(
+        (data || []).map(async (account) => {
+          try {
+            const rows = await fetchChartAccountEventLog(account.accountID);
+            const latest = getLatestEventTimestamp(rows);
+            if (latest) {
+              lastModifiedByAccountId.set(account.accountID, latest);
+            }
+          } catch {
+            // Keep loading account rows even if one event-log lookup fails.
+          }
+        })
+      );
+
       const movementByAccount = new Map();
       for (const row of ledgerRows || []) {
         const accountId = row.accountID;
@@ -170,6 +209,11 @@ function ChartOfAccounts() {
           ledgerDebitTotal: movement.debit,
           ledgerCreditTotal: movement.credit,
           currentBalance,
+          lastModifiedAt:
+            lastModifiedByAccountId.get(account.accountID) ??
+            account.updatedAt ??
+            account.createdAt ??
+            null,
         };
       });
 
@@ -660,6 +704,7 @@ function ChartOfAccounts() {
               <th className="COA-added">Added At</th>
               <th className="COA-modified">Last Modified</th>
               <th className="COA-status">Status</th>
+              <th className="COA-comment">Comment</th>
               <th className="COA-event">Event Log</th>
               {isAdmin && <th className="COA-actions">Actions</th>}
             </tr>
@@ -668,7 +713,7 @@ function ChartOfAccounts() {
             {filteredAccounts.length === 0 ? (
               <tr>
                 <td
-                  colSpan={isAdmin ? 14 : 13}
+                  colSpan={isAdmin ? 15 : 14}
                   style={{ textAlign: 'center', padding: '20px', color: 'var(--bff-dark-text)' }}
                 >
                   No accounts exist for the selected filters.
@@ -702,8 +747,9 @@ function ChartOfAccounts() {
                   <td className="COA-credit money">${fmt(account.ledgerCreditTotal)}</td>
                   <td className="COA-current money">${fmt(account.currentBalance ?? account.initBalance)}</td>
                   <td className="COA-added">{account.createdAt ? new Date(account.createdAt).toLocaleString() : 'N/A'}</td>
-                  <td className="COA-modified">{account.updatedAt ? new Date(account.updatedAt).toLocaleString() : 'N/A'}</td>
+                  <td className="COA-modified">{account.lastModifiedAt ? new Date(account.lastModifiedAt).toLocaleString() : 'N/A'}</td>
                   <td className="COA-status">{account.active ? 'Active' : 'Inactive'}</td>
+                  <td className="COA-comment">{account.comment || 'N/A'}</td>
                   <td className="COA-event" onClick={(e) => e.stopPropagation()}>
                     <HelpTooltip text="View audit events for this account (before/after snapshots, who changed it, when).">
                       <button
@@ -849,7 +895,7 @@ function ChartOfAccounts() {
                   <tr><th>Statement Type</th><td>{selectedAccount.statementType || 'N/A'}</td></tr>
                   <tr><th>Status</th><td>{selectedAccount.active ? 'Active' : 'Inactive'}</td></tr>
                   <tr><th>Added At</th><td>{selectedAccount.createdAt ? new Date(selectedAccount.createdAt).toLocaleString() : 'N/A'}</td></tr>
-                  <tr><th>Last Modified</th><td>{selectedAccount.updatedAt ? new Date(selectedAccount.updatedAt).toLocaleString() : 'N/A'}</td></tr>
+                  <tr><th>Last Modified</th><td>{selectedAccount.lastModifiedAt ? new Date(selectedAccount.lastModifiedAt).toLocaleString() : 'N/A'}</td></tr>
                 </tbody>
               </table>
             )}

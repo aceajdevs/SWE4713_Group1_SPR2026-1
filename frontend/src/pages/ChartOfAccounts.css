@@ -20,9 +20,10 @@
 .COA-debit { width: 6% }
 .COA-credit { width: 6% }
 .COA-current { width: 6% }
-.COA-added { width: 11% }
-.COA-modified { width: 11% }
+.COA-added { width: 8% }
+.COA-modified { width: 8% }
 .COA-status { width: 4% }
+.COA-comment { width: 6% }
 .COA-event { width: 4% }
 .COA-actions { width: 6% }
 
@@ -49,7 +50,7 @@
 
 @media (max-width: 1200px) {
   .COA-table { font-size: 0.95rem; }
-  .COA-description, .COA-added, .COA-modified { display: none; }
+  .COA-description, .COA-added, .COA-modified, .COA-comment { display: none; }
 }
 @media (max-width: 900px) {
   .COA-table { font-size: 0.9rem; }
