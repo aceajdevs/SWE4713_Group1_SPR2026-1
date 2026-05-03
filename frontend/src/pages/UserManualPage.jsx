@@ -87,7 +87,7 @@ function UserManualPage() {
       <Navbar />
       <header className="user-manual-header">
         <div className="user-manual-header-inner">
-          <h1>User manual</h1>
+          <h1>User Manual</h1>
           <HelpTooltip text="Return to the previous page.">
             <button type="button" className="button-primary" onClick={goBack}>
               Back
