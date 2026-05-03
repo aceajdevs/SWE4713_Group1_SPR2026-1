@@ -116,7 +116,22 @@ function PostedJournalEntriesPage() {
         </p>
       )}
 
-      <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+      <div style={{ display: 'flex', width: '88vw', gap: '10px', padding: '8px 10px', marginBottom: '16px' }}>
+        <div>
+          <h5 className='h5'>Search</h5>
+          <div className="clear-input-container" role="group">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Account, amount, or date"
+              className="input"
+              style={{ width: '30rem' }}
+              aria-label="Search posted journals by account, amount, or date"
+            />
+            <button type="button" className="button-clear" onClick={() => setSearchQuery('')} aria-label="Clear search input">X</button>
+          </div>
+        </div>
         <div>
           <h5 className='h5'>From</h5>
           <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="input" />
@@ -124,21 +139,6 @@ function PostedJournalEntriesPage() {
         <div>
           <h5 className='h5'>To</h5>
           <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="input" />
-        </div>
-        <div style={{ flex: '1 1 200px', minWidth: 180}}>
-          <h5 className='h5'>Search</h5>
-          <div className="clear-input-container" role="group">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Account, amount, or date"
-            className="input"
-            style={{ width: '100%' }}
-            aria-label="Search posted journals by account, amount, or date"
-          />
-          <button type="button" className="button-clear" onClick={() => setSearchQuery('')} aria-label="Clear search input">X</button>
-          </div>
         </div>
       </div>
 
