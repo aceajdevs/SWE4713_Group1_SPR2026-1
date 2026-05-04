@@ -5,7 +5,6 @@ function AccountantDashboard() {
   return (
     <LandingDashboard
       title="Accountant Dashboard"
-      subtitle="Use this landing page to create journal entries, track approvals, and review financial ratio health."
       actions={[
         { label: 'New Journal Entry', path: '/journal-entry/new' },
         { label: 'View Journal Entries', path: '/journal-entries' },

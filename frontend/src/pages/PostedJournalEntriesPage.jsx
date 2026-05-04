@@ -129,9 +129,7 @@ function PostedJournalEntriesPage() {
               style={{ width: '30rem' }}
               aria-label="Search posted journals by account, amount, or date"
             />
-            <HelpTooltip text="Clear the search field.">
-              <button type="button" className="button-clear" onClick={() => setSearchQuery('')} aria-label="Clear search input">X</button>
-            </HelpTooltip>
+            <button type="button" className="button-clear" onClick={() => setSearchQuery('')} aria-label="Clear search input">X</button>
           </div>
         </div>
         <div>
@@ -252,7 +250,7 @@ function PostedJournalEntriesPage() {
                     </span>
                   </td>
                   <td className="PJE-ledger">
-                    <HelpTooltip text="View the general ledger details for this journal entry.">
+                    <HelpTooltip text="View the general ledger for this journal entry.">
                       <button
                         type="button"
                         className="button-primary"
