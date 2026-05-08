@@ -574,6 +574,20 @@ export async function getAllUserRequests() {
 
 export async function approveUserRequest(userRequestId, role, changedByUserId) {
   try {
+    // Capture request contact info up front in case post-approval lookup is unavailable.
+    let requestSnapshot = null;
+    try {
+      const { data: pendingRequests, error: pendingRequestsError } = await supabase.rpc('get_all_user_requests');
+      if (pendingRequestsError) {
+        throw pendingRequestsError;
+      }
+      requestSnapshot = (pendingRequests || []).find(
+        (row) => String(row?.userID) === String(userRequestId)
+      ) || null;
+    } catch (prefetchError) {
+      console.warn('Unable to prefetch account request details before approval:', prefetchError);
+    }
+
     const { data, error } = await supabase.rpc('approve_user_request_with_actor', {
       p_userrequest_id: userRequestId,
       p_role: role,
@@ -596,7 +610,16 @@ export async function approveUserRequest(userRequestId, role, changedByUserId) {
         approvedRow?.new_user_id ??
         approvedRow?.id ??
         null;
-      const fallbackEmail = String(approvedRow?.email || '').trim();
+      const fallbackEmail = String(
+        approvedRow?.email || requestSnapshot?.email || ''
+      ).trim();
+      const fallbackUsername = String(
+        approvedRow?.username || requestSnapshot?.username || ''
+      ).trim();
+      const fallbackDisplayName =
+        `${approvedRow?.fName || requestSnapshot?.fName || ''} ${approvedRow?.lName || requestSnapshot?.lName || ''}`.trim() ||
+        fallbackUsername ||
+        'User';
 
       let query = supabase
         .from('user')
@@ -618,11 +641,11 @@ export async function approveUserRequest(userRequestId, role, changedByUserId) {
 
         const recipientEmail = String(approvedUserRecord?.email || fallbackEmail).trim();
         if (recipientEmail) {
-          const username = String(approvedUserRecord?.username || '').trim();
+          const username = String(approvedUserRecord?.username || fallbackUsername).trim();
           const displayName =
             `${approvedUserRecord?.fName || ''} ${approvedUserRecord?.lName || ''}`.trim() ||
             username ||
-            'User';
+            fallbackDisplayName;
 
           const subject = 'Your account request was approved';
           const message =

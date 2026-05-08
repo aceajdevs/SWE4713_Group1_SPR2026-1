@@ -1,5 +1,22 @@
 import { supabase } from '../supabaseClient';
 
+/** Lower rank = more liquid. Persists via table update (column may not exist on RPC). */
+async function setAccountLiquidityRank(accountNumber, liquidityRank) {
+  if (liquidityRank === '' || liquidityRank === null || liquidityRank === undefined) {
+    return;
+  }
+  const n = typeof liquidityRank === 'number' ? liquidityRank : parseInt(liquidityRank, 10);
+  if (!Number.isInteger(n) || n < 1) {
+    throw new Error('Liquidity rank must be a whole number ≥ 1 (lower = more liquid).');
+  }
+  const { error } = await supabase
+    .from('chartOfAccounts')
+    .update({ liquidityRank: n })
+    .eq('accountNumber', accountNumber);
+
+  if (error) throw error;
+}
+
 export async function createChartAccountWithActor(accountData, actorUserId) {
   const { data, error } = await supabase.rpc('create_chart_account_with_actor', {
     p_account_name: accountData.accountName,
@@ -17,6 +34,7 @@ export async function createChartAccountWithActor(accountData, actorUserId) {
   });
 
   if (error) throw error;
+  await setAccountLiquidityRank(accountData.accountNumber, accountData.liquidityRank);
   return data;
 }
 
@@ -38,6 +56,7 @@ export async function updateChartAccountWithActor(accountId, accountData, actorU
   });
 
   if (error) throw error;
+  await setAccountLiquidityRank(accountData.accountNumber, accountData.liquidityRank);
   return data;
 }
 

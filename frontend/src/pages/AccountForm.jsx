@@ -63,7 +63,8 @@ function AccountForm() {
     active: true,
     statementType: '',
     createdAt: '',
-    createdBy: 0
+    createdBy: 0,
+    liquidityRank: ''
   });
 
   const [loading, setLoading] = useState(false);
@@ -190,6 +191,12 @@ function AccountForm() {
         if (isNaN(updatedValue)) updatedValue = 0;
       } else if (name === 'accountNumber') {
         updatedValue = value.replace(/\D/g, '').slice(0, 8);
+      } else if (name === 'liquidityRank') {
+        if (value === '') updatedValue = '';
+        else {
+          const n = parseInt(value, 10);
+          updatedValue = Number.isNaN(n) ? '' : n;
+        }
       } else {
         updatedValue = type === 'number' ? parseFloat(value) : value;
       }
@@ -280,6 +287,21 @@ function AccountForm() {
       return;
     }
 
+    if (!isEditing) {
+      const lr = formData.liquidityRank;
+      if (lr === '' || lr === null || lr === undefined) {
+        alert('Liquidity rank is required. Use a whole number: lower values mean higher liquidity (e.g. 1 = most liquid).');
+        setLoading(false);
+        return;
+      }
+      const rank = typeof lr === 'number' ? lr : parseInt(lr, 10);
+      if (!Number.isInteger(rank) || rank < 1) {
+        alert('Liquidity rank must be a whole number ≥ 1. Lower numbers indicate higher liquidity.');
+        setLoading(false);
+        return;
+      }
+    }
+
     let resolvedAccountNumber = formData.accountNumber.toString();
     if (!isEditing) {
       const { data: allAccounts, error: fetchError } = await fetchFromTable('chartOfAccounts', {
@@ -309,6 +331,23 @@ function AccountForm() {
       }
     }
 
+    let liquidityRankForSave = null;
+    if (!isEditing) {
+      liquidityRankForSave = typeof formData.liquidityRank === 'number'
+        ? formData.liquidityRank
+        : parseInt(formData.liquidityRank, 10);
+    } else if (formData.liquidityRank !== '' && formData.liquidityRank != null) {
+      const lr = typeof formData.liquidityRank === 'number'
+        ? formData.liquidityRank
+        : parseInt(formData.liquidityRank, 10);
+      if (!Number.isInteger(lr) || lr < 1) {
+        alert('Liquidity rank must be a whole number ≥ 1. Lower numbers indicate higher liquidity.');
+        setLoading(false);
+        return;
+      }
+      liquidityRankForSave = lr;
+    }
+
     const accountData = {
       accountName: formData.accountName,
       accountNumber: parseInt(resolvedAccountNumber, 10),
@@ -322,7 +361,8 @@ function AccountForm() {
       active: isEditing ? formData.active : true,
       statementType: formData.statementType,
       createdBy: isEditing ? formData.createdBy : actorUserId,
-      createdAt: isEditing ? formData.createdAt : new Date().toISOString()
+      createdAt: isEditing ? formData.createdAt : new Date().toISOString(),
+      liquidityRank: liquidityRankForSave
     };
 
     console.log('Submitting account data to Supabase:', accountData);
@@ -618,6 +658,29 @@ function AccountForm() {
             value={formData.orderNumber}
             onChange={handleChange}
             className="input"
+          />
+        </div>
+        <div>
+          <label htmlFor="liquidityRank" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+            Liquidity rank{isEditing ? ' (optional)' : ''}
+            <HelpTooltip text="Whole number ≥ 1. Lower values mean higher liquidity (for example, 1 is more liquid than 10). Required when adding a new account.">
+              <button type="button" className="button-clear" aria-label="About liquidity rank">
+                ?
+              </button>
+            </HelpTooltip>
+          </label>
+          <input
+            id="liquidityRank"
+            type="number"
+            name="liquidityRank"
+            min={1}
+            step={1}
+            inputMode="numeric"
+            value={formData.liquidityRank === '' || formData.liquidityRank == null ? '' : formData.liquidityRank}
+            onChange={handleChange}
+            className="input"
+            required={!isEditing}
+            placeholder={isEditing ? 'Leave blank to keep current' : 'e.g. 10'}
           />
         </div>
         <div>

@@ -45,16 +45,13 @@ export default function LandingDashboard({ title, subtitle, actions = [] }) {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const [periods, setPeriods] = useState([]);
   const [ratioSeries, setRatioSeries] = useState({});
   const [pendingCount, setPendingCount] = useState(0);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      setLoading(true);
       setError('');
       try {
         const [{ periods: labels }, pendingEntries] = await Promise.all([
@@ -62,7 +59,6 @@ export default function LandingDashboard({ title, subtitle, actions = [] }) {
           getJournalEntries('pending'),
         ]);
         if (cancelled) return;
-        setPeriods(labels || []);
         setPendingCount((pendingEntries || []).length);
 
         if (labels?.length) {
@@ -76,8 +72,6 @@ export default function LandingDashboard({ title, subtitle, actions = [] }) {
           setError(err?.message || 'Could not load dashboard data.');
           setRatioSeries({});
         }
-      } finally {
-        if (!cancelled) setLoading(false);
       }
     })();
 
@@ -227,9 +221,6 @@ export default function LandingDashboard({ title, subtitle, actions = [] }) {
               </article>
             ))}
           </div>
-          <p className="landing-period-caption">
-            {loading ? 'Loading ratio data from posted ledger activity...' : `Recent periods: ${periods.join(' · ') || 'No period labels available'}`}
-          </p>
         </section>
 
         <section className="landing-dashboard-messages">
